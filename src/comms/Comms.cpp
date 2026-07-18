@@ -6,14 +6,15 @@
 #include "config/Config.h"
 #include "comms/MultiPrint.h"
 
-/* ============ THIRD-PARTY ============ */
-#include <NeoSWSerial.h>
-
 /* ============ CORE ============ */
 #include <Arduino.h>
 
 /* =============== INTERNAL STATE =============== */
-static NeoSWSerial bt_serial(BT_NEOSWSERIAL_RX, BT_NEOSWSERIAL_TX);
+#ifdef BOARD_UNO_R4
+  static HardwareSerial& bt_serial = Serial1;
+#else
+  static HardwareSerial& bt_serial = Serial;
+#endif
 
 static MultiPrint comms_out(&bt_serial);
 static MultiPrint system_out_impl(&bt_serial, &Serial);
@@ -46,6 +47,10 @@ void begin() {
     ensure_usb_serial();
     comms_out.set_secondary(&Serial);
 #endif
+
+#if ENABLE_HC05_STATE_PIN
+    pinMode(BT_STATE_PIN, INPUT);
+#endif
 }
 
 bool available() {
@@ -55,5 +60,15 @@ bool available() {
 int read() {
     return bt_serial.read();
 }
+
+#if ENABLE_HC05_STATE_PIN
+bool is_connected() {
+    return digitalRead(BT_STATE_PIN) == HIGH;
+}
+#else
+bool is_connected() {
+    return true;  // HC-06: assume always connected
+}
+#endif
 
 } // namespace Comms

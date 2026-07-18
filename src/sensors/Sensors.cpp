@@ -7,7 +7,7 @@
 #include "comms/Comms.h"
 
 /* ============ THIRD-PARTY ============ */
-#include <NewPing.h>
+#include <UltraPing.h>
 
 /* ============ CORE ============ */
 #include <Arduino.h>
@@ -20,13 +20,13 @@ namespace Sensors {
 static Servo scan_servo;
 static bool  servo_ready = false;
 
-static NewPing front_sonar(
+static UltraPing front_sonar(
     SR04_FRONT_TRIG_PIN,
     SR04_FRONT_ECHO_PIN,
     200   // max distance (cm)
 );
 
-static NewPing rear_sonar(
+static UltraPing rear_sonar(
     SR04_REAR_TRIG_PIN,
     SR04_REAR_ECHO_PIN,
     200   // max distance (cm)

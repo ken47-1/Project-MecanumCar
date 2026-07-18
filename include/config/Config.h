@@ -28,7 +28,7 @@
 
 /* ============ SERVO ============ */
 /* Pins */
-constexpr uint8_t SCAN_SERVO_PIN = 10;    // AFMS V2 CLONE Servo 1 (D10)
+constexpr uint8_t SCAN_SERVO_PIN = 10;  // AFMS V2 CLONE Servo 1 (D10)
 
 /* Angles (degrees) */
 constexpr int SERVO_LEFT        = 180;
@@ -79,10 +79,16 @@ static_assert(REAR_STOP_EXIT_CM  > REAR_STOP_ENTER_CM, "STOP exit must be farthe
 constexpr float ULTRASONIC_EMA_ALPHA_FRONT = 0.35f;
 constexpr float ULTRASONIC_EMA_ALPHA_REAR  = 0.35f;
 
-/* ============ BLUETOOTH (NeoSWSerial) ============ */
-/* Pins */
-constexpr uint8_t BT_NEOSWSERIAL_RX = 11;
-constexpr uint8_t BT_NEOSWSERIAL_TX = 12;
+/* ============ BLUETOOTH ============ */
+/* Bluetooth: R3 uses Serial (pins 0/1), R4 uses Serial1 (pins 0/1) */
+/* R3: Disconnect Bluetooth when uploading (pins shared with USB) */
+/* R4: Upload with Bluetooth connected (Serial1 is independent) */
+
+/* Set to 1 for HC-05 (configurable STATE pin), set to 0 for HC-06 */
+#define ENABLE_HC05_STATE_PIN  0
+#if ENABLE_HC05_STATE_PIN
+    constexpr uint8_t BT_STATE_PIN = 2;  // HC-05 STATE pin
+#endif
 
 /* =============== FEATURE FLAGS (COMPILE-TIME) =============== */
 

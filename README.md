@@ -4,7 +4,7 @@ Bluetooth-controlled Mecanum wheel robot with autonomous obstacle avoidance. Ard
 
 ## Hardware
 
-- **MCU**: Arduino Uno (ATmega328P)
+- **MCU**: Arduino Uno R3 (ATmega328P) or Uno R4 (Minima/WiFi)
 - **Motor Driver**: Adafruit Motor Shield V2 (TB6612FNG + PCA9685, 12-bit PWM)
 - **Wheels**: 4× mecanum (45° rubber rollers)
 - **Sensors**: HC-SR04 front (servo-mounted, 5-position sweep) + HC-SR04 rear (static)
@@ -13,6 +13,19 @@ Bluetooth-controlled Mecanum wheel robot with autonomous obstacle avoidance. Ard
 - **Power**: 2× 18650 lithium cells in series
 - **Chassis**: Clear acrylic frame
 
+### Bluetooth Module Support
+
+This project supports both HC-05 and HC-06 Bluetooth modules.
+
+| Module | STATE Pin | Connection Detection |
+|--------|-----------|---------------------|
+| HC-05  | ✅ Yes (D2) | Detects bluetooth disconnection |
+| HC-06  | ❌ No     | Relies on watchdog timeout only |
+
+**HC-05 users:** Connect the STATE pin to D2 and enable `ENABLE_HC05_STATE_PIN` in `Config.h` (**off by default**).
+
+**HC-06 users:** No change needed — `ENABLE_HC05_STATE_PIN` is **off by default**.
+
 ### Pin Configuration
 
 | Component | Pins |
@@ -20,7 +33,10 @@ Bluetooth-controlled Mecanum wheel robot with autonomous obstacle avoidance. Ard
 | Front Ultrasonic TRIG/ECHO | D8 / D9 |
 | Rear Ultrasonic TRIG/ECHO | D6 / D7 |
 | Servo | D10 |
-| Bluetooth RX/TX | D11 / D12 (SoftwareSerial) |
+| Bluetooth RX/TX | D0 / D1 (Hardware Serial) |
+| Bluetooth STATE (HC-05 only) | D2 (optional) |
+
+**Note:** On R3, disconnect Bluetooth when uploading (pins shared with USB). On R4, upload with Bluetooth connected (Serial1 is independent).
 
 ### Motor Mapping (AFMS V2)
 
@@ -31,22 +47,55 @@ Bluetooth-controlled Mecanum wheel robot with autonomous obstacle avoidance. Ard
 | Rear Left | M2 |
 | Rear Right | M3 |
 
+## About This Project
+
+This is a **complete rewrite** of the ZYC0044 Mini Mecanum Wheel Car kit firmware.
+
+The original kit came with basic Arduino code — functional but limited. This version rebuilds everything from the ground up with proper software architecture, real-time safety systems, autonomous navigation, and support for both Arduino Uno R3 and R4 Series boards.
+
+**Key improvements:**
+- Modular C++ architecture instead of a single `.ino` file
+- Non-blocking timing (no `delay()`)
+- Real-time safety (watchdog, input loss detection, emergency stop)
+- Autonomous state machine with pathfinding
+- Dual ultrasonic sensors with EMA filtering
+- Motor ramping for smooth acceleration
+- Hardware UART for Bluetooth (no software serial conflicts)
+- HC-05 STATE pin support for connection status
+- Full configuration via `Config.h`
+
+**Why this matters:** The same hardware, now capable of much more. Autonomous driving, obstacle avoidance, and safe operation — all in a clean, maintainable codebase.
+
 ## Quick Start
 
 ### 1. Flash
 
 ```bash
-pio run -t upload
+# Arduino Uno R3
+pio run -e uno -t upload
+
+# Arduino Uno R4 Minima/WiFi
+pio run -e uno_r4_minima -t upload
+
+# Monitor (both boards)
 pio device monitor -b 9600
 ```
 
-### 2. Pair Bluetooth
+### 2. Wiring
+
+**Bluetooth:** Connect to pins D0 (RX) and D1 (TX).
+- **HC-05:** Connect STATE pin to D2 (optional, enables connection loss detection)
+- **HC-06:** No STATE pin, watchdog only
+
+**Note:** On Arduino Uno R3, disconnect Bluetooth when uploading (pins shared with USB). On R4, upload with Bluetooth connected.
+
+### 3. Pair Bluetooth
 
 - Phone Bluetooth settings → HC-06 (PIN usually 1234 or 0000)
 - Android: Install [Bluetooth Electronics](https://www.keuwl.com/apps/bluetoothelectronics/)
 - Load custom panel from `archive/Bluetooth Electronics Panels/`
 
-### 3. Drive
+### 4. Drive
 
 - **Manual Mode (0)**: Use d-pad to move, speed slider to control
 - **Autonomous Mode (1)**: Robot navigates obstacles automatically
@@ -61,11 +110,12 @@ pio device monitor -b 9600
 - **EMA filtering** — `ULTRASONIC_EMA_ALPHA_FRONT`, `ULTRASONIC_EMA_ALPHA_REAR` (0.3–0.5 recommended)
 
 ### Features
-- `ENABLE_INPUT_WATCHDOG` — Bluetooth keepalive (150ms timeout, default: ON)
+- `ENABLE_INPUT_WATCHDOG` — Bluetooth keepalive (150ms timeout, default: **ON**)
 - `ENABLE_OBSTACLE_AVOIDANCE` — Front/rear veto logic (default: **OFF** — enable manually if desired)
-- `ENABLE_INPUT_BUTTONS` — Button-based control (default: ON)
-- `ENABLE_INPUT_JOYSTICK` — Joystick analog input (default: OFF)
-- `ENABLE_INPUT_SPEED_AUTHORITY` — Speed slider control (default: ON)
+- `ENABLE_INPUT_BUTTONS` — Button-based control (default: **ON**)
+- `ENABLE_INPUT_JOYSTICK` — Joystick analog input (default: **OFF**)
+- `ENABLE_INPUT_SPEED_AUTHORITY` — Speed slider control (default: **ON**)
+- `ENABLE_HC05_STATE_PIN` — HC-05 STATE pin connection detection (default: **OFF** — enable manually for HC-05)
 
 ### Drive Behavior
 - **Speed** — `SPEED_USER_MIN` (200 per-mille), `SPEED_USER_MAX` (1000), `SPEED_USER_DEFAULT` (1000)
@@ -130,7 +180,7 @@ See `docs/Control_Protocol.md` for full protocol details and `docs/Code_Layout_S
 4. Resumes driving
 5. If cornered: waits `AUTO_RETRY_WAIT_MS` (2 seconds), retries
 
-**Note:** Enable via `ENABLE_OBSTACLE_AVOIDANCE = 1` in Config.h; disabled by default.
+**Note:** Autonomous mode is **disabled by default** (`ENABLE_OBSTACLE_AVOIDANCE = 0` in Config.h). Enable it manually if desired. The user can still toggle autonomous mode at runtime with the `1` command regardless of this flag.
 
 ## Architecture & Code
 
@@ -196,22 +246,31 @@ flowchart TB
 - Verify Bluetooth connected (check serial output)
 - Check battery voltage (should be >6V for two 18650s)
 - Test individual motors manually
+- Check SafetyManager state: `SAFETY_INPUT_LOSS`, `SAFETY_CONNECTION_LOSS`, or `SAFETY_EMERGENCY_STOP` will block motion
 
 **Bluetooth keeps disconnecting**
 - Move closer to phone (HC-06 range ~10m)
 - Reduce electromagnetic interference
 - Try re-pairing
+- HC-05 users: ensure `ENABLE_HC05_STATE_PIN` is set correctly in `Config.h`
 
 **Obstacle avoidance not working**
 - Check sensor wires (HC-SR04 needs GND, 5V, TRIG, ECHO)
 - Watch serial output: `[SENS] Front: XX cm`
 - Adjust thresholds in `Config.h` if using different sensors
 - Enable `DEBUG_OA_REASON` in `Config.h` to debug veto logic
+- Obstacle avoidance is **disabled by default** (`ENABLE_OBSTACLE_AVOIDANCE = 0`)
 
 **Servo doesn't scan**
 - Check D10 connection to servo control line
 - Verify servo power (should be ~6V, not from Arduino 5V pin)
 - Adjust `SERVO_LEFT`, `SERVO_CENTER`, `SERVO_RIGHT` angles
+
+**Robot stops and shows CONNECTION_LOSS**
+- HC-05 only: STATE pin detected disconnection
+- Only appears when `ENABLE_HC05_STATE_PIN` is enabled
+- Re-pair Bluetooth or restart the app
+- HC-06 users: disable `ENABLE_HC05_STATE_PIN` in `Config.h`
 
 ## Debug Flags
 
