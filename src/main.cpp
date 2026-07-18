@@ -3,19 +3,19 @@
 /* =============== INCLUDES =============== */
 /* ============ PROJECT ============ */
 #include "config/Config.h"
-#include "comms/Comms.h"
-#include "input/BluetoothCommandParser.h"
-#include "input/InputWatchdog.h"
-#include "control/ModeManager.h"
-#include "control/MotorControl.h"
-#include "control/MotorRamp.h"
-#include "control/MotorFault.h"
-#include "control/MotorHardware.h"
-#include "control/AutonomousController.h"
-#include "sensors/Sensors.h"
-#include "sensors/DirectionalScan.h"
-#include "safety/ObstacleDetection.h"
-#include "safety/SafetyManager.h"
+#include "comms/comms.h"
+#include "input/bluetooth_command_parser.h"
+#include "input/input_watchdog.h"
+#include "control/mode_manager.h"
+#include "control/motor_control.h"
+#include "control/motor_ramp.h"
+#include "control/motor_fault.h"
+#include "control/motor_hardware.h"
+#include "control/autonomous_controller.h"
+#include "sensors/sensors.h"
+#include "sensors/directional_scan.h"
+#include "safety/obstacle_detection.h"
+#include "safety/safety_manager.h"
 
 /* ============ CORE ============ */
 #include <Wire.h>
