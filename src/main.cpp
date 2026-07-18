@@ -53,21 +53,27 @@ void setup() {
 /* ============ LOOP ============ */
 void loop() {
     /* --- Input Processing --- */
-    /* System commands work in any mode; Manual intent is applied if in MANUAL */
     BluetoothCommandParser::handle(input_watchdog);
 
     /* --- Safety & Watchdog Ticks --- */
-    /* Watchdog push state to SafetyManager; Sensors update zones */
     input_watchdog.update();
+    
+    /* --- HC-05 Connection Status (if enabled) --- */
+    #if ENABLE_HC05_STATE_PIN
+        if (!Comms::is_connected()) {
+            SafetyManager::set_connection_loss(true);
+        } else {
+            SafetyManager::set_connection_loss(false);
+        }
+    #endif
+
     ObstacleDetection::update();
     SafetyManager::update();
 
     /* --- Mode-Specific Logic --- */
-    /* Only acts if ModeManager is in AUTO; Handles its own watchdog feeding */
     AutonomousController::update(input_watchdog);
 
     /* --- Hardware Execution --- */
-    /* Processes ramping curves and writes final PWM to shield */
     MotorRamp::update();
     MotorControl::update();
 }

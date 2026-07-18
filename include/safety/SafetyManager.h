@@ -6,6 +6,7 @@
 enum SafetyState {
     SAFETY_CLEAR,
     SAFETY_INPUT_LOSS,
+    SAFETY_CONNECTION_LOSS,
     SAFETY_EMERGENCY_STOP
 };
 
@@ -21,7 +22,8 @@ namespace SafetyManager {
     SafetyState get_state();
 
     /* --------- State Modification --------- */
+    void set_input_loss(bool active);
+    void set_connection_loss(bool active);
     void set_emergency_stop();
     void clear_emergency_stop();
-    void set_input_loss(bool active);
 }

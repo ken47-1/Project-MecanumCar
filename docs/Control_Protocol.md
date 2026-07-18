@@ -63,6 +63,8 @@ Single-character, no prefix.
 | `0` | Autonomous mode OFF |
 | `^` | Force watchdog feed (master keepalive) |
 
+**Note:** HC-05 STATE pin (optional) detects physical disconnection. See `ENABLE_HC05_STATE_PIN` in Config.h.
+
 ---
 
 ## Feedback (Robot → App)
@@ -83,3 +85,4 @@ Single-character, no prefix.
 - Watchdog asserts input loss if no valid command arrives within timeout
 - Autonomous mode ON (`1`) and OFF (`0`) are stateless — safe to resend
 - Autonomous mode exits immediately on any manual input
+- HC-05 STATE pin (optional) detects physical disconnection — `CONNECTION_LOSS` state has higher priority than `INPUT_LOSS`

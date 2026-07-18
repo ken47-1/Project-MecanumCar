@@ -6,12 +6,57 @@ Bluetooth-controlled Mecanum wheel robot with autonomous obstacle avoidance. Ard
 
 ---
 
+## Why This Project Exists
+
+This project is a complete rewrite of the **ZYC0044 Mini Mecanum Wheel Car** kit.
+
+### The Original Kit
+
+The kit (available from ZHIYI Technology) includes:
+- Basic Arduino code (`MINI_Mecanum_Wheel_Car.ino`) with simple forward/back/left/right control
+- A single HC-SR04 ultrasonic sensor for obstacle avoidance
+- HC-06 Bluetooth module for remote control
+- 74HC595 shift register + L293D motor driver
+- Tutorial document covering assembly, coding, and APP setup
+
+### What Was Wrong With It
+
+The original code worked, but had serious limitations:
+- **Blocking delays** — `delay()` everywhere, preventing real-time response
+- **Flat architecture** — everything in a single `.ino` file with global variables
+- **No safety subsystem** — no watchdog, no input loss detection, no emergency stop
+- **Limited obstacle avoidance** — only front sensor, no pathfinding, just "back up and turn"
+- **No autonomous mode** — only manual control via Bluetooth
+- **Single-board only** — designed for Arduino Uno R3, no R4 support
+- **No ramping** — motors start and stop abruptly
+- **Hardcoded values** — speeds, distances, and timing buried in code
+
+### The Rewrite
+
+This project rebuilds the kit from the ground up with:
+- **Modular C++ architecture** — clean separation of concerns (comms, control, input, safety, sensors)
+- **Non-blocking timing** — no `delay()`, all based on `millis()`
+- **Real-time safety** — watchdog, input loss detection, emergency stop
+- **Autonomous navigation** — state machine with pathfinding (MOVING → SCANNING → SPINNING → BACKING_UP → STUCK)
+- **Dual ultrasonic sensors** — front (servo-mounted, 5-position sweep) + rear
+- **Sensor filtering** — EMA filtering + hysteresis for reliable distance readings
+- **Motor ramping** — smooth acceleration and deceleration (400ms up, 200ms down)
+- **Dual-board support** — works on both Arduino Uno R3 and Uno R4 (Minima/WiFi)
+- **Configurable** — all settings in `Config.h`, no hardcoded values
+- **Real feedback** — speed gauge, step mode, debug output
+
+### The Result
+
+A professional-grade firmware for a hobbyist robot kit. The same hardware, now capable of autonomous driving, obstacle avoidance with pathfinding, and safe operation. Compatible with both Arduino Uno R3 and the newer R4 Series boards.
+
+---
+
 ## Firmware Architecture
 
 ### Module Organization
 
 **Comms** (`src/comms/`)
-- `Comms` — Serial output multiplexing (debug mirror + Bluetooth feedback)
+- `Comms` — Serial output multiplexing (debug mirror + Bluetooth feedback) with HC-05 STATE pin support via `Comms::is_connected()` (optional, compile-time toggle)
 - `MultiPrint` — Fans output to two channels simultaneously
 - Handles message formatting and transmission
 
@@ -214,6 +259,7 @@ Single-character commands sent one at a time or batched.
 - Idle `X` resets timeout without stopping motors (emergent heartbeat)
 - Any valid command resets timeout
 - Timeout → SafetyManager asserts INPUT_LOSS → MotorPolicy blocks all motion
+- HC-05 STATE pin can be used for connection status (optional)
 
 ---
 
@@ -228,6 +274,17 @@ Single-character commands sent one at a time or batched.
 - **Action:** InputWatchdog notifies SafetyManager, which asserts INPUT_LOSS flag
 - **Result:** MotorPolicy blocks all motion until `?` (reset) command
 - **Emergent design:** Idle `X` command resets timeout without requiring dedicated keepalive frame
+
+### Safety States (Priority Order)
+
+| Priority | State | Trigger | Recovery |
+|----------|-------|---------|----------|
+| 1 | EMERGENCY_STOP | `!` command or hardware fault | Manual reset (`?`) |
+| 2 | CONNECTION_LOSS | HC-05 STATE pin LOW (optional) | Re-pair/reconnect |
+| 3 | INPUT_LOSS | Watchdog timeout (150ms) | Auto-resume on command |
+| 4 | CLEAR | Normal operation | — |
+
+**Note:** CONNECTION_LOSS only applies when `ENABLE_HC05_STATE_PIN` is enabled in Config.h (**off by default**). For HC-06 users, this state is never entered.
 
 ### Obstacle Detection
 
@@ -420,7 +477,8 @@ Enable in `Config.h`:
 - **Servo:** D10 (`SCAN_SERVO_PIN`)
 - **Front Ultrasonic:** TRIG D8, ECHO D9
 - **Rear Ultrasonic:** TRIG D6, ECHO D7
-- **Bluetooth:** RX D11, TX D12 (SoftwareSerial)
+- **Bluetooth:** D0/D1 (Hardware Serial) — R3 uses Serial, R4 uses Serial1
+- **Bluetooth STATE (HC-05 only):** D2 (optional, for connection status)
 
 ### Servo Angles (degrees)
 - `SERVO_LEFT = 180`
