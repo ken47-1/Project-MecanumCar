@@ -1,10 +1,10 @@
-/* ==================== Sensors.cpp ==================== */
-#include "sensors/Sensors.h"
+/* ==================== sensors.cpp ==================== */
+#include "sensors/sensors.h"
 
 /* =============== INCLUDES =============== */
 /* ============ PROJECT ============ */
 #include "config/Config.h"
-#include "comms/Comms.h"
+#include "comms/comms.h"
 
 /* ============ THIRD-PARTY ============ */
 #include <UltraPing.h>

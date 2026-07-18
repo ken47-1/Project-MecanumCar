@@ -1,10 +1,10 @@
-/* ==================== Comms.cpp ==================== */
-#include "comms/Comms.h"
+/* ==================== comms.cpp ==================== */
+#include "comms/comms.h"
 
 /* =============== INCLUDES =============== */
 /* ============ PROJECT ============ */
 #include "config/Config.h"
-#include "comms/MultiPrint.h"
+#include "comms/multi_print.h"
 
 /* ============ CORE ============ */
 #include <Arduino.h>
@@ -17,10 +17,15 @@
 #endif
 
 static MultiPrint comms_out(&bt_serial);
-static MultiPrint system_out_impl(&bt_serial, &Serial);
+
+#ifdef BOARD_UNO_R4
+  static MultiPrint system_out_impl(&bt_serial, &Serial);   // Bluetooth + USB debug
+#else
+  static MultiPrint system_out_impl(&bt_serial, nullptr);   // Bluetooth only (no USB debug on R3)
+#endif
 
 /* =============== INTERNAL HELPERS =============== */
-#if COMMS_DEBUG_MIRROR
+#if COMMS_DEBUG_MIRROR && defined(BOARD_UNO_R4)
 static bool usb_serial_enabled = false;
 
 static void ensure_usb_serial() {
@@ -43,7 +48,7 @@ namespace Comms {
 void begin() {
     bt_serial.begin(9600);
 
-#if COMMS_DEBUG_MIRROR
+#if COMMS_DEBUG_MIRROR && defined(BOARD_UNO_R4)
     ensure_usb_serial();
     comms_out.set_secondary(&Serial);
 #endif
