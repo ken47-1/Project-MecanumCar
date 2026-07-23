@@ -1,5 +1,7 @@
 # Project MecanumCar
 
+*This project was developed with AI-assisted code generation and human oversight.*
+
 Bluetooth-controlled Mecanum wheel robot with autonomous obstacle avoidance. Arduino Uno + Motor Shield V2, modular C++ firmware on the Arduino Framework, dual HC-SR04 ultrasonic sensors with servo turret, real-time safety subsystem. Manual driving via Bluetooth app or autonomous mode with pathfinding. Complete rewrite of a commercial kit.
 
 ## Hardware
@@ -18,7 +20,7 @@ Bluetooth-controlled Mecanum wheel robot with autonomous obstacle avoidance. Ard
 This project supports both HC-05 and HC-06 Bluetooth modules.
 
 | Module | STATE Pin | Connection Detection |
-|--------|-----------|---------------------|
+|--------|-----------|----------------------|
 | HC-05  | ✅ Yes (D2) | Detects bluetooth disconnection |
 | HC-06  | ❌ No     | Relies on watchdog timeout only |
 
@@ -316,6 +318,6 @@ This project enforces a strict code layout standard documented in [`docs/Code_La
 
 When contributing, follow the visual hierarchy scale defined in the standard document.
 
-## Credits
+## License
 
-This project was developed with human oversight and AI-assisted code generation.
+MIT
