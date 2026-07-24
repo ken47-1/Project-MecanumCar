@@ -15,7 +15,7 @@ This project is a complete rewrite of the **ZYC0044 Mini Mecanum Wheel Car** kit
 The kit (available from ZHIYI Technology) includes:
 - Basic Arduino code (`MINI_Mecanum_Wheel_Car.ino`) with simple forward/back/left/right control
 - A single HC-SR04 ultrasonic sensor for obstacle avoidance
-- HC-06 Bluetooth module for remote control
+- HM-10 BLE (Bluetooth Low Energy) clone module for remote control
 - 74HC595 shift register + L293D motor driver
 - Tutorial document covering assembly, coding, and APP setup
 
