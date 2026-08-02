@@ -1,9 +1,9 @@
 /* ==================== bluetooth_speed_authority.cpp ==================== */
+#include "config/Config.h"
 #include "input/bluetooth_speed_authority.h"
 
 /* =============== INCLUDES =============== */
 /* ============ PROJECT ============ */
-#include "config/Config.h"
 #include "comms/comms.h"
 
 /* ============ CORE ============ */

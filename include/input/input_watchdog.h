@@ -1,15 +1,16 @@
 /* ==================== input_watchdog.h ==================== */
 #pragma once
 
-/* =============== INCLUDES =============== */
-/* ============ PROJECT ============ */
 #include "config/Config.h"
+
+#if ENABLE_INPUT_WATCHDOG
+
+/* =============== INCLUDES =============== */
 
 /* ============ CORE ============ */
 #include <stdint.h>
 
 /* =============== API =============== */
-#if ENABLE_INPUT_WATCHDOG
 
 /* ============ CLASSES ============ */
 class InputWatchdog {
@@ -20,6 +21,7 @@ public:
     void feed();
     void reset();
     void enable(bool state);
+    void set_motion_state(bool active);
     void update();
 
     /* --------- Status --------- */
@@ -30,6 +32,7 @@ private:
     uint32_t _last_seen;
     bool     _armed;
     bool     _enabled;
+    bool     _motion_active;
     uint32_t _now() const;
 };
 

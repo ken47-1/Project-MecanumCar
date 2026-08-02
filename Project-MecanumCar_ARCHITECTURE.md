@@ -42,7 +42,7 @@ This project rebuilds the kit from the ground up with:
 - **Sensor filtering** — EMA filtering + hysteresis for reliable distance readings
 - **Motor ramping** — smooth acceleration and deceleration (400ms up, 200ms down)
 - **Dual-board support** — works on both Arduino Uno R3 and Uno R4 (Minima/WiFi)
-- **Configurable** — all settings in `Config.h`, no hardcoded values
+- **Configurable** — all settings split across three config files (`Config.h`, `HardwareConfig.h`, `DebugConfig.h`), no hardcoded values
 - **Real feedback** — speed gauge, step mode, debug output
 
 ### The Result
@@ -56,7 +56,7 @@ A professional-grade firmware for a hobbyist robot kit. The same hardware, now c
 ### Module Organization
 
 **Comms** (`src/comms/`)
-- `Comms` — Serial output multiplexing (debug mirror + Bluetooth feedback) with HC-05 STATE pin support via `Comms::is_connected()` (optional, compile-time toggle)
+- `Comms` — Serial output multiplexing (debug mirror + Bluetooth feedback) with support for HC-05 (STATE pin optional) and HC-06 modules. `Comms::is_connected()` uses STATE pin when enabled, otherwise assumes always connected.
 - `MultiPrint` — Fans output to two channels simultaneously
 - Handles message formatting and transmission
 
@@ -70,7 +70,7 @@ A professional-grade firmware for a hobbyist robot kit. The same hardware, now c
 - `MotionCommand` — Data structure for motion intents (speed, direction)
 
 **Input** (`src/input/`)
-- `BluetoothCommandParser` — Parses ASCII commands from HC-06 serial
+- `BluetoothCommandParser` — Parses ASCII commands from Bluetooth Serial module
 - `BluetoothButtonInput` — Maps button commands (W/A/S/D/Q/E/Z/C/J/L/X) to motion intents
 - `BluetoothSpeedAuthority` — Handles speed step control (%+, %-, %R/%N/%F)
 - `BluetoothSystemCommands` — Handles system commands (!, ?, 0, 1)
@@ -89,7 +89,7 @@ A professional-grade firmware for a hobbyist robot kit. The same hardware, now c
   - Independent front/rear logic — can reverse when front blocked
 
 **Sensors** (`src/sensors/`)
-- `Sensors` — HC-SR04 wrapper with EMA-filtered readings
+- `Ultrasonic` — HC-SR04 wrapper with EMA-filtered readings
   - `get_front_distance_cm()` — EMA-filtered front sensor
   - `get_rear_distance_cm()` — EMA-filtered rear sensor
   - `get_front_distance_raw_cm()` — Raw single ping (used during servo sweeps)
@@ -99,15 +99,21 @@ A professional-grade firmware for a hobbyist robot kit. The same hardware, now c
   - Sweeps 5 positions: LEFT (180°), FRONT_LEFT (135°), CENTER (90°), FRONT_RIGHT (45°), RIGHT (0°)
   - Returns `SweepResult` with distances and `clear_mask` (bitmask of clear directions)
   - Settle time: 500ms per position (configurable `SCAN_SERVO_SETTLE_MS`)
+- `BatteryVoltage` — 0-25V voltage sensor reader (Rev 2)
+  - `get_voltage()` — Returns filtered voltage (EMA alpha=0.1)
+  - `is_low()` — Returns true if voltage below `BATTERY_WARNING_VOLTAGE`
+  - `report()` — Sends `*V{voltage}V*` telemetry every `BATTERY_REPORT_INTERVAL_MS`
+  - Tracks minimum voltage seen for critical E-stop at `BATTERY_CRITICAL_VOLTAGE` (6.0V)
 
 **Main Loop** (`src/main.cpp`)
 1. `BluetoothCommandParser::handle(input_watchdog)` — Receive and dispatch commands
-2. `input_watchdog.update()` — Check for signal loss (150ms timeout)
-3. `ObstacleDetection::update()` — Poll sensors, apply hysteresis, update front/rear flags
-4. `SafetyManager::update()` — Aggregate all fault states (E-STOP, INPUT_LOSS, obstacle flags)
-5. `AutonomousController::update(input_watchdog)` — Execute autonomous state machine if in AUTO mode
-6. `MotorRamp::update()` — Apply ramping curves (400ms up, 200ms down)
-7. `MotorControl::update()` — Write final PWM values to motor shield
+2. `input_watchdog.update()` — Check for signal loss (only when moving)
+3. `ObstacleDetection::update()` — Poll ultrasonic sensors, apply hysteresis
+4. `SafetyManager::update()` — Aggregate faults (E-STOP, INPUT_LOSS, BATTERY_CRITICAL)
+5. `BatteryVoltage::report()` — Send voltage telemetry (every 2s)
+6. `AutonomousController::update(input_watchdog)` — Execute autonomous state machine
+7. `MotorRamp::update()` — Apply ramping curves
+8. `MotorControl::update()` — Write PWM to motors
 
 ### Flowchart
 
@@ -255,17 +261,20 @@ Single-character commands sent one at a time or batched.
 
 ### Watchdog Behavior
 
-- 150ms timeout on no valid command
-- Idle `X` resets timeout without stopping motors (emergent heartbeat)
-- Any valid command resets timeout
-- Timeout → SafetyManager asserts INPUT_LOSS → MotorPolicy blocks all motion
-- HC-05 STATE pin can be used for connection status (optional)
+- **Motion-aware:** Watchdog is only active when the robot is moving
+- **Timeout:** 150ms (`INPUT_WATCHDOG_TIMEOUT_MS`)
+- **Trigger:** No valid command received while motion is active
+- **Action:** InputWatchdog asserts INPUT_LOSS → SafetyManager blocks motion
+- **Recovery:** Any valid command clears INPUT_LOSS and resumes operation
+- **Stopped state:** Watchdog is idle — no timeout when robot is stationary
 
 ---
 
 ## Safety Subsystem
 
-**Note:** Obstacle avoidance is **disabled by default** (`ENABLE_OBSTACLE_AVOIDANCE = 0` in Config.h). Enable it manually if desired.
+**Notes**
+- Obstacle avoidance is **enabled by default** (`ENABLE_OBSTACLE_AVOIDANCE = 1` in Config.h). Disable it manually if desired.
+- CONNECTION_LOSS only applies when `ENABLE_HC05_STATE_PIN` is enabled in `HardwareConfig.h` (**off by default**). Enable it manually if using HC-05.
 
 ### Watchdog
 
@@ -279,12 +288,12 @@ Single-character commands sent one at a time or batched.
 
 | Priority | State | Trigger | Recovery |
 |----------|-------|---------|----------|
-| 1 | EMERGENCY_STOP | `!` command or hardware fault | Manual reset (`?`) |
-| 2 | CONNECTION_LOSS | HC-05 STATE pin LOW (optional) | Re-pair/reconnect |
-| 3 | INPUT_LOSS | Watchdog timeout (150ms) | Auto-resume on command |
+| 1 | EMERGENCY_STOP | `!` command, battery critical, or hardware fault | Manual reset (`?`) |
+| 2 | CONNECTION_LOSS | HC-05 STATE pin LOW | Re-pair/reconnect |
+| 3 | INPUT_LOSS | Watchdog timeout while moving | Auto-resume on command |
 | 4 | CLEAR | Normal operation | — |
 
-**Note:** CONNECTION_LOSS only applies when `ENABLE_HC05_STATE_PIN` is enabled in Config.h (**off by default**). For HC-06 users, this state is never entered.
+**Note:** CONNECTION_LOSS only applies when `ENABLE_HC05_STATE_PIN` is enabled in `HardwareConfig.h` (**off by default**). Enable it manually if using HC-05.
 
 ### Obstacle Detection
 
@@ -317,9 +326,13 @@ Single-character commands sent one at a time or batched.
 
 ### Emergency Stop
 
-- Triggered by `!` command
+- Triggered by:
+  - `!` command (user)
+  - `BATTERY_CRITICAL_VOLTAGE` reached (6.0V minimum tracked)
+  - Hardware fault (motor shield missing, etc.)
 - Latches until `?` (reset) command
-- Overrides all motion including autonomous state machine
+- **Immediate stop:** `MotorControl::hard_stop()` — no ramping
+- Overrides all motion including autonomous mode
 - SafetyManager tracks state; MotorPolicy enforces block
 
 ---
@@ -417,7 +430,7 @@ MotionCommand safe = MotionPolicy::apply_safety(cmd);
 ### Data Flow
 
 ```
-Sensors::get_front_distance_cm()
+Ultrasonic::get_front_distance_cm()
     ↓
 ObstacleDetection::update()  [applies hysteresis]
     ↓
@@ -448,12 +461,27 @@ MOVING ──[hit obstacle]──> SCANNING
 
 ### Debug Output
 
-Enable in `Config.h`:
+Enable in `DebugConfig.h`:
 ```cpp
-#define DEBUG_SENSORS       1  // Prints "Front: 45 | Rear: 120"
-#define DEBUG_OA_REASON     1  // Prints zone flags per sensor
-#define DEBUG_OA_SCALE      1  // Prints policy decisions
-#define DEBUG_WATCHDOG      1  // Prints watchdog resets
+#define DEBUG_ENABLED  1   // Master toggle
+
+#if DEBUG_ENABLED   // EDIT BELOW
+    #define COMMS_DEBUG_MIRROR  1   // Echo commands to debug serial
+    #define DEBUG_COMMS         0   // Log Bluetooth communication
+    #define DEBUG_MOTOR_RAMP    0   // Print ramp calculations
+    #define DEBUG_OA_REASON     1   // Print veto reasons
+    #define DEBUG_OA_SCALE      1   // Print speed scaling
+    #define DEBUG_SENSORS       1   // Print sensor readings
+    #define DEBUG_WATCHDOG      1   // Print watchdog resets
+#else   // DO NOT EDIT BELOW
+    #define COMMS_DEBUG_MIRROR  0
+    #define DEBUG_COMMS         0
+    #define DEBUG_WATCHDOG      0
+    #define DEBUG_SENSORS       0
+    #define DEBUG_MOTOR_RAMP    0
+    #define DEBUG_OA_REASON     0
+    #define DEBUG_OA_SCALE      0
+#endif
 ```
 
 ### Migration from Old Code
@@ -471,14 +499,30 @@ Enable in `Config.h`:
 
 ## Configuration
 
-**Single config file:** `include/config/Config.h`
+**Config files:** `include/config/` contains three files:
+- `DebugConfig.h` – Debug output toggles
+- `HardwareConfig.h` – Physical hardware presence (pins, sensors installed)
+- `Config.h` – Software behavior (thresholds, timing, speed, features)
 
 ### Hardware Pins
 - **Servo:** D10 (`SCAN_SERVO_PIN`)
-- **Front Ultrasonic:** TRIG D8, ECHO D9
-- **Rear Ultrasonic:** TRIG D6, ECHO D7
+- **Front Ultrasonic:** TRIG D11, ECHO D12
+- **Rear Ultrasonic:** TRIG D8, ECHO D9
 - **Bluetooth:** D0/D1 (Hardware Serial) — R3 uses Serial, R4 uses Serial1
-- **Bluetooth STATE (HC-05 only):** D2 (optional, for connection status)
+- **Bluetooth STATE (HC-05 only):** D2 (enabled by default — disable in HardwareConfig.h for HC-06)
+- **Battery Monitoring (Rev 2):** A0
+- **Encoders (Rev 3):** D3 (FL), D4 (FR), D5 (RL), D6 (RR)
+
+### Bluetooth Hardware
+
+| Module | Connection | Pins | Notes |
+|--------|------------|------|-------|
+| HC-05 | UART | D0 (RX), D1 (TX) | Supports STATE pin for connection detection (disabled by default) |
+| HC-06 | UART | D0 (RX), D1 (TX) | No STATE pin — leave `ENABLE_HC05_STATE_PIN = 0` in HardwareConfig.h |
+
+- **Default baud rate:** 9600
+- **STATE pin (HC-05 only):** D2 (disabled by default, enable via `ENABLE_HC05_STATE_PIN` in HardwareConfig.h)
+- **Pairing PIN:** HC-06: 1234 or 0000; HC-05: 1234
 
 ### Servo Angles (degrees)
 - `SERVO_LEFT = 180`
@@ -498,14 +542,41 @@ Enable in `Config.h`:
 - `ULTRASONIC_EMA_ALPHA_REAR = 0.35`
 
 ### Feature Flags
+
+**Software Features** (Config.h)
 - `ENABLE_INPUT_WATCHDOG = 1` (ON)
-- `ENABLE_OBSTACLE_AVOIDANCE = 0` (OFF by default)
 - `ENABLE_INPUT_BUTTONS = 1` (ON)
 - `ENABLE_INPUT_JOYSTICK = 0` (OFF)
 - `ENABLE_INPUT_SPEED_AUTHORITY = 1` (ON)
+- `ENABLE_DIRECTIONAL_SCAN = 1` (ON)
+- `ENABLE_OBSTACLE_AVOIDANCE = 1` (ON)
+- `ENABLE_AUTONOMOUS_MODE = 0` (OFF)
+
+**Hardware Presence** (HardwareConfig.h)
+- `ENABLE_HC05_STATE_PIN = 0` (OFF — enable for HC-05)
+- `ENABLE_ULTRASONIC_FRONT = 1` (ON)
+- `ENABLE_ULTRASONIC_REAR = 1` (ON)
+- `ENABLE_SERVO = 1` (ON)
+- `ENABLE_BATTERY_MONITOR = 1` (ON)
+- `ENABLE_ENCODERS = 0` (OFF — Rev 3 planned)
+
+All modules are fully optional. Each can be enabled/disabled at compile time via flags in `Config.h` and `HardwareConfig.h`.
+
+### Revision History
+
+**Rev 2 (Current)**
+- Double-deck chassis
+- Battery monitoring (A0)
+- New pin layout (ultrasonics moved to D8/D9 and D11/D12)
+
+**Rev 3 (Planned)**
+- 4× H206 optical encoders (D3, D4, D5, D6)
+- Closed-loop PID speed control
+- Encoder-based odometry
 
 ### Watchdog & Input
 - `INPUT_WATCHDOG_TIMEOUT_MS = 150`
+    - **Motion-aware:** Watchdog active only when robot is moving
 - `JOYSTICK_DEADZONE = 30.0`
 - `JOYSTICK_INPUT_MAX = 127.0`
 
@@ -522,6 +593,20 @@ Enable in `Config.h`:
 - `AUTO_RETRY_WAIT_MS = 2000` (wait before retrying when cornered)
 - `AUTO_SPIN_DIAGONAL_MS = 500` (45° rotation time)
 - `AUTO_SPIN_SIDE_MS = 1000` (90° rotation time)
+
+### Battery Monitoring
+- `BATTERY_WARNING_VOLTAGE = 7.0V` — Warning threshold, prints alert
+- `BATTERY_CRITICAL_VOLTAGE = 6.0V` — Triggers emergency stop
+- `BATTERY_EMA_ALPHA = 0.1` — Smoothing filter for voltage readings
+- `BATTERY_MIN_DECAY_RATE = 0.01V/s` — Min voltage recovery rate
+- `BATTERY_REPORT_INTERVAL_MS = 2000` — Telemetry interval (2 seconds)
+- Tracks minimum voltage seen to catch sag under load
+- Telemetry format:
+  - `*V{voltage}V*` — Filtered voltage (e.g., `*V7.72V*`)
+  - `*M{voltage}V*` — Minimum voltage (e.g., `*M7.70V*`)
+- Warning cooldowns:
+  - `BATTERY_WARNING_COOLDOWN_MS = 10000` (10s between warnings)
+  - `BATTERY_CRITICAL_COOLDOWN_MS = 5000` (5s between critical alerts)
 
 ### Drive Behavior
 - **Speed:** MIN (200), MAX (1000), DEFAULT (1000) per-mille

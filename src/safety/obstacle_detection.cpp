@@ -1,10 +1,13 @@
 /* ==================== obstacle_detection.cpp ==================== */
+#include "config/Config.h"
 #include "safety/obstacle_detection.h"
 
+#if ENABLE_OBSTACLE_AVOIDANCE
+
 /* =============== INCLUDES =============== */
+
 /* ============ PROJECT ============ */
-#include "config/Config.h"
-#include "sensors/sensors.h"
+#include "sensors/ultrasonic.h"
 #include "comms/comms.h"
 
 /* ============ CORE ============ */
@@ -34,7 +37,9 @@ static void update_zone(
     bool& in_zone,
     uint32_t& last_clear_ms
 ) {
-    if (distance == 0) return;  // invalid reading, hold state
+    if (distance == 0) {
+        return;  // invalid reading, hold state
+    }
 
     bool triggered = (distance <= enter_threshold);
     bool should_exit = (distance > exit_threshold);
@@ -71,14 +76,13 @@ void init() {
 }
 
 void update() {
-    uint16_t front_dist = Sensors::get_front_distance_cm();
-    uint16_t rear_dist = Sensors::get_rear_distance_cm();
+    uint16_t front_dist = Ultrasonic::get_front_distance_raw_cm();
+    uint16_t rear_dist = Ultrasonic::get_rear_distance_raw_cm();
 
     #if DEBUG_SENSORS
-        Comms::system.print("Front: ");
-        Comms::system.print(front_dist);
-        Comms::system.print(" | Rear: ");
-        Comms::system.println(rear_dist);
+        char buf[50];
+        snprintf(buf, sizeof(buf), "Front: %u cm | Rear: %u cm", front_dist, rear_dist);
+        Comms::system.println(buf);
     #endif
 
     /* ===== FRONT ZONES ===== */
@@ -94,20 +98,19 @@ void update() {
                 rear_in_stop, rear_last_clear_stop_ms);
 
     #if DEBUG_OA_REASON
-        Comms::system.print("Front slow: ");
-        Comms::system.print(front_in_slow);
-        Comms::system.print(" | stop: ");
-        Comms::system.print(front_in_stop);
-        Comms::system.print(" | Rear slow: ");
-        Comms::system.print(rear_in_slow);
-        Comms::system.print(" | stop: ");
-        Comms::system.println(rear_in_stop);
+        char buf[40];
+        
+        snprintf(buf, sizeof(buf), "Front slow: %d | stop: %d", front_in_slow, front_in_stop);
+        Comms::system.println(buf);
+        
+        snprintf(buf, sizeof(buf), "Rear slow: %d | stop: %d", rear_in_slow, rear_in_stop);
+        Comms::system.println(buf);
     #endif
 }
 
 Proximity get_front() {
     return {
-        Sensors::get_front_distance_cm(),
+        Ultrasonic::get_front_distance_cm(),
         front_in_slow,
         front_in_stop
     };
@@ -115,10 +118,12 @@ Proximity get_front() {
 
 Proximity get_rear() {
     return {
-        Sensors::get_rear_distance_cm(),
+        Ultrasonic::get_rear_distance_cm(),
         rear_in_slow,
         rear_in_stop
     };
 }
 
 } // namespace ObstacleDetection
+
+#endif // ENABLE_OBSTACLE_AVOIDANCE

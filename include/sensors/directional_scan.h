@@ -1,10 +1,15 @@
 /* ==================== directional_scan.h ==================== */
 #pragma once
 
+#include "config/Config.h"
+
+#if ENABLE_DIRECTIONAL_SCAN
+
 /* =============== INCLUDES =============== */
+
 /* ============ PROJECT ============ */
 #include "control/motion_command.h"
-#include "sensors/sensors.h"
+#include "sensors/ultrasonic.h"
 
 /* =============== TYPES =============== */
 struct SweepResult {
@@ -24,18 +29,22 @@ constexpr uint8_t SWEEP_CLEAR_RIGHT       = (1 << 4);
 
 /* =============== API =============== */
 namespace DirectionalScan {
+    /* --------- Lifecycle --------- */
     void init();
     void reset();
 
-    // Tracking mode — follows movement direction
+    /* --------- Tracking --------- */
     void update(const MotionCommand& cmd);
     ScanDir current_scan_dir();
 
-    // Sweep mode — scans all angles, returns results
-    // Call start_sweep() once, then poll sweep_ready() each loop.
-    // When ready, call get_sweep_result() to retrieve distances.
+    /* --------- Sweep --------- */
     void start_sweep();
     bool sweep_ready();
     SweepResult get_sweep_result();
-    void update_sweep();   // call each loop while sweeping
+    void update_sweep();
+
+    /* --------- Status --------- */
+    bool is_settled();
 }
+
+#endif // ENABLE_DIRECTIONAL_SCAN

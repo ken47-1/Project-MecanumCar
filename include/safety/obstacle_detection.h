@@ -1,6 +1,8 @@
 /* ==================== obstacle_detection.h ==================== */
 #pragma once
 
+#if ENABLE_OBSTACLE_AVOIDANCE
+
 /* =============== INCLUDES =============== */
 /* ==================== THIRD-PARTY ==================== */
 #include <stdint.h>
@@ -20,3 +22,5 @@ namespace ObstacleDetection {
     Proximity get_front();
     Proximity get_rear();
 }
+
+#endif // ENABLE_OBSTACLE_AVOIDANCE

@@ -1,9 +1,8 @@
 /* ==================== motor_ramp.cpp ==================== */
+#include "config/Config.h"
 #include "control/motor_ramp.h"
 
 /* =============== INCLUDES =============== */
-/* ============ PROJECT ============ */
-#include "config/Config.h"
 
 /* ============ CORE ============ */
 #include <Arduino.h>
@@ -58,7 +57,9 @@ void update() {
 
     uint32_t now = millis();
     uint32_t dt_ms = now - last_update_ms;
-    if (dt_ms == 0) return;
+    if (dt_ms == 0) {
+        return;
+    }
 
     // prevent stall spikes
     if (dt_ms > 100) dt_ms = 100;
@@ -82,6 +83,9 @@ void update() {
 
 MotorSet current() {
     return cur;
+}
+MotorSet target() {
+    return tgt;
 }
 
 } // namespace MotorRamp

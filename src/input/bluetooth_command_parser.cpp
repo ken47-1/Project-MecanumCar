@@ -27,6 +27,9 @@ static uint16_t      manual_spin_limit_ms = 0;
 static float         manual_spin_dir      = 0.0f;
 static bool          manual_spin_active   = false;
 
+/* ============ ARC TURN MODE ============ */
+static bool arc_turn_speed_dependent = ARC_TURN_DEFAULT_MODE;
+
 /* =============== PUBLIC API =============== */
 void handle(InputWatchdog& watchdog) {
     MotionCommand cmd = {0.0f, 0.0f, 0.0f};
@@ -41,8 +44,14 @@ void handle(InputWatchdog& watchdog) {
 
         /* --- System Commands --- */
         if (BluetoothSystemCommands::handle_char(c, watchdog)) {
-            if (c == '!') return; 
-            if (c == 'X') explicit_stop = true;
+            if (c == '!') {
+                return;
+            }
+            
+            if (c == 'X') {
+                explicit_stop = true;
+            }
+
             valid_input = true;
             continue;
         }
@@ -80,6 +89,17 @@ void handle(InputWatchdog& watchdog) {
             }
             motion_applied = true;
             valid_input    = true;
+        }
+    }
+
+    /* ===== ARC TURNING ===== */
+    if (fabs(cmd.forward) > 0.1f && fabs(cmd.rotate) > 0.1f) {
+        if (arc_turn_speed_dependent) {
+            float speed_factor = fabs(cmd.forward);
+            float rotate_scale = SD_MAX_SCALE - (SD_MAX_SCALE - SD_MIN_SCALE) * speed_factor;
+            cmd.rotate *= rotate_scale;
+        } else {
+            cmd.rotate *= FIXED_ROTATE_SCALE;
         }
     }
 

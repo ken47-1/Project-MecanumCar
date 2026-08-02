@@ -42,7 +42,9 @@ void InputWatchdog::enable(bool state) {
 }
 
 void InputWatchdog::update() {
-    if (!_enabled || !_armed) return;
+    if (!_enabled || !_armed) {
+        return;
+    }
 
     /* 
        Only push 'true' to SafetyManager. 

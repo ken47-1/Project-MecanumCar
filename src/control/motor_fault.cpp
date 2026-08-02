@@ -1,9 +1,10 @@
 /* ==================== motor_fault.cpp ==================== */
+#include "config/Config.h"
 #include "control/motor_fault.h"
 
 /* =============== INCLUDES =============== */
+
 /* ============ PROJECT ============ */
-#include "config/Config.h"
 #include "control/motor_control.h"
 #include "safety/safety_manager.h"
 #include "comms/comms.h"
@@ -22,11 +23,16 @@ static MotorFaultReason fault_reason = MotorFaultReason::NONE;
 /* ============ STRINGS ============ */
 static const char* fault_to_string(MotorFaultReason r) {
     switch (r) {
-        case MotorFaultReason::ESTOP:            return "E-STOP";
-        case MotorFaultReason::INVALID_COMMAND:  return "INVALID COMMAND";
-        case MotorFaultReason::SENSOR_FAIL:      return "SENSOR FAILED";
+
+        // Hardware failures (fatal)
         case MotorFaultReason::SHIELD_NOT_FOUND: return "SHIELD NOT FOUND";
         case MotorFaultReason::INTERNAL_ERROR:   return "INTERNAL ERROR";
+        case MotorFaultReason::BATTERY_CRITICAL: return "BATTERY CRITICAL";
+        case MotorFaultReason::SENSOR_FAIL:      return "SENSOR FAILED";
+
+        // User/command issues
+        case MotorFaultReason::ESTOP:            return "E-STOP";
+        case MotorFaultReason::INVALID_COMMAND:  return "INVALID COMMAND";
         case MotorFaultReason::MANUAL:           return "MANUAL";
         default:                                 return "UNKNOWN";
     }
@@ -52,7 +58,9 @@ MotorFaultReason reason() {
 /* ============ CONTROL ============ */
 void trigger(MotorFaultReason reason) {
     /* Prevent re-triggering if already faulted */
-    if (fault_active) return;
+    if (fault_active) {
+        return;
+    }
 
     fault_active = true;
     fault_reason = reason;
@@ -60,7 +68,9 @@ void trigger(MotorFaultReason reason) {
     /* --- Critical Alert Output --- */
     Comms::print.println("===================");
     Comms::print.println("!!! MOTOR FAULT !!!");
-    Comms::print.print(">>> "); Comms::print.print(fault_to_string(reason)); Comms::print.print(" <<<");
+    Comms::print.print(">>> ");
+    Comms::print.print(fault_to_string(reason));
+    Comms::print.println(" <<<");
     Comms::print.println("===================");
 
     /* Immediate hardware halt */

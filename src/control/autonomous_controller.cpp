@@ -1,19 +1,32 @@
 /* ==================== autonomous_controller.cpp ==================== */
+#include "config/Config.h"
+
+#if ENABLE_AUTONOMOUS_MODE
+
 #include "control/autonomous_controller.h"
 
 /* =============== INCLUDES =============== */
+
 /* ============ PROJECT ============ */
-#include "config/Config.h"
+
+/* ========= COMMS ========= */
 #include "comms/comms.h"
+
+/* ========= CONTROL ========= */
 #include "control/motion_command.h"
 #include "control/motor_control.h"
 #include "control/mode_manager.h"
+
+/* ========= SAFETY ========= */
 #include "safety/obstacle_detection.h"
 #include "safety/safety_manager.h"
-#include "sensors/directional_scan.h"
-#include "sensors/sensors.h"
-#include "input/input_watchdog.h"
 
+/* ========= SENSORS ========= */
+#include "sensors/directional_scan.h"
+#include "sensors/ultrasonic.h"
+
+/* ========= INPUT ========= */
+#include "input/input_watchdog.h"
 /* ============ CORE ============ */
 #include <Arduino.h>
 
@@ -94,7 +107,9 @@ void reset() {
 /* ============ LOGIC LOOP ============ */
 void update(InputWatchdog& watchdog) {
     /* --- Mode Guard --- */
-    if (!ModeManager::is_autonomous()) return;
+    if (!ModeManager::is_autonomous()) {
+        return;
+    }
 
     /* --- Automatic Authority --- */
     watchdog.feed();
@@ -132,11 +147,11 @@ void update(InputWatchdog& watchdog) {
 
                 if (spin_limit_ms > 0) {
                     // Center the sensor for the next MOVING state
-                    Sensors::scan_set_direction(ScanDir::FRONT);
+                    Ultrasonic::scan_set_direction(ScanDir::FRONT);
                     enter(AutoState::SPINNING);
                 } else {
                     // No forward path: check if rear escape is possible
-                    if (Sensors::get_rear_distance_raw_cm() > REAR_SLOW_EXIT_CM) {
+                    if (Ultrasonic::get_rear_distance_raw_cm() > REAR_SLOW_EXIT_CM) {
                         enter(AutoState::BACKING_UP);
                     } else {
                         enter(AutoState::STUCK);
@@ -162,7 +177,7 @@ void update(InputWatchdog& watchdog) {
         /* ---------------- BACKING_UP ---------------- */
         case AutoState::BACKING_UP: {
             // Reverse escape (max 1s or until rear is blocked)
-            if (millis() - timer_ms >= 1000 || Sensors::get_rear_distance_raw_cm() <= REAR_STOP_ENTER_CM) {
+            if (millis() - timer_ms >= 1000 || Ultrasonic::get_rear_distance_raw_cm() <= REAR_STOP_ENTER_CM) {
                 MotorControl::hard_stop();
                 DirectionalScan::start_sweep(); 
                 enter(AutoState::SCANNING);
@@ -185,3 +200,5 @@ void update(InputWatchdog& watchdog) {
 }
 
 } // namespace AutonomousController
+
+#endif // ENABLE_AUTONOMOUS_MODE

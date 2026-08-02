@@ -5,11 +5,16 @@
 /* ============ ENUMS ============ */
 enum class MotorFaultReason {
     NONE,
-    ESTOP,
-    INVALID_COMMAND,
-    SENSOR_FAIL,
+
+    // Hardware failures (fatal)
     SHIELD_NOT_FOUND,
     INTERNAL_ERROR,
+    BATTERY_CRITICAL,
+    SENSOR_FAIL,
+    
+    // User/command issues
+    ESTOP,
+    INVALID_COMMAND,
     MANUAL
 };
 

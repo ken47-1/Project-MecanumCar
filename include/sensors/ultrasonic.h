@@ -1,4 +1,4 @@
-/* ==================== sensors.h ==================== */
+/* ==================== ultrasonic.h ==================== */
 #pragma once
 
 #include <stdint.h>
@@ -14,16 +14,22 @@ enum class ScanDir : uint8_t {
 };
 
 /* =============== API =============== */
-namespace Sensors {
+namespace Ultrasonic {
     void init();
 
-    /* EMA-filtered readings — use in continuous loop (ObstacleDetection) */
+    /* EMA-filtered readings */
     uint16_t get_front_distance_cm();
-    uint16_t get_rear_distance_cm();
 
-    /* Raw single ping — use after servo settle during sweeps, bypasses EMA */
+    #if ENABLE_ULTRASONIC_REAR
+        uint16_t get_rear_distance_cm();
+    #endif
+
+    /* Raw single ping */
     uint16_t get_front_distance_raw_cm();
-    uint16_t get_rear_distance_raw_cm();
+
+    #if ENABLE_ULTRASONIC_REAR
+        uint16_t get_rear_distance_raw_cm();
+    #endif
 
     void scan_set_direction(ScanDir dir);
 }

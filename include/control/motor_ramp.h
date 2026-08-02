@@ -16,4 +16,5 @@ namespace MotorRamp {
     void set_target(const MotorSet& target);
     void update();
     MotorSet current();
+    MotorSet target();
 }

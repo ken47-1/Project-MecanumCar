@@ -73,6 +73,14 @@ Single-character, no prefix.
 |-------|-------------|
 | `*G[value]*` | Speed gauge — value is `0–1000` |
 | `*%[mode]*` | Step mode — `Fine`, `Normal`, or `Rough` |
+| `*V[value]V*` | Filtered battery voltage — e.g., `*V7.72V*` |
+| `*M[value]V*` | Minimum battery voltage (with decay) — e.g., `*M7.70V*` |
+
+### Battery Voltage
+
+- **Filtered (`*V`)** — EMA‑smoothed current voltage (alpha = 0.1)
+- **Minimum (`*M`)** — Lowest voltage seen since boot, with slow decay (0.01V/s)
+- Both are sent every `BATTERY_REPORT_INTERVAL_MS` (default 2000ms)
 
 ---
 

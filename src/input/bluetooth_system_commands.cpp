@@ -1,4 +1,5 @@
 /* ==================== bluetooth_system_commands.cpp ==================== */
+#include "config/Config.h"
 #include "input/bluetooth_system_commands.h"
 
 /* =============== INCLUDES =============== */
@@ -10,6 +11,9 @@
 
 /* ============ CORE ============ */
 #include <Arduino.h>
+
+/* =============== INTERNAL STATE =============== */
+extern bool arc_turn_speed_dependent;
 
 /* =============== PUBLIC API =============== */
 namespace BluetoothSystemCommands {
@@ -36,15 +40,28 @@ bool handle_char(char c, InputWatchdog& watchdog) {
             watchdog.feed();
             return true;
 
+        /* ============ ARC TURN TOGGLE ============ */
+        case 'T':
+            arc_turn_speed_dependent = !arc_turn_speed_dependent;
+            Comms::system.print("Arc turn: ");
+            Comms::system.println(arc_turn_speed_dependent ? "Speed-Dependent" : "Fixed");
+            watchdog.feed();
+            return true;            
+
         /* ============ DRIVE MODES ============ */
         case '1':
-            ModeManager::set(DriveMode::AUTONOMOUS);
-            watchdog.feed(); // Mode switch feeds watchdog
-            return true;
+            #if ENABLE_AUTONOMOUS_MODE
+                ModeManager::set(DriveMode::AUTONOMOUS);
+                watchdog.feed();
+                return true;
+            #else
+                Comms::system.println("ERROR: Autonomous mode not compiled");
+                return false;
+            #endif
 
         case '0':
             ModeManager::set(DriveMode::MANUAL);
-            watchdog.feed(); // Mode switch feeds watchdog
+            watchdog.feed();
             return true;
 
         default:

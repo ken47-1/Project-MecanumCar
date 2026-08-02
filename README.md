@@ -11,7 +11,7 @@ Bluetooth-controlled Mecanum wheel robot with autonomous obstacle avoidance. Ard
 - **Wheels**: 4× mecanum (45° rubber rollers)
 - **Sensors**: HC-SR04 front (servo-mounted, 5-position sweep) + HC-SR04 rear (static)
 - **Servo**: Micro servo (SG90 or compatible) for turret scanning
-- **Bluetooth**: HC-06 (9600 baud)
+- **Bluetooth**: HC-05 or HC-06 (9600 baud)
 - **Power**: 2× 18650 lithium cells in series
 - **Chassis**: Clear acrylic frame
 
@@ -21,22 +21,24 @@ This project supports both HC-05 and HC-06 Bluetooth modules.
 
 | Module | STATE Pin | Connection Detection |
 |--------|-----------|----------------------|
-| HC-05  | ✅ Yes (D2) | Detects bluetooth disconnection |
+| HC-05  | ✅ Yes (D2) | Detects bluetooth disconnection (disabled by default) |
 | HC-06  | ❌ No     | Relies on watchdog timeout only |
 
-**HC-05 users:** Connect the STATE pin to D2 and enable `ENABLE_HC05_STATE_PIN` in `Config.h` (**off by default**).
+**HC-05 users:** Connect STATE pin to D2. Set `ENABLE_HC05_STATE_PIN = 1` in `HardwareConfig.h`.
 
-**HC-06 users:** No change needed — `ENABLE_HC05_STATE_PIN` is **off by default**.
+**HC-06 users:** Leave `ENABLE_HC05_STATE_PIN = 0` in `HardwareConfig.h` (default).
 
 ### Pin Configuration
 
 | Component | Pins |
 |-----------|------|
-| Front Ultrasonic TRIG/ECHO | D8 / D9 |
-| Rear Ultrasonic TRIG/ECHO | D6 / D7 |
+| Front Ultrasonic TRIG/ECHO | D11 / D12 |
+| Rear Ultrasonic TRIG/ECHO | D8 / D9 |
 | Servo | D10 |
 | Bluetooth RX/TX | D0 / D1 (Hardware Serial) |
-| Bluetooth STATE (HC-05 only) | D2 (optional) |
+| Bluetooth STATE (HC-05 only) | D2 (disabled by default — enable in HardwareConfig.h for HC-05) |
+| Battery Monitor (Rev 2) | A0 |
+| Encoders (Rev 3) | D3, D4, D5, D6 |
 
 **Note:** On R3, disconnect Bluetooth when uploading (pins shared with USB). On R4, upload with Bluetooth connected (Serial1 is independent).
 
@@ -93,7 +95,7 @@ pio device monitor -b 9600
 
 ### 3. Pair Bluetooth
 
-- Phone Bluetooth settings → HC-06 (PIN usually 1234 or 0000)
+- Phone Bluetooth settings → HC-05 or HC-06 (PIN usually 1234 or 0000 for HC-06; 1234 for HC-05)
 - Android: Install [Bluetooth Electronics](https://www.keuwl.com/apps/bluetoothelectronics/)
 - Load custom panel from `archive/Bluetooth Electronics Panels/`
 
@@ -104,20 +106,39 @@ pio device monitor -b 9600
 
 ## Configuration
 
-**All settings in `include/config/Config.h`:**
+**All settings are split across three config files in `include/config/`:**
+- `DebugConfig.h` – Debug output toggles
+- `HardwareConfig.h` – Physical hardware presence (pins, sensors installed)
+- `Config.h` – Software behavior (thresholds, timing, speed, features)
 
-### Hardware Configuration
-- **Servo angles** — `SERVO_LEFT`, `SERVO_CENTER`, `SERVO_RIGHT`, etc. (degrees 0–180)
-- **Ultrasonic thresholds** — `FRONT_SLOW_ENTER_CM`, `FRONT_STOP_ENTER_CM`, etc.
-- **EMA filtering** — `ULTRASONIC_EMA_ALPHA_FRONT`, `ULTRASONIC_EMA_ALPHA_REAR` (0.3–0.5 recommended)
+### Hardware Configuration (HardwareConfig.h)
+- **Servo angles** — `SERVO_LEFT`, ...
+- **Physical presence flags** — `ENABLE_ULTRASONIC_FRONT`, `ENABLE_SERVO`, `ENABLE_BATTERY_MONITOR`, etc.
+
+### Software Configuration (Config.h)
+- **Feature flags** — `ENABLE_INPUT_WATCHDOG`, `ENABLE_OBSTACLE_AVOIDANCE`, `ENABLE_AUTONOMOUS_MODE`, etc.
+- **Ultrasonic thresholds** — `FRONT_SLOW_ENTER_CM`, ...
 
 ### Features
+
+**Input** (Config.h)
 - `ENABLE_INPUT_WATCHDOG` — Bluetooth keepalive (150ms timeout, default: **ON**)
-- `ENABLE_OBSTACLE_AVOIDANCE` — Front/rear veto logic (default: **OFF** — enable manually if desired)
-- `ENABLE_INPUT_BUTTONS` — Button-based control (default: **ON**)
-- `ENABLE_INPUT_JOYSTICK` — Joystick analog input (default: **OFF**)
-- `ENABLE_INPUT_SPEED_AUTHORITY` — Speed slider control (default: **ON**)
-- `ENABLE_HC05_STATE_PIN` — HC-05 STATE pin connection detection (default: **OFF** — enable manually for HC-05)
+- `ENABLE_INPUT_BUTTONS` — WASD/QE/ZC/JL button commands (default: **ON**)
+- `ENABLE_INPUT_JOYSTICK` — Joystick protocol support (default: **OFF** — future feature)
+- `ENABLE_INPUT_SPEED_AUTHORITY` — Speed slider (%+, %-, %R/%N/%F) (default: **ON**)
+
+**Navigation & Autonomy** (Config.h)
+- `ENABLE_DIRECTIONAL_SCAN` — Servo sweep for obstacle detection (default: **ON**)
+- `ENABLE_OBSTACLE_AVOIDANCE` — Front/rear veto logic with hysteresis (default: **ON**)
+- `ENABLE_AUTONOMOUS_MODE` — State machine with pathfinding (default: **OFF** — requires OBSTACLE_AVOIDANCE + DIRECTIONAL_SCAN)
+
+**Hardware Presence** (HardwareConfig.h)
+- `ENABLE_HC05_STATE_PIN` — HC-05 STATE pin connection detection (default: **OFF** — enable for HC-05)
+- `ENABLE_ULTRASONIC_FRONT` — Front HC-SR04 installed (default: **ON**)
+- `ENABLE_ULTRASONIC_REAR` — Rear HC-SR04 installed (default: **ON**)
+- `ENABLE_SERVO` — Servo for directional scan installed (default: **ON**)
+- `ENABLE_BATTERY_MONITOR` — 0-25V voltage sensor (default: **ON**)
+- `ENABLE_ENCODERS` — H206 optical encoders (default: **OFF** — future Rev 3 feature)
 
 ### Drive Behavior
 - **Speed** — `SPEED_USER_MIN` (200 per-mille), `SPEED_USER_MAX` (1000), `SPEED_USER_DEFAULT` (1000)
@@ -166,7 +187,7 @@ See `docs/Control_Protocol.md` for full protocol details and `docs/Code_Layout_S
 
 ## Safety Features
 
-- **Watchdog**: 150ms Bluetooth timeout → auto-stop
+- **Watchdog**: 150ms Bluetooth timeout, motion‑aware (active only when moving)
 - **Obstacle Detection**: Front/rear independent
   - Clear (>50cm): Full speed
   - Slow (40–50cm): 0.5× speed with hysteresis
@@ -182,7 +203,7 @@ See `docs/Control_Protocol.md` for full protocol details and `docs/Code_Layout_S
 4. Resumes driving
 5. If cornered: waits `AUTO_RETRY_WAIT_MS` (2 seconds), retries
 
-**Note:** Autonomous mode is **disabled by default** (`ENABLE_OBSTACLE_AVOIDANCE = 0` in Config.h). Enable it manually if desired. The user can still toggle autonomous mode at runtime with the `1` command regardless of this flag.
+**Note:** Autonomous mode is **disabled by default** (`ENABLE_AUTONOMOUS_MODE = 0` in Config.h). Enable it manually if desired. Obstacle avoidance itself is enabled by default.
 
 ## Architecture & Code
 
@@ -191,7 +212,7 @@ See `docs/Control_Protocol.md` for full protocol details and `docs/Code_Layout_S
 - `control/` — Motor control, ramping (400ms accel/200ms decel), autonomous state machine
 - `input/` — Bluetooth watchdog, button/joystick parsing, speed authority
 - `safety/` — Obstacle detection with EMA filtering, motion policy
-- `sensors/` — HC-SR04 wrapper, distance caching, directional servo scan
+- `sensors/` — HC-SR04 wrapper (`Ultrasonic`), servo sweep (`DirectionalScan`), battery voltage monitor (`BatteryVoltage`)
 
 ```mermaid
 flowchart TB
@@ -254,14 +275,15 @@ flowchart TB
 - Move closer to phone (HC-06 range ~10m)
 - Reduce electromagnetic interference
 - Try re-pairing
-- HC-05 users: ensure `ENABLE_HC05_STATE_PIN` is set correctly in `Config.h`
+- HC-05 users: ensure `ENABLE_HC05_STATE_PIN` is set correctly in `HardwareConfig.h`
+- HC-06 users: disable `ENABLE_HC05_STATE_PIN` in `HardwareConfig.h` (set to 0)
 
 **Obstacle avoidance not working**
 - Check sensor wires (HC-SR04 needs GND, 5V, TRIG, ECHO)
 - Watch serial output: `[SENS] Front: XX cm`
 - Adjust thresholds in `Config.h` if using different sensors
-- Enable `DEBUG_OA_REASON` in `Config.h` to debug veto logic
-- Obstacle avoidance is **disabled by default** (`ENABLE_OBSTACLE_AVOIDANCE = 0`)
+- Enable `DEBUG_OA_REASON` in `DebugConfig.h` to debug veto logic
+- Obstacle avoidance is **enabled by default** (`ENABLE_OBSTACLE_AVOIDANCE = 1`)
 
 **Servo doesn't scan**
 - Check D10 connection to servo control line
@@ -276,17 +298,28 @@ flowchart TB
 
 ## Debug Flags
 
-Enable in `Config.h`:
+Enable in `DebugConfig.h`:
 
 ```cpp
-#define DEBUG_ENABLED 1
-#define COMMS_DEBUG_MIRROR  1  // Echo commands to debug serial
-#define DEBUG_COMMS         0  // Log Bluetooth communication
-#define DEBUG_MOTOR_RAMP    0  // Print ramp calculations
-#define DEBUG_OA_REASON     1  // Print veto reasons
-#define DEBUG_OA_SCALE      1  // Print speed scaling
-#define DEBUG_SENSORS       1  // Print sensor readings
-#define DEBUG_WATCHDOG      1  // Print watchdog resets
+#define DEBUG_ENABLED  1   // Master toggle
+
+#if DEBUG_ENABLED   // EDIT BELOW
+    #define COMMS_DEBUG_MIRROR  1   // Echo commands to debug serial
+    #define DEBUG_COMMS         0   // Log Bluetooth communication
+    #define DEBUG_MOTOR_RAMP    0   // Print ramp calculations
+    #define DEBUG_OA_REASON     1   // Print veto reasons
+    #define DEBUG_OA_SCALE      1   // Print speed scaling
+    #define DEBUG_SENSORS       1   // Print sensor readings
+    #define DEBUG_WATCHDOG      1   // Print watchdog resets
+#else   // DO NOT EDIT BELOW
+    #define COMMS_DEBUG_MIRROR  0
+    #define DEBUG_COMMS         0
+    #define DEBUG_WATCHDOG      0
+    #define DEBUG_SENSORS       0
+    #define DEBUG_MOTOR_RAMP    0
+    #define DEBUG_OA_REASON     0
+    #define DEBUG_OA_SCALE      0
+#endif
 ```
 
 Then `pio device monitor -b 9600` to see output.

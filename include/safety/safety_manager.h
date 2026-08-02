@@ -20,6 +20,8 @@ namespace SafetyManager {
     
     /* --------- State Access --------- */
     SafetyState get_state();
+    float get_min_voltage();
+    void reset_min_voltage();
 
     /* --------- State Modification --------- */
     void set_input_loss(bool active);

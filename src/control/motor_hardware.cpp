@@ -1,7 +1,9 @@
 /* ==================== motor_hardware.cpp ==================== */
+#include "config/Config.h"
 #include "control/motor_hardware.h"
 
 /* =============== INCLUDES =============== */
+
 /* ============ PROJECT ============ */
 #include "control/motor_fault.h"
 #include "comms/comms.h"
@@ -27,7 +29,15 @@ bool MotorHardware::init() {
     }
 
     Comms::system.println("MotorHardware INIT");
-    Comms::system.println("- Driver: AFMS V2");
+    if (PWM_MAX == 4095) {
+        Comms::system.println("- PWM: 12-bit (AFMS V2)");
+    } else if (PWM_MAX == 255) {
+        Comms::system.println("- PWM: 8-bit (AFMS V1)");
+    } else {
+        Comms::system.print("- PWM_MAX: ");
+        Comms::system.println(PWM_MAX);
+    }
+
     return true;
 }
 
@@ -46,8 +56,19 @@ Adafruit_DCMotor* MotorHardware::get(MotorId id) {
 }
 
 void MotorHardware::release_all() {
-    if (_fl) { _fl->run(RELEASE); }
-    if (_fr) { _fr->run(RELEASE); }
-    if (_rl) { _rl->run(RELEASE); }
-    if (_rr) { _rr->run(RELEASE); }
+    if (_fl) {
+        _fl->run(RELEASE);
+    }
+    
+    if (_fr) {
+        _fr->run(RELEASE);
+    }
+
+    if (_rl) {
+        _rl->run(RELEASE);
+    }
+    
+    if (_rr) {
+        _rr->run(RELEASE);
+    }
 }

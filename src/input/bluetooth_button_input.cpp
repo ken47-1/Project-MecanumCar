@@ -1,9 +1,8 @@
 /* ==================== bluetooth_button_input.cpp ==================== */
+#include "config/Config.h"
 #include "input/bluetooth_button_input.h"
 
 /* =============== INCLUDES =============== */
-/* ============ PROJECT ============ */
-#include "config/Config.h"
 
 /* ============ CORE ============ */
 #include <Arduino.h>

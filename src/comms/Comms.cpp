@@ -1,9 +1,12 @@
 /* ==================== comms.cpp ==================== */
+#include "config/Config.h"
+#include "config/HardwareConfig.h"
+#include "config/DebugConfig.h"
 #include "comms/comms.h"
 
 /* =============== INCLUDES =============== */
+
 /* ============ PROJECT ============ */
-#include "config/Config.h"
 #include "comms/multi_print.h"
 
 /* ============ CORE ============ */

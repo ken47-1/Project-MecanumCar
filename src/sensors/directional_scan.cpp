@@ -1,11 +1,13 @@
 /* ==================== directional_scan.cpp ==================== */
 #include "sensors/directional_scan.h"
 
+#if ENABLE_DIRECTIONAL_SCAN
+
 /* =============== INCLUDES =============== */
+
 /* ============ PROJECT ============ */
-#include "config/Config.h"
 #include "comms/comms.h"
-#include "sensors/sensors.h"
+#include "sensors/ultrasonic.h"
 
 /* ============ CORE ============ */
 #include <Arduino.h>
@@ -13,9 +15,12 @@
 namespace DirectionalScan {
 
 /* =============== INTERNAL STATE =============== */
+/* ============ TRACKING STATE ============ */
 static ScanDir active_dir = ScanDir::FRONT;
+static unsigned long last_move_ms = 0;
+static ScanDir last_settled_dir = ScanDir::NONE;
 
-/* ========= SWEEP STATE ========= */
+/* ============ SWEEP STATE ============ */
 enum class SweepPhase : uint8_t {
     IDLE,
     SETTLING,   // waiting for servo to reach position
@@ -53,6 +58,27 @@ static ScanDir classify(const MotionCommand& cmd) {
     return ScanDir::FRONT;
 }
 
+/* ============ ANGLE MAPPING ============ */
+static int angle_of(ScanDir dir) {
+    switch (dir) {
+        case ScanDir::LEFT:        return SERVO_LEFT;
+        case ScanDir::FRONT_LEFT:  return SERVO_FRONT_LEFT;
+        case ScanDir::FRONT:       return SERVO_CENTER;
+        case ScanDir::FRONT_RIGHT: return SERVO_FRONT_RIGHT;
+        case ScanDir::RIGHT:       return SERVO_RIGHT;
+        default:                   return SERVO_CENTER;
+    }
+}
+
+/* ============ SETTLE TIME ============ */
+static unsigned long get_settle_time(ScanDir from, ScanDir to) {
+    if (from == ScanDir::NONE) return SCAN_SERVO_SETTLE_MS_90;
+    int diff = abs(angle_of(to) - angle_of(from));
+    if (diff <= 45) return SCAN_SERVO_SETTLE_MS_45;
+    if (diff <= 90) return SCAN_SERVO_SETTLE_MS_90;
+    return SCAN_SERVO_SETTLE_MS_135;
+}
+
 /* ============ DATA MAPPING ============ */
 static uint16_t* result_slot(uint8_t step) {
     switch (SWEEP_DIRS[step]) {
@@ -72,7 +98,7 @@ void reset() {
     sweep_phase  = SweepPhase::IDLE;
     sweep_step   = 0;
     sweep_result = {};
-    Sensors::scan_set_direction(active_dir);
+    Ultrasonic::scan_set_direction(active_dir);
 }
 
 void init() {
@@ -81,15 +107,18 @@ void init() {
     Comms::system.println("- Modes: Tracking, Sweep");
 }
 
-/* ============ MODE: TRACKING ============ */
+/* ============ TRACKING ============ */
 void update(const MotionCommand& cmd) {
-    /* Tracking mode only active when not performing a sweep */
-    if (sweep_phase != SweepPhase::IDLE) return;
+    if (sweep_phase != SweepPhase::IDLE) {
+        return;
+    }
 
     ScanDir next = classify(cmd);
     if (next != active_dir) {
+        last_settled_dir = active_dir;
         active_dir = next;
-        Sensors::scan_set_direction(active_dir);
+        Ultrasonic::scan_set_direction(active_dir);
+        last_move_ms = millis();
     }
 }
 
@@ -97,24 +126,28 @@ ScanDir current_scan_dir() {
     return active_dir;
 }
 
-/* ============ MODE: SWEEP ============ */
+/* ============ SWEEP ============ */
 void start_sweep() {
     sweep_step     = 0;
     sweep_result   = {};
     sweep_phase    = SweepPhase::SETTLING;
     sweep_timer_ms = millis();
 
-    Sensors::scan_set_direction(SWEEP_DIRS[0]);
+    Ultrasonic::scan_set_direction(SWEEP_DIRS[0]);
 }
 
 void update_sweep() {
-    if (sweep_phase == SweepPhase::IDLE || sweep_phase == SweepPhase::DONE) return;
+    if (sweep_phase == SweepPhase::IDLE || sweep_phase == SweepPhase::DONE) {
+        return;
+    }
 
     unsigned long now = millis();
 
     /* --- Step 1: Wait for Servo --- */
     if (sweep_phase == SweepPhase::SETTLING) {
-        if (now - sweep_timer_ms >= SCAN_SERVO_SETTLE_MS) {
+        ScanDir from = (sweep_step == 0) ? ScanDir::FRONT : SWEEP_DIRS[sweep_step - 1];
+        ScanDir to = SWEEP_DIRS[sweep_step];
+        if (now - sweep_timer_ms >= get_settle_time(from, to)) {
             sweep_phase = SweepPhase::READING;
         }
         return;
@@ -122,14 +155,12 @@ void update_sweep() {
 
     /* --- Step 2: Sample Distance --- */
     if (sweep_phase == SweepPhase::READING) {
-        /* Raw ping — servo just settled, EMA would blend in old-angle readings */
-        uint16_t dist = Sensors::get_front_distance_raw_cm();
+        uint16_t dist = Ultrasonic::get_front_distance_raw_cm();
         if (dist == 0) dist = 999;
 
         uint16_t* slot = result_slot(sweep_step);
         if (slot) *slot = dist;
 
-        /* Update clear mask if path is beyond stop threshold */
         if (dist > FRONT_STOP_ENTER_CM) {
             switch (SWEEP_DIRS[sweep_step]) {
                 case ScanDir::FRONT:       sweep_result.clear_mask |= SWEEP_CLEAR_FRONT;       break;
@@ -143,16 +174,14 @@ void update_sweep() {
 
         sweep_step++;
 
-        /* Check for completion */
         if (sweep_step >= SWEEP_COUNT) {
             sweep_phase = SweepPhase::DONE;
             active_dir  = ScanDir::FRONT;
-            Sensors::scan_set_direction(active_dir);
+            Ultrasonic::scan_set_direction(active_dir);
             return;
         }
 
-        /* Move to next position */
-        Sensors::scan_set_direction(SWEEP_DIRS[sweep_step]);
+        Ultrasonic::scan_set_direction(SWEEP_DIRS[sweep_step]);
         sweep_phase    = SweepPhase::SETTLING;
         sweep_timer_ms = millis();
     }
@@ -167,12 +196,19 @@ SweepResult get_sweep_result() {
     return sweep_result;
 }
 
+/* ============ STATUS ============ */
+bool is_settled() {
+    if (last_settled_dir == ScanDir::NONE) return true;
+    return (millis() - last_move_ms) >= get_settle_time(last_settled_dir, active_dir);
+}
+
 void set_angle(int angle) {
-    /* Manual override for alignment during autonomous spin */
     if (angle == 0) {
         active_dir = ScanDir::FRONT;
-        Sensors::scan_set_direction(ScanDir::FRONT);
+        Ultrasonic::scan_set_direction(ScanDir::FRONT);
     }
 }
 
 } // namespace DirectionalScan
+
+#endif // ENABLE_DIRECTIONAL_SCAN
