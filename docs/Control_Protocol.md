@@ -62,8 +62,9 @@ Single-character, no prefix.
 | `1` | Autonomous mode ON |
 | `0` | Autonomous mode OFF |
 | `^` | Force watchdog feed (master keepalive) |
+| `T` | Toggle arc turn mode (Fixed ↔ Speed-Dependent) |
 
-**Note:** HC-05 STATE pin (optional) detects physical disconnection. See `ENABLE_HC05_STATE_PIN` in Config.h.
+**Notes:** HC-05 STATE pin (optional) detects physical disconnection. See `ENABLE_HC05_STATE_PIN` in Config.h. `T` toggles between Fixed (always 0.5× rotation) and Speed-Dependent (tighter at low speed, wider at high) arc turning. Prints current mode.
 
 ---
 
@@ -88,8 +89,9 @@ Single-character, no prefix.
 
 - All commands are ASCII
 - Emergency stop overrides all motion and latches until reset with `?`
-- Soft stop (`X`) does not latch — also sent as idle heartbeat to feed watchdog
-- `^` is the master keepalive — explicitly feeds the watchdog without affecting motion
+- Soft stop (`X`) does not latch — also feeds watchdog
+- Any valid command feeds watchdog and prevents INPUT_LOSS
+- `^` is an explicit keepalive — feeds watchdog without affecting motion
 - Watchdog asserts input loss if no valid command arrives within timeout
 - Autonomous mode ON (`1`) and OFF (`0`) are stateless — safe to resend
 - Autonomous mode exits immediately on any manual input

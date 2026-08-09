@@ -56,7 +56,7 @@ All files must use the following comment scale to represent the logical tree. Se
 ## Header File Layout (`.h`)
 
 ```cpp
-/* ==================== ModuleName.h ==================== */
+/* ==================== module_name.h ==================== */
 #pragma once
 
 /* =============== INCLUDES =============== */
@@ -83,8 +83,8 @@ namespace ModuleName {
 ## Source File Layout (`.cpp`)
 
 ```cpp
-/* ==================== ModuleName.cpp ==================== */
-#include "path/ModuleName.h"
+/* ==================== module_name.cpp ==================== */
+#include "path/module_name.h"
 
 /* =============== INCLUDES =============== */
 /* ============ PROJECT ============ */

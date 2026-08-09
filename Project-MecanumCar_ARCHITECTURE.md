@@ -96,9 +96,9 @@ A professional-grade firmware for a hobbyist robot kit. The same hardware, now c
   - `get_rear_distance_raw_cm()` — Raw single ping
   - Dropout handling: `dist==0` treated as 999cm (assume clear)
 - `DirectionalScan` — Servo sweep logic and multi-angle distance measurement
-  - Sweeps 5 positions: LEFT (180°), FRONT_LEFT (135°), CENTER (90°), FRONT_RIGHT (45°), RIGHT (0°)
+  - Sweeps 5 positions: LEFT (0°), FRONT_LEFT (45°), CENTER (90°), FRONT_RIGHT (135°), RIGHT (180°) [mirrored mounting]
   - Returns `SweepResult` with distances and `clear_mask` (bitmask of clear directions)
-  - Settle time: 500ms per position (configurable `SCAN_SERVO_SETTLE_MS`)
+  - Dynamic settle times based on angle change: 45°=200ms, 90°=300ms, 135°=500ms (configurable)
 - `BatteryVoltage` — 0-25V voltage sensor reader (Rev 2)
   - `get_voltage()` — Returns filtered voltage (EMA alpha=0.1)
   - `is_low()` — Returns true if voltage below `BATTERY_WARNING_VOLTAGE`
@@ -243,16 +243,14 @@ Single-character commands sent one at a time or batched.
 - `%N` — Set normal step mode (5% increments)
 - `%F` — Set fine step mode (1% increments)
 
-**Joystick Input** (`@` prefix, optional)
-- `@1X<val>Y<val>;` — Joystick 1 (X = strafe, Y = forward/backward)
-- `@2X<val>Y<val>;` — Joystick 2 (X = rotation, Y = reserved)
-- Values: signed integers in range [-127, +127]
-
 **System** (single char)
 - `!` — Emergency stop (latching fault)
 - `?` — Reset / clear emergency stop
 - `1` — Autonomous mode ON
 - `0` — Autonomous mode OFF
+- `T` — Toggle arc turn mode (Fixed ↔ Speed-Dependent)
+  - **Fixed:** Always 0.5× rotation when moving
+  - **Speed-Dependent:** Tighter turns at low speed, wider arcs at high speed
 
 ### Feedback (Robot → App)
 
@@ -261,12 +259,12 @@ Single-character commands sent one at a time or batched.
 
 ### Watchdog Behavior
 
-- **Motion-aware:** Watchdog is only active when the robot is moving
+- **Always active:** Watchdog runs continuously, reset by any valid command.
 - **Timeout:** 150ms (`INPUT_WATCHDOG_TIMEOUT_MS`)
-- **Trigger:** No valid command received while motion is active
+- **Trigger:** No valid command received within timeout
 - **Action:** InputWatchdog asserts INPUT_LOSS → SafetyManager blocks motion
 - **Recovery:** Any valid command clears INPUT_LOSS and resumes operation
-- **Stopped state:** Watchdog is idle — no timeout when robot is stationary
+- **Idle command:** `X` is a soft stop that also resets the watchdog when the robot is idle.
 
 ---
 
@@ -301,14 +299,14 @@ Single-character commands sent one at a time or batched.
 
 | Zone | Distance | Action |
 |------|----------|--------|
-| Clear | >50cm | Full speed, no veto |
-| Slow | 40–50cm | Scale to 0.5× speed (`OA_SOFT_AUTHORITY`) |
-| Stop | 15–25cm | Block forward motion, force backoff if in motion |
+| Clear | >35cm | Full speed, no veto |
+| Slow | 30–35cm | Scale to 0.5× speed (`OA_SOFT_AUTHORITY`) |
+| Stop | 15–20cm | Block forward motion, force backoff if in motion |
 | Blocked | <15cm | Don't enter this state |
 
 **Hysteresis** (prevents oscillation at thresholds)
-- Slow zone: 40cm entry → 50cm exit
-- Stop zone: 15cm entry → 25cm exit
+- Slow zone: 30cm entry → 35cm exit
+- Stop zone: 15cm entry → 20cm exit
 
 **EMA Filtering**
 - Alpha = 0.35 (both front and rear)

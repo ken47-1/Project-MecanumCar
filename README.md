@@ -148,8 +148,8 @@ pio device monitor -b 9600
 - **Turn ratio** — `TURN_RATIO_NUM` / `TURN_RATIO_DEN` (1/2 default)
 
 ### Obstacle Avoidance
-- **Slow zone** — 40–50cm → 0.5× speed
-- **Stop zone** — 15–25cm → block forward or force backoff
+- **Slow zone** — 30–35cm → 0.5× speed
+- **Stop zone** — 15–20cm → block forward or force backoff
 - **Hold time** — `OA_CLEAR_HOLD_MS` (200ms hysteresis)
 - **Backoff speed** — `OA_BACKOFF_SPEED` (0.25f per-unit)
 
@@ -187,7 +187,7 @@ See `docs/Control_Protocol.md` for full protocol details and `docs/Code_Layout_S
 
 ## Safety Features
 
-- **Watchdog**: 150ms Bluetooth timeout, motion‑aware (active only when moving)
+- **Watchdog**: 150ms Bluetooth timeout, **always active**. Any valid command (`X`, `W`, `%+`, `T`, etc.) resets the timer. If no command arrives within 150ms, INPUT_LOSS is asserted and motors stop.
 - **Obstacle Detection**: Front/rear independent
   - Clear (>50cm): Full speed
   - Slow (40–50cm): 0.5× speed with hysteresis
