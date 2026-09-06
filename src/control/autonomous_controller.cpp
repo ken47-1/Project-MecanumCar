@@ -151,11 +151,15 @@ void update(InputWatchdog& watchdog) {
                     enter(AutoState::SPINNING);
                 } else {
                     // No forward path: check if rear escape is possible
+                #if ENABLE_ULTRASONIC_REAR
                     if (Ultrasonic::get_rear_distance_raw_cm() > REAR_SLOW_EXIT_CM) {
                         enter(AutoState::BACKING_UP);
                     } else {
                         enter(AutoState::STUCK);
                     }
+                #else
+                    enter(AutoState::STUCK);
+                #endif
                 }
             }
             break;
@@ -176,8 +180,14 @@ void update(InputWatchdog& watchdog) {
 
         /* ---------------- BACKING_UP ---------------- */
         case AutoState::BACKING_UP: {
-            // Reverse escape (max 1s or until rear is blocked)
-            if (millis() - timer_ms >= 1000 || Ultrasonic::get_rear_distance_raw_cm() <= REAR_STOP_ENTER_CM) {
+			bool rear_blocked = false;
+			#if ENABLE_ULTRASONIC_REAR
+				rear_blocked = (Ultrasonic::get_rear_distance_raw_cm() <= REAR_STOP_ENTER_CM);
+			#else
+				rear_blocked = false;  // assume clear
+			#endif
+            
+            if (millis() - timer_ms >= 1000 || rear_blocked) {
                 MotorControl::hard_stop();
                 DirectionalScan::start_sweep(); 
                 enter(AutoState::SCANNING);

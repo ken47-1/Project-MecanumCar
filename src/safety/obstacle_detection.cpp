@@ -76,8 +76,18 @@ void init() {
 }
 
 void update() {
+    #if ENABLE_ULTRASONIC_FRONT
     uint16_t front_dist = Ultrasonic::get_front_distance_raw_cm();
+    #else
+    // Return clear
+    uint16_t front_dist = 999;
+    #endif
+    #if ENABLE_ULTRASONIC_REAR
     uint16_t rear_dist = Ultrasonic::get_rear_distance_raw_cm();
+    #else
+    // Return clear
+    uint16_t rear_dist = 999;
+    #endif
 
     #if DEBUG_SENSORS
         char buf[50];
@@ -109,19 +119,29 @@ void update() {
 }
 
 Proximity get_front() {
+    #if ENABLE_ULTRASONIC_FRONT
     return {
         Ultrasonic::get_front_distance_cm(),
         front_in_slow,
         front_in_stop
     };
+    #else
+    // Return clear
+    return { 999, false, false };
+    #endif
 }
 
 Proximity get_rear() {
+    #if ENABLE_ULTRASONIC_REAR
     return {
         Ultrasonic::get_rear_distance_cm(),
         rear_in_slow,
         rear_in_stop
     };
+    #else
+    // Return clear
+    return { 999, false, false };
+    #endif
 }
 
 } // namespace ObstacleDetection

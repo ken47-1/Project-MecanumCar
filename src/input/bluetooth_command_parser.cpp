@@ -27,9 +27,6 @@ static uint16_t      manual_spin_limit_ms = 0;
 static float         manual_spin_dir      = 0.0f;
 static bool          manual_spin_active   = false;
 
-/* ============ ARC TURN MODE ============ */
-static bool arc_turn_speed_dependent = ARC_TURN_DEFAULT_MODE;
-
 /* =============== PUBLIC API =============== */
 void handle(InputWatchdog& watchdog) {
     MotionCommand cmd = {0.0f, 0.0f, 0.0f};
@@ -55,7 +52,6 @@ void handle(InputWatchdog& watchdog) {
             valid_input = true;
             continue;
         }
-
         
         /* --- Timed Spin Triggers --- */
         // SPEED: 600

@@ -10,7 +10,6 @@
 /* ============ INPUT FEATURES ============ */
 #define ENABLE_INPUT_WATCHDOG        1   // Auto-stop on lost connection
 #define ENABLE_INPUT_BUTTONS         1   // WASD/QE/ZC/JL commands
-#define ENABLE_INPUT_JOYSTICK        0   // Joystick protocol (future)
 #define ENABLE_INPUT_SPEED_AUTHORITY 1   // Speed slider (%+, %-, etc.)
 
 /* ============ NAVIGATION & AUTONOMY ============ */

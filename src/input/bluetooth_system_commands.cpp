@@ -5,6 +5,7 @@
 /* =============== INCLUDES =============== */
 /* ============ PROJECT ============ */
 #include "control/motor_fault.h"
+#include "safety/safety_manager.h"
 #include "input/input_watchdog.h"
 #include "control/mode_manager.h"
 #include "comms/comms.h"
@@ -13,7 +14,7 @@
 #include <Arduino.h>
 
 /* =============== INTERNAL STATE =============== */
-extern bool arc_turn_speed_dependent;
+bool arc_turn_speed_dependent = ARC_TURN_DEFAULT_MODE;
 
 /* =============== PUBLIC API =============== */
 namespace BluetoothSystemCommands {
@@ -27,7 +28,7 @@ bool handle_char(char c, InputWatchdog& watchdog) {
             return true;
 
         case '?':
-            MotorFault::reset();
+            SafetyManager::clear_emergency_stop();
             return true;
 
         case '^':
