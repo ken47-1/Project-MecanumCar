@@ -4,52 +4,51 @@
 
 Bluetooth-controlled Mecanum wheel robot with autonomous obstacle avoidance. Arduino Uno + Adafruit Motor Shield V2 (TB6612FNG motor driver + PCA9685 PWM controller), modular C++ firmware on the Arduino Framework, dual HC-SR04 ultrasonic sensors with servo turret, real-time safety subsystem with independent front/rear obstacle detection.
 
----
-
 ## Why This Project Exists
 
-This project is a complete rewrite of the **ZYC0044 Mini Mecanum Wheel Car** kit.
+This project is a complete rewrite of the **ZYC0044 Mini Mecanum Wheel Car** kit firmware.
 
 ### The Original Kit
 
 The kit (available from ZHIYI Technology) includes:
-- Basic Arduino code (`MINI_Mecanum_Wheel_Car.ino`) with simple forward/back/left/right control
-- A single HC-SR04 ultrasonic sensor for obstacle avoidance
-- HM-10 BLE (Bluetooth Low Energy) clone module for remote control
-- 74HC595 shift register + L293D motor driver
-- Tutorial document covering assembly, coding, and APP setup
+- A single Arduino sketch (`MINI_Mecanum_Wheel_Car.ino`) that controls the car with a L293D motor driver and a 74HC595 shift register.
+- One HC‑SR04 ultrasonic sensor for obstacle detection.
+- An HM‑10 BLE module for Bluetooth control.
+- Basic direction commands: Forward, Back, Left, Right, Turn Left, Turn Right, and Stop.
+- Speed adjustment via `+` and `-` characters (10‑step increments).
+- A simple obstacle‑avoidance routine: if an object is closer than 20 cm, the car backs up, turns left, and continues forward.
 
-### What Was Wrong With It
+### What Was Missing
 
-The original code worked, but had serious limitations:
-- **Blocking delays** — `delay()` everywhere, preventing real-time response
-- **Flat architecture** — everything in a single `.ino` file with global variables
-- **No safety subsystem** — no watchdog, no input loss detection, no emergency stop
-- **Limited obstacle avoidance** — only front sensor, no pathfinding, just "back up and turn"
-- **No autonomous mode** — only manual control via Bluetooth
-- **Single-board only** — designed for Arduino Uno R3, no R4 support
-- **No ramping** — motors start and stop abruptly
-- **Hardcoded values** — speeds, distances, and timing buried in code
+The original code works, but it has severe limitations for real‑world use:
+- **Blocking delays** – `delay()` stops all other tasks, making the car unresponsive during maneuvers.
+- **Flat structure** – everything is in one file with global variables; no modularity.
+- **No safety system** – no watchdog, no input loss detection, no emergency stop.
+- **Minimal obstacle logic** – only one sensor, no hysteresis, and a fixed 20 cm threshold.
+- **No autonomous navigation** – no pathfinding; the car only backs up and turns left.
+- **No motor ramping** – motors start and stop instantly, causing jerky motion.
+- **Single‑board only** – designed for Arduino Uno R3; no support for R4.
+- **Hardcoded values** – speeds, distances, and pin assignments are scattered and not configurable.
 
 ### The Rewrite
 
-This project rebuilds the kit from the ground up with:
-- **Modular C++ architecture** — clean separation of concerns (comms, control, input, safety, sensors)
-- **Non-blocking timing** — no `delay()`, all based on `millis()`
-- **Real-time safety** — watchdog, input loss detection, emergency stop
-- **Autonomous navigation** — state machine with pathfinding (MOVING → SCANNING → SPINNING → BACKING_UP → STUCK)
-- **Dual ultrasonic sensors** — front (servo-mounted, 5-position sweep) + rear
-- **Sensor filtering** — EMA filtering + hysteresis for reliable distance readings
-- **Motor ramping** — smooth acceleration and deceleration (400ms up, 200ms down)
-- **Dual-board support** — works on both Arduino Uno R3 and Uno R4 (Minima/WiFi)
-- **Configurable** — all settings split across three config files (`Config.h`, `HardwareConfig.h`, `DebugConfig.h`), no hardcoded values
-- **Real feedback** — speed gauge, step mode, debug output
+This firmware rebuilds the kit from the ground up with:
+- **Modular C++ architecture** – separate modules for communication, control, input, safety, and sensors.
+- **Non‑blocking timing** – all delays use `millis()`, so the car stays responsive.
+- **Real‑time safety** – a watchdog, input loss detection, and a latching emergency stop.
+- **Autonomous navigation** – a state machine with pathfinding (MOVING → SCANNING → SPINNING → BACKING_UP → STUCK).
+- **Dual ultrasonic sensors** – front (servo‑mounted, 5‑position sweep) and rear.
+- **Sensor filtering** – exponential moving average (EMA) and hysteresis for stable readings.
+- **Motor ramping** – smooth acceleration and deceleration (400 ms up, 200 ms down).
+- **Dual‑board support** – works on Arduino Uno R3 and R4 Minima/WiFi.
+- **Fully configurable** – all settings are in `Config.h`, `HardwareConfig.h`, and `DebugConfig.h`.
+- **Real feedback** – speed gauge, step mode, and debug output.
+
+The same hardware now delivers autonomous driving, reliable obstacle avoidance, and safe operation – all in a clean, maintainable codebase.
 
 ### The Result
 
 A professional-grade firmware for a hobbyist robot kit. The same hardware, now capable of autonomous driving, obstacle avoidance with pathfinding, and safe operation. Compatible with both Arduino Uno R3 and the newer R4 Series boards.
-
----
 
 ## Firmware Architecture
 
@@ -66,7 +65,7 @@ A professional-grade firmware for a hobbyist robot kit. The same hardware, now c
 - `MotorRamp` — Acceleration/deceleration curves (400ms accel, 200ms decel)
 - `MotorFault` — Fault state tracking and latching
 - `ModeManager` — Manual vs. Autonomous mode switching with state tracking
-- `AutonomousController` — Autonomous state machine (MOVING → SCANNING → SPINNING → BACKING_UP → STUCK) with servo sweep and pathfinding
+- `AutonomousController` — Autonomous state machine (MOVING -> SCANNING -> SPINNING -> BACKING_UP -> STUCK) with servo sweep and pathfinding
 - `MotionCommand` — Data structure for motion intents (speed, direction)
 
 **Input** (`src/input/`)
@@ -85,7 +84,7 @@ A professional-grade firmware for a hobbyist robot kit. The same hardware, now c
 - `MotionPolicy` — Decision logic for motion vetoes
   - Applies emergency stop override
   - Applies input loss (watchdog timeout) override
-  - Applies obstacle detection scaling (0.5× in slow zone, block in stop zone)
+  - Applies obstacle detection scaling (0.5x in slow zone, block in stop zone)
   - Independent front/rear logic — can reverse when front blocked
 
 **Sensors** (`src/sensors/`)
@@ -118,17 +117,16 @@ A professional-grade firmware for a hobbyist robot kit. The same hardware, now c
 ### Flowchart
 
 ```mermaid
-flowchart TB
+graph TB
     subgraph Input["Input Layer"]
         BT[BluetoothCommandParser]
         WD[InputWatchdog]
-        BA[BluetoothButtonInput]
-        SA[BluetoothSpeedAuthority]
     end
 
     subgraph Sensors["Sensor Layer"]
         US[Ultrasonic Sensors<br>HC-SR04 front/rear]
         DS[DirectionalScan<br>Servo sweep]
+        BV[BatteryVoltage]
     end
 
     subgraph Safety["Safety Layer"]
@@ -143,21 +141,23 @@ flowchart TB
         MH[MotorHardware<br>AFMS V2]
         AM[AutonomousController<br>State machine]
         MF[MotorFault]
+        MD[ModeManager]
     end
 
     BT --> MC
     WD --> SM
     US --> OD
     DS --> AM
+    BV --> SM
     OD --> MP
     SM --> MP
     MP --> MC
     AM --> MC
     MC --> MR
     MR --> MH
+    MF --> MC
+    MD --> AM
 ```
-
----
 
 ## Autonomous State Machine
 
@@ -196,13 +196,13 @@ flowchart TB
 ### Navigation Logic Flow
 
 1. MOVING: forward motion, continuous monitoring
-2. Obstacle detected → SCANNING: servo sweep
+2. Obstacle detected -> SCANNING: servo sweep
 3. Evaluate clear_mask from sweep results
-4. Pick direction with max distance → SPINNING: rotate to that direction
+4. Pick direction with max distance -> SPINNING: rotate to that direction
 5. Resume MOVING after rotation
-6. If all zones blocked → BACKING_UP: escape attempt
-7. BACKING_UP → SCANNING: retry
-8. If too many retries → STUCK: wait and retry
+6. If all zones blocked -> BACKING_UP: escape attempt
+7. BACKING_UP -> SCANNING: retry
+8. If too many retries -> STUCK: wait and retry
 
 ```mermaid
 flowchart TD
@@ -214,8 +214,6 @@ flowchart TD
     D -->|retry| B
     E -->|wait & retry| B
 ```
-
----
 
 ## Control Protocol
 
@@ -248,11 +246,11 @@ Single-character commands sent one at a time or batched.
 - `?` — Reset / clear emergency stop
 - `1` — Autonomous mode ON
 - `0` — Autonomous mode OFF
-- `T` — Toggle arc turn mode (Fixed ↔ Speed-Dependent)
-  - **Fixed:** Always 0.5× rotation when moving
+- `T` — Toggle arc turn mode (Fixed <-> Speed-Dependent)
+  - **Fixed:** Always 0.5x rotation when moving
   - **Speed-Dependent:** Tighter turns at low speed, wider arcs at high speed
 
-### Feedback (Robot → App)
+### Feedback (Robot -> App)
 
 - `*G[value]*` — Speed gauge; value is 0–1000 (PWM 0–4095 scaled)
 - `*%[mode]*` — Step mode; `Fine`, `Normal`, or `Rough`
@@ -262,17 +260,15 @@ Single-character commands sent one at a time or batched.
 - **Always active:** Watchdog runs continuously, reset by any valid command.
 - **Timeout:** 150ms (`INPUT_WATCHDOG_TIMEOUT_MS`)
 - **Trigger:** No valid command received within timeout
-- **Action:** InputWatchdog asserts INPUT_LOSS → SafetyManager blocks motion
+- **Action:** InputWatchdog asserts INPUT_LOSS -> SafetyManager blocks motion
 - **Recovery:** Any valid command clears INPUT_LOSS and resumes operation
 - **Idle command:** `X` is a soft stop that also resets the watchdog when the robot is idle.
-
----
 
 ## Safety Subsystem
 
 **Notes**
-- Obstacle avoidance is **enabled by default** (`ENABLE_OBSTACLE_AVOIDANCE = 1` in Config.h). Disable it manually if desired.
-- CONNECTION_LOSS only applies when `ENABLE_HC05_STATE_PIN` is enabled in `HardwareConfig.h` (**off by default**). Enable it manually if using HC-05.
+- Obstacle avoidance is enabled by default (`ENABLE_OBSTACLE_AVOIDANCE = 1` in Config.h). Disable it manually if desired.
+- CONNECTION_LOSS only applies when `ENABLE_HC05_STATE_PIN` is enabled in `HardwareConfig.h` (off by default). Enable it manually if using HC-05.
 
 ### Watchdog
 
@@ -285,28 +281,28 @@ Single-character commands sent one at a time or batched.
 ### Safety States (Priority Order)
 
 | Priority | State | Trigger | Recovery |
-|----------|-------|---------|----------|
+|---|---|---|---|
 | 1 | EMERGENCY_STOP | `!` command, battery critical, or hardware fault | Manual reset (`?`) |
 | 2 | CONNECTION_LOSS | HC-05 STATE pin LOW | Re-pair/reconnect |
 | 3 | INPUT_LOSS | Watchdog timeout while moving | Auto-resume on command |
 | 4 | CLEAR | Normal operation | — |
 
-**Note:** CONNECTION_LOSS only applies when `ENABLE_HC05_STATE_PIN` is enabled in `HardwareConfig.h` (**off by default**). Enable it manually if using HC-05.
+**Note:** CONNECTION_LOSS only applies when `ENABLE_HC05_STATE_PIN` is enabled in `HardwareConfig.h` (off by default). Enable it manually if using HC-05.
 
 ### Obstacle Detection
 
 **Thresholds** (configurable in Config.h)
 
 | Zone | Distance | Action |
-|------|----------|--------|
+|---|---|---|
 | Clear | >35cm | Full speed, no veto |
-| Slow | 30–35cm | Scale to 0.5× speed (`OA_SOFT_AUTHORITY`) |
+| Slow | 30–35cm | Scale to 0.5x speed (`OA_SOFT_AUTHORITY`) |
 | Stop | 15–20cm | Block forward motion, force backoff if in motion |
 | Blocked | <15cm | Don't enter this state |
 
 **Hysteresis** (prevents oscillation at thresholds)
-- Slow zone: 30cm entry → 35cm exit
-- Stop zone: 15cm entry → 20cm exit
+- Slow zone: 30cm entry -> 35cm exit
+- Stop zone: 15cm entry -> 20cm exit
 
 **EMA Filtering**
 - Alpha = 0.35 (both front and rear)
@@ -314,8 +310,8 @@ Single-character commands sent one at a time or batched.
 - Formula: `filtered = filtered + alpha * (raw - filtered)`
 
 **Independent Front/Rear**
-- Front blocked → can't drive forward, but can reverse
-- Rear blocked → can't reverse, but can drive forward
+- Front blocked -> can't drive forward, but can reverse
+- Rear blocked -> can't reverse, but can drive forward
 - Diagonal movement: both sensors must clear respective zones
 
 **Sensor Dropout**
@@ -332,8 +328,6 @@ Single-character commands sent one at a time or batched.
 - **Immediate stop:** `MotorControl::hard_stop()` — no ramping
 - Overrides all motion including autonomous mode
 - SafetyManager tracks state; MotorPolicy enforces block
-
----
 
 ## Refactor History
 
@@ -359,13 +353,14 @@ Single-character commands sent one at a time or batched.
 ```cpp
 // OLD CODE (BROKEN)
 if (Veto::has_reason(VetoReason::OA_FRONT)) {
-    cmd.forward = 0.0f;  // ❌ Kills motion at 40cm
+    cmd.forward = 0.0f;  // Kills motion at 40cm
 }
 // Then authority scaling applies:
 cmd.forward *= 0.5f;  // 0.0 * 0.5 = still 0.0
 ```
 
 **Solution:** Separate stop zones from slow zones
+
 - **Slow zone (40-50cm):** Only scale authority by 0.5x
 - **Stop zone (15-25cm):** Force backoff or block motion
 
@@ -376,8 +371,6 @@ cmd.forward *= 0.5f;  // 0.0 * 0.5 = still 0.0
 3. **Better Hysteresis** – Per-sensor timers, independent front/rear
 4. **Smarter Autonomous** – Added CORNERED and STUCK states
 5. **Simpler Integration** – InputWatchdog just reports state; MotorControl has one safety call
-
----
 
 ## Safety Quick Reference
 
@@ -391,6 +384,7 @@ cmd.forward *= 0.5f;  // 0.0 * 0.5 = still 0.0
 ### Key API Usage
 
 **Check Obstacles**
+
 ```cpp
 #include "safety/ObstacleDetection.h"
 
@@ -405,6 +399,7 @@ uint16_t distance = front.distance_cm;  // raw reading
 ```
 
 **Check Safety State**
+
 ```cpp
 #include "safety/SafetyManager.h"
 
@@ -413,6 +408,7 @@ SafetyState state = SafetyManager::get_state();
 ```
 
 **Apply Motion Safely**
+
 ```cpp
 #include "safety/MotionPolicy.h"
 
@@ -427,39 +423,33 @@ MotionCommand safe = MotionPolicy::apply_safety(cmd);
 
 ### Data Flow
 
-```
-Ultrasonic::get_front_distance_cm()
-    ↓
-ObstacleDetection::update()  [applies hysteresis]
-    ↓
-ObstacleDetection::get_front()  → Proximity struct
-    ↓
-MotionPolicy::apply_safety(cmd)  [reads obstacles + safety]
-    ↓
-MotorControl::apply_command(safe_cmd)
-    ↓
+```mermaid
+flowchart LR
+    US[Ultrasonic::get_front_distance_cm] --> OD[ObstacleDetection::update]
+    OD --> OD2[ObstacleDetection::get_front → Proximity]
+    OD2 --> MP[MotionPolicy::apply_safety]
+    MP --> MC[MotorControl::apply_command]
+    MC --> Motors
 Motors
 ```
 
 ### State Transitions (Autonomous)
 
-```
-MOVING ──[hit obstacle]──> SCANNING
-   ↑                           ↓
-   │                    [path found]
-   │                           ↓
-   └────[clear ahead]──── SPINNING
-                               ↓
-                        [all blocked]
-                               ↓
-                           BACKING_UP ──[max attempts]──> STUCK
-                               ↑                              ↓
-                               └──────[retry]────────────────┘
+```mermaid
+flowchart LR
+    A[MOVING] -->|hit obstacle| B[SCANNING]
+    B -->|path found| C[SPINNING]
+    C -->|rotation complete| A
+    B -->|all blocked| D[BACKING_UP]
+    D -->|max attempts| E[STUCK]
+    D -->|retry| B
+    E -->|wait & retry| B
 ```
 
 ### Debug Output
 
 Enable in `DebugConfig.h`:
+
 ```cpp
 #define DEBUG_ENABLED  1   // Master toggle
 
@@ -485,7 +475,7 @@ Enable in `DebugConfig.h`:
 ### Migration from Old Code
 
 | Old (Veto) | New (Safety Modules) |
-|------------|----------------------|
+|---|---|
 | `Veto::get_state()` | `SafetyManager::get_state()` + `ObstacleDetection::get_front()` |
 | `Veto::is_faulted()` | `SafetyManager::get_state() == SAFETY_EMERGENCY_STOP` |
 | `Veto::is_input_loss()` | `SafetyManager::get_state() == SAFETY_INPUT_LOSS` |
@@ -493,16 +483,16 @@ Enable in `DebugConfig.h`:
 | `MotorPolicy::intent_scale()` | Built into `MotionPolicy::apply_safety()` |
 | `MotorPolicy::apply_directional_veto()` | Built into `MotionPolicy::apply_safety()` |
 
----
-
 ## Configuration
 
 **Config files:** `include/config/` contains three files:
+
 - `DebugConfig.h` – Debug output toggles
 - `HardwareConfig.h` – Physical hardware presence (pins, sensors installed)
 - `Config.h` – Software behavior (thresholds, timing, speed, features)
 
 ### Hardware Pins
+
 - **Servo:** D10 (`SCAN_SERVO_PIN`)
 - **Front Ultrasonic:** TRIG D11, ECHO D12
 - **Rear Ultrasonic:** TRIG D8, ECHO D9
@@ -514,7 +504,7 @@ Enable in `DebugConfig.h`:
 ### Bluetooth Hardware
 
 | Module | Connection | Pins | Notes |
-|--------|------------|------|-------|
+|---|---|---|---|
 | HC-05 | UART | D0 (RX), D1 (TX) | Supports STATE pin for connection detection (disabled by default) |
 | HC-06 | UART | D0 (RX), D1 (TX) | No STATE pin — leave `ENABLE_HC05_STATE_PIN = 0` in HardwareConfig.h |
 
@@ -523,6 +513,7 @@ Enable in `DebugConfig.h`:
 - **Pairing PIN:** HC-06: 1234 or 0000; HC-05: 1234
 
 ### Servo Angles (degrees)
+
 - `SERVO_LEFT = 180`
 - `SERVO_FRONT_LEFT = 135`
 - `SERVO_CENTER = 90`
@@ -530,18 +521,21 @@ Enable in `DebugConfig.h`:
 - `SERVO_RIGHT = 0`
 
 ### Obstacle Thresholds (cm)
+
 - **Front Slow:** 40–50cm
 - **Front Stop:** 15–25cm
 - **Rear Slow:** 40–50cm
 - **Rear Stop:** 15–25cm
 
 ### EMA Filter
+
 - `ULTRASONIC_EMA_ALPHA_FRONT = 0.35`
 - `ULTRASONIC_EMA_ALPHA_REAR = 0.35`
 
 ### Feature Flags
 
 **Software Features** (Config.h)
+
 - `ENABLE_INPUT_WATCHDOG = 1` (ON)
 - `ENABLE_INPUT_BUTTONS = 1` (ON)
 - `ENABLE_INPUT_JOYSTICK = 0` (OFF)
@@ -551,6 +545,7 @@ Enable in `DebugConfig.h`:
 - `ENABLE_AUTONOMOUS_MODE = 0` (OFF)
 
 **Hardware Presence** (HardwareConfig.h)
+
 - `ENABLE_HC05_STATE_PIN = 0` (OFF — enable for HC-05)
 - `ENABLE_ULTRASONIC_FRONT = 1` (ON)
 - `ENABLE_ULTRASONIC_REAR = 1` (ON)
@@ -563,36 +558,44 @@ All modules are fully optional. Each can be enabled/disabled at compile time via
 ### Revision History
 
 **Rev 2 (Current)**
+
 - Double-deck chassis
 - Battery monitoring (A0)
 - New pin layout (ultrasonics moved to D8/D9 and D11/D12)
 
 **Rev 3 (Planned)**
-- 4× H206 optical encoders (D3, D4, D5, D6)
+
+- 4x H206 optical encoders (D3, D4, D5, D6)
 - Closed-loop PID speed control
 - Encoder-based odometry
 
 ### Watchdog & Input
+
 - `INPUT_WATCHDOG_TIMEOUT_MS = 150`
-    - **Motion-aware:** Watchdog active only when robot is moving
+
+- **Motion-aware:** Watchdog active only when robot is moving
 - `JOYSTICK_DEADZONE = 30.0`
 - `JOYSTICK_INPUT_MAX = 127.0`
 
 ### Servo & Scan
+
 - `SCAN_SERVO_SETTLE_MS = 500` (per position)
 
 ### Obstacle Avoidance
+
 - `OA_CLEAR_HOLD_MS = 200` (hysteresis hold time)
 - `OA_SOFT_AUTHORITY = 0.5` (speed scale in slow zone)
 - `OA_BACKOFF_SPEED = 0.25` (nudge-away backoff speed)
 
 ### Autonomous Mode
+
 - `AUTO_SPEED = 600` (per-mille, 60%)
 - `AUTO_RETRY_WAIT_MS = 2000` (wait before retrying when cornered)
 - `AUTO_SPIN_DIAGONAL_MS = 500` (45° rotation time)
 - `AUTO_SPIN_SIDE_MS = 1000` (90° rotation time)
 
 ### Battery Monitoring
+
 - `BATTERY_WARNING_VOLTAGE = 7.0V` — Warning threshold, prints alert
 - `BATTERY_CRITICAL_VOLTAGE = 6.0V` — Triggers emergency stop
 - `BATTERY_EMA_ALPHA = 0.1` — Smoothing filter for voltage readings
@@ -600,50 +603,58 @@ All modules are fully optional. Each can be enabled/disabled at compile time via
 - `BATTERY_REPORT_INTERVAL_MS = 2000` — Telemetry interval (2 seconds)
 - Tracks minimum voltage seen to catch sag under load
 - Telemetry format:
-  - `*V{voltage}V*` — Filtered voltage (e.g., `*V7.72V*`)
-  - `*M{voltage}V*` — Minimum voltage (e.g., `*M7.70V*`)
+
+- `*V{voltage}V*` — Filtered voltage (e.g., `*V7.72V*`)
+- `*M{voltage}V*` — Minimum voltage (e.g., `*M7.70V*`)
 - Warning cooldowns:
-  - `BATTERY_WARNING_COOLDOWN_MS = 10000` (10s between warnings)
-  - `BATTERY_CRITICAL_COOLDOWN_MS = 5000` (5s between critical alerts)
+
+- `BATTERY_WARNING_COOLDOWN_MS = 10000` (10s between warnings)
+- `BATTERY_CRITICAL_COOLDOWN_MS = 5000` (5s between critical alerts)
 
 ### Drive Behavior
+
 - **Speed:** MIN (200), MAX (1000), DEFAULT (1000) per-mille
 - **Speed steps:** ROUGH (100 = 10%), NORMAL (50 = 5%), FINE (10 = 1%)
 - **Motor ramp:** UP (400ms), DOWN (200ms)
 - **Turn ratio:** 1/2 (half speed on one side for turns) — constant defined but not currently used in motion mix
 
 ### Motor Output
+
 - `PWM_MAX = 4095` (AFMS V2, 12-bit)
 - (Commented: PWM_MAX = 255 for AFMS V1, 8-bit)
-
----
 
 ## Design Patterns
 
 ### Non-Blocking Architecture
+
 - No `delay()` anywhere in codebase
 - All timing based on `millis()`
 - Sensor reads polled on demand
 - Commands processed asynchronously
 
 ### Hardware Ownership
+
 - `MotorHardware` owns Motor Shield (singleton)
 - `DirectionalScan` owns servo
 - `Sensors` owns HC-SR04 instances
 - Other modules get refs/pointers only, never own hardware
 
 ### Threshold Tuning Over Compensation
+
 - Sensor inaccuracy (±2–4cm) handled by hysteresis zones + EMA filtering, not math
 - Simpler, more robust across environments
 - Scales without calibration
 
 ### Emergent Watchdog
+
 - No dedicated keepalive frame needed
 - Idle `X` command naturally resets timeout
 - Reduces protocol overhead
 
 ### Code Layout Standard
+
 Enforced via `docs/Code_Layout_Standard.md`:
+
 - `.h` files: `#pragma once`, INCLUDES, TYPES, API namespace (public only)
 - `.cpp` files: header, INCLUDES, INTERNAL STATE, INTERNAL HELPERS, PUBLIC API
 - One module per file
@@ -651,22 +662,18 @@ Enforced via `docs/Code_Layout_Standard.md`:
 - No `using namespace` in headers
 - Full qualification for cross-module calls
 
----
-
 ## Performance
 
 | Metric | Value |
-|--------|-------|
+|---|---|
 | Command latency | <10ms |
 | Motor response | <50ms |
 | Ultrasonic sampling | ~50ms per sensor |
-| Servo sweep | ~2.5 seconds (5 positions × 500ms settle) |
+| Servo sweep | ~2.5 seconds (5 positions x 500ms settle) |
 | Speed ramp | 400ms accel, 200ms decel |
 | Watchdog timeout | 150ms |
 | Max speed | ~1.5 m/s (depends on gearing and PWM_MAX scaling) |
 | PWM resolution | 12-bit (0–4095, AFMS V2) |
-
----
 
 ## Current Status
 
