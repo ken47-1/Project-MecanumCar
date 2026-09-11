@@ -36,7 +36,7 @@ This project supports both HC-05 and HC-06 Bluetooth modules.
 | Bluetooth RX/TX | D0 / D1 (Hardware Serial) |
 | Bluetooth STATE (HC-05 only) | D2 (disabled by default) |
 | Battery Monitor (Rev 2) | A0 |
-| Encoders (Rev 3) | D3, D4, D5, D6 |
+| Encoders (Rev 3) | D7, D6, D5, D4 |
 
 **Note**: On R3, disconnect Bluetooth when uploading (pins shared with USB). On R4, upload with Bluetooth connected (Serial1 is independent).
 
@@ -138,7 +138,6 @@ All settings are split across three config files in `include/config/`:
 
 - `ENABLE_INPUT_WATCHDOG` — Bluetooth keepalive (150ms timeout, default: ON)
 - `ENABLE_INPUT_BUTTONS` — WASD/QE/ZC/JL button commands (default: ON)
-- `ENABLE_INPUT_JOYSTICK` — Joystick protocol support (default: OFF)
 - `ENABLE_INPUT_SPEED_AUTHORITY` — Speed slider (%+, %-, %R/%N/%F) (default: ON)
 
 **Navigation & Autonomy** (Config.h)
@@ -146,6 +145,8 @@ All settings are split across three config files in `include/config/`:
 - `ENABLE_DIRECTIONAL_SCAN` — Servo sweep for obstacle detection (default: ON)
 - `ENABLE_OBSTACLE_AVOIDANCE` — Front/rear veto logic with hysteresis (default: ON)
 - `ENABLE_AUTONOMOUS_MODE` — State machine with pathfinding (default: OFF)
+
+**Note**: `ENABLE_AUTONOMOUS_MODE` requires `ENABLE_DIRECTIONAL_SCAN` to be enabled.
 
 **Hardware Presence** (HardwareConfig.h)
 
@@ -165,16 +166,17 @@ All settings are split across three config files in `include/config/`:
 
 ### Obstacle Avoidance
 
-- **Slow zone**: 30–35cm -> 0.5x speed
-- **Stop zone**: 15–20cm -> block forward or force backoff
-- **Hold time**: `OA_CLEAR_HOLD_MS` (200ms hysteresis)
-- **Backoff speed**: `OA_BACKOFF_SPEED` (0.25f per-unit)
+- **Front slow**: 30–35cm → 0.5x
+- **Front stop**: 15–20cm → block
+- **Rear slow**: 35–40cm → 0.5x
+- **Rear stop**: 15–20cm → block
+- **Hold time**: OA_CLEAR_HOLD_MS (200ms)
 
 ### Autonomous Mode
 
 - **Retry wait**: `AUTO_RETRY_WAIT_MS` (2000ms when cornered)
 - **Spin time**: `AUTO_SPIN_DIAGONAL_MS` (500ms 45°), `AUTO_SPIN_SIDE_MS` (1000ms 90°)
-- **Servo settle**: `SCAN_SERVO_SETTLE_MS` (500ms per position)
+- **Servo settle**: `45°=200ms, 90°=300ms, 135°=500ms`
 
 ## Controls
 
@@ -193,28 +195,25 @@ All settings are split across three config files in `include/config/`:
 - `%N` — Normal (5% steps)
 - `%F` — Fine (1% steps)
 
-### Joystick Input (optional)
-
-- `@1X<val>Y<val>;` — Joystick 1 (strafe + forward/backward)
-- `@2X<val>Y<val>;` — Joystick 2 (rotation)
-
 ### System
 
 - `!` — Emergency stop (latches)
 - `?` — Reset / clear E-stop
 - `0` — Manual mode
 - `1` — Autonomous mode
+- `T` — Arc turn toggle
+- `^` — Force watchdog feed
 
 ## Safety Features
 
-- **Watchdog**: 150ms Bluetooth timeout, always active. Any valid command (`X`, `W`, `%+`, `T`, etc.) resets the timer. If no command arrives within 150ms, INPUT_LOSS is asserted and motors stop.
-- **Obstacle Detection**: Front/rear independent
+- **Watchdog**: 150ms Bluetooth timeout, always active. Any valid command (`X`, `W`, `%+`, `T`, etc.) resets the timer. If no command arrives within 150ms, INPUT_LOSS is asserted and motors stop. auto-resumes on any valid command; only E-STOP latches.
 
-- Clear (>50cm): Full speed
-- Slow (40–50cm): 0.5x speed with hysteresis
-- Stop (<25cm): Block or backoff
-- **Sensor Dropout**: `dist==0` treated as clear (sensor glitch absorption)
-- **Independent Vetoes**: Front blocked does not equal rear blocked (can reverse when front is blocked)
+- **Obstacle Detection**: Front/rear independent
+  - Clear: >35cm front, >40cm rear — full speed
+  - Slow: 30–35cm front, 35–40cm rear — 0.5x speed with hysteresis
+  - Stop: 15–20cm — block motion in that direction
+  - **Sensor Dropout**: `dist==0` treated as clear (sensor glitch absorption)
+  - **Independent Vetoes**: Front blocked does not equal rear blocked (can reverse when front is blocked)
 
 ## Autonomous Mode
 
@@ -223,6 +222,7 @@ All settings are split across three config files in `include/config/`:
 3. Picks clearest path, rotates toward it
 4. Resumes driving
 5. If cornered: waits `AUTO_RETRY_WAIT_MS` (2 seconds), retries
+6. If `STUCK_MAX_RETRIES` (5) attempts fail, holds position until user intervention
 
 **Note**: Autonomous mode is disabled by default (`ENABLE_AUTONOMOUS_MODE = 0` in Config.h). Enable it manually if desired. Obstacle avoidance itself is enabled by default.
 
@@ -232,7 +232,7 @@ All settings are split across three config files in `include/config/`:
 
 - `comms/` — Bluetooth parser, serial output multiplexing
 - `control/` — Motor control, ramping (400ms accel/200ms decel), autonomous state machine
-- `input/` — Bluetooth watchdog, button/joystick parsing, speed authority
+- `input/` — Bluetooth watchdog, button parsing, speed authority
 - `safety/` — Obstacle detection with EMA filtering, motion policy
 - `sensors/` — HC-SR04 wrapper (`Ultrasonic`), servo sweep (`DirectionalScan`), battery voltage monitor (`BatteryVoltage`)
 

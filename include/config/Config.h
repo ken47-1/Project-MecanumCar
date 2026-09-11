@@ -17,7 +17,7 @@
 #define ENABLE_INPUT_SPEED_AUTHORITY 1   // Speed slider (%+, %-, etc.)
 
 /* ============ NAVIGATION & AUTONOMY ============ */
-#define ENABLE_DIRECTIONAL_SCAN     0   // Servo sweep for obstacle avoidance
+#define ENABLE_DIRECTIONAL_SCAN     1   // Servo sweep for obstacle avoidance
 #define ENABLE_OBSTACLE_AVOIDANCE   1   // ON by default – Requires ultrasonic front/rear
 #define ENABLE_AUTONOMOUS_MODE      0   // OFF by default – Requires OBSTACLE_AVOIDANCE + DIRECTIONAL_SCAN
 

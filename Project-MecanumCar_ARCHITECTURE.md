@@ -70,16 +70,20 @@ A professional-grade firmware for a hobbyist robot kit. The same hardware, now c
 
 **Input** (`src/input/`)
 - `BluetoothCommandParser` — Parses ASCII commands from Bluetooth Serial module
-- `BluetoothButtonInput` — Maps button commands (W/A/S/D/Q/E/Z/C/J/L/X) to motion intents
+- `BluetoothButtonInput` — Maps button commands (W/A/S/D/Q/E/Z/C/J/L) to motion intents
 - `BluetoothSpeedAuthority` — Handles speed step control (%+, %-, %R/%N/%F)
-- `BluetoothSystemCommands` — Handles system commands (!, ?, 0, 1)
-- `InputWatchdog` — Bluetooth keepalive; auto-stop on signal loss (150ms timeout)
+- `BluetoothSystemCommands` — Handles system commands (!, ?, 0, 1, T, ^)
+- `InputWatchdog` — Bluetooth keepalive; asserts INPUT_LOSS (150ms timeout)
 
 **Safety** (`src/safety/`)
-- `ObstacleDetection` — Sensor thresholds with EMA filtering (alpha=0.35) and hysteresis
-  - Front: SLOW (40-50cm), STOP (15-25cm)
-  - Rear: SLOW (40-50cm), STOP (15-25cm)
+- `ObstacleDetection` — Sensor thresholds with hysteresis
+  - Front: SLOW (30–35cm), STOP (15–20cm)
+  - Rear: SLOW (35–40cm), STOP (15–20cm)
   - Returns `Proximity` struct: `in_slow_zone`, `in_stop_zone`, `distance_cm`
+  - `distance_cm` is EMA-filtered. Zone flags use RAW.
+
+**Note**: `distance_cm` is EMA-fltered. Zone flags use RAW.
+
 - `SafetyManager` — System fault aggregation (emergency stop, input loss)
 - `MotionPolicy` — Decision logic for motion vetoes
   - Applies emergency stop override
@@ -108,7 +112,7 @@ A professional-grade firmware for a hobbyist robot kit. The same hardware, now c
 1. `BluetoothCommandParser::handle(input_watchdog)` — Receive and dispatch commands
 2. `input_watchdog.update()` — Check for signal loss (only when moving)
 3. `ObstacleDetection::update()` — Poll ultrasonic sensors, apply hysteresis
-4. `SafetyManager::update()` — Aggregate faults (E-STOP, INPUT_LOSS, BATTERY_CRITICAL)
+4. `SafetyManager::update()` — Aggregate faults (E-STOP, INPUT_LOSS, CONNECTION_LOSS, BATTERY_CRITICAL)
 5. `BatteryVoltage::report()` — Send voltage telemetry (every 2s)
 6. `AutonomousController::update(input_watchdog)` — Execute autonomous state machine
 7. `MotorRamp::update()` — Apply ramping curves
@@ -275,7 +279,7 @@ Single-character commands sent one at a time or batched.
 - **Timeout:** 150ms (`INPUT_WATCHDOG_TIMEOUT_MS`)
 - **Trigger:** No valid command received within timeout
 - **Action:** InputWatchdog notifies SafetyManager, which asserts INPUT_LOSS flag
-- **Result:** MotorPolicy blocks all motion until `?` (reset) command
+- **Result:** MotorPolicy blocks all motion until the next valid command
 - **Emergent design:** Idle `X` command resets timeout without requiring dedicated keepalive frame
 
 ### Safety States (Priority Order)
@@ -293,20 +297,21 @@ Single-character commands sent one at a time or batched.
 
 **Thresholds** (configurable in Config.h)
 
-| Zone | Distance | Action |
-|---|---|---|
-| Clear | >35cm | Full speed, no veto |
-| Slow | 30–35cm | Scale to 0.5x speed (`OA_SOFT_AUTHORITY`) |
-| Stop | 15–20cm | Block forward motion, force backoff if in motion |
-| Blocked | <15cm | Don't enter this state |
+| Zone | Front | Rear | Action |
+|---|---|---|---|
+| Clear | >35cm | >40cm | Full speed, no veto |
+| Slow | 30–35cm | 35–40cm | Scale to 0.5x speed (`OA_SOFT_AUTHORITY`) |
+| Stop | 15–20cm | 15–20cm | Block motion in that direction |
 
 **Hysteresis** (prevents oscillation at thresholds)
-- Slow zone: 30cm entry -> 35cm exit
-- Stop zone: 15cm entry -> 20cm exit
+- Front slow: 30cm entry → 35cm exit
+- Front stop: 15cm entry → 20cm exit
+- Rear slow: 35cm entry → 40cm exit
+- Rear stop: 15cm entry → 20cm exit
 
 **EMA Filtering**
 - Alpha = 0.35 (both front and rear)
-- Balances responsiveness vs. noise suppression
+- Applied to `distance_cm` only (telemetry). Zone flags use RAW readings.
 - Formula: `filtered = filtered + alpha * (raw - filtered)`
 
 **Independent Front/Rear**
@@ -339,10 +344,10 @@ Single-character commands sent one at a time or batched.
 - `include/control/AutonomousOA.h` / `src/control/AutonomousOA.cpp`
 
 **Created (New Architecture)**
-- `include/safety/ObstacleDetection.h` / `src/safety/ObstacleDetection.cpp`
-- `include/safety/SafetyManager.h` / `src/safety/SafetyManager.cpp`
-- `include/safety/MotionPolicy.h` / `src/safety/MotionPolicy.cpp`
-- `include/control/AutonomousController.h` / `src/control/AutonomousController.cpp`
+- `include/safety/obstacle_detection.h` / `src/safety/obstacle_detection.cpp`
+- `include/safety/safety_manager.h` / `src/safety/safety_manager.cpp`
+- `include/safety/motion_policy.h` / `src/safety/motion_policy.cpp`
+- `include/control/autonomous_controller.h` / `src/control/autonomous_controller.cpp`
 
 ### The Bug That Was Fixed
 
@@ -361,8 +366,8 @@ cmd.forward *= 0.5f;  // 0.0 * 0.5 = still 0.0
 
 **Solution:** Separate stop zones from slow zones
 
-- **Slow zone (40-50cm):** Only scale authority by 0.5x
-- **Stop zone (15-25cm):** Force backoff or block motion
+- **Slow zone (30–35cm):** Only scale authority by 0.5x
+- **Stop zone (15–20cm):** Force backoff or block motion
 
 ### New Architecture Benefits
 
@@ -390,12 +395,12 @@ cmd.forward *= 0.5f;  // 0.0 * 0.5 = still 0.0
 
 Proximity front = ObstacleDetection::get_front();
 if (front.in_stop_zone) {
-    // Too close! (within 15-25cm)
+    // Too close! (within 15-20cm)
 }
 if (front.in_slow_zone) {
-    // Approaching (within 40-50cm)
+    // Approaching (within 35-40cm)
 }
-uint16_t distance = front.distance_cm;  // raw reading
+uint16_t distance = front.distance_cm;  // EMA-filtered telemetry value
 ```
 
 **Check Safety State**
@@ -430,7 +435,6 @@ flowchart LR
     OD2 --> MP[MotionPolicy::apply_safety]
     MP --> MC[MotorControl::apply_command]
     MC --> Motors
-Motors
 ```
 
 ### State Transitions (Autonomous)
@@ -572,10 +576,6 @@ All modules are fully optional. Each can be enabled/disabled at compile time via
 ### Watchdog & Input
 
 - `INPUT_WATCHDOG_TIMEOUT_MS = 150`
-
-- **Motion-aware:** Watchdog active only when robot is moving
-- `JOYSTICK_DEADZONE = 30.0`
-- `JOYSTICK_INPUT_MAX = 127.0`
 
 ### Servo & Scan
 
