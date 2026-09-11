@@ -2,17 +2,27 @@
 #pragma once
 
 /* =============== INCLUDES =============== */
-/* ============ THIRD-PARTY ============ */
+
+/* ============ CONFIG ============ */
+#include "config/Config.h"
+
+/* ============ CORE ============ */
 #include <stdint.h>
+
+#if ENABLE_INPUT_SPEED_AUTHORITY
 
 /* =============== API =============== */
 namespace BluetoothSpeedAuthority {
-
-    // Handle a single incoming Bluetooth character.
-    // Returns true if the character was consumed. 
     bool handle_char(char c);
-
-    //Get current speed authority as PERCENT (0–100).
     float get_speed_scale();
-
 }
+
+#else
+
+/* =============== API =============== */
+namespace BluetoothSpeedAuthority {
+    inline bool handle_char(char) { return false; }
+    inline float get_speed_scale() { return 1.0f; }
+}
+
+#endif

@@ -46,11 +46,7 @@ void InputWatchdog::update() {
         return;
     }
 
-    /* 
-       Only push 'true' to SafetyManager. 
-       Let the 'feed()' function handle setting it to false 
-       to prevent logic racing.
-    */
+    // Only set true. feed() clears it.
     if (is_expired()) {
         SafetyManager::set_input_loss(true);
     }

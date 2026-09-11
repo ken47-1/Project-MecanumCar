@@ -2,22 +2,29 @@
 #include "input/bluetooth_command_parser.h"
 
 /* =============== INCLUDES =============== */
+
 /* ============ PROJECT ============ */
+
+/* ========= CONFIG ========= */
 #include "config/Config.h"
+
+/* ========= COMMS ========= */
 #include "comms/comms.h"
+
+/* ========= CONTROL ========= */
 #include "control/mode_manager.h"
 #include "control/motion_command.h"
 #include "control/motor_control.h"
+
+/* ========= INPUT ========= */
 #include "input/input_watchdog.h"
 #include "input/bluetooth_system_commands.h"
 #include "input/bluetooth_button_input.h"
 #include "input/bluetooth_speed_authority.h"
+
+/* ========= SENSORS ========= */
 #include "sensors/directional_scan.h"
 
-/* ============ CORE ============ */
-#include <Arduino.h>
-
-/* =============== PUBLIC API =============== */
 namespace BluetoothCommandParser {
 
 /* =============== INTERNAL STATE =============== */
@@ -34,7 +41,7 @@ void handle(InputWatchdog& watchdog) {
     bool motion_applied = false;
     bool explicit_stop  = false;
 
-    /* --------- Parsing Loop --------- */
+    /* --- Parsing Loop --- */
     while (Comms::available()) {
         char c = (char)Comms::read();
         if (c == '\n' || c == '\r' || c == ' ') continue;
@@ -52,21 +59,6 @@ void handle(InputWatchdog& watchdog) {
             valid_input = true;
             continue;
         }
-        
-        /* --- Timed Spin Triggers --- */
-        // SPEED: 600
-        /*
-        if (c == '[' || c == ']' || c == '{' || c == '}') {
-            manual_spin_active = true;
-            manual_spin_start_ms = millis();
-            manual_spin_dir = (c == '[' || c == '{') ? -1.0f : 1.0f;
-            manual_spin_limit_ms = (c == '[' || c == ']') ? AUTO_SPIN_DIAGONAL_MS : AUTO_SPIN_SIDE_MS;
-            
-            if (ModeManager::is_autonomous()) ModeManager::set(DriveMode::MANUAL);
-            valid_input = true;
-            continue;
-        }
-        */
 
         /* --- Speed Control --- */
         if (BluetoothSpeedAuthority::handle_char(c)) {
@@ -88,18 +80,16 @@ void handle(InputWatchdog& watchdog) {
         }
     }
 
-    /* ===== ARC TURNING ===== */
-    if (fabs(cmd.forward) > 0.1f && fabs(cmd.rotate) > 0.1f) {
-        if (arc_turn_speed_dependent) {
-            float speed_factor = fabs(cmd.forward);
-            float rotate_scale = SD_MAX_SCALE - (SD_MAX_SCALE - SD_MIN_SCALE) * speed_factor;
-            cmd.rotate *= rotate_scale;
-        } else {
-            cmd.rotate *= FIXED_ROTATE_SCALE;
-        }
+    /* --- ARC TURNING --- */
+    if (BluetoothSystemCommands::arc_turn_speed_dependent()) {
+        float speed_factor = fabs(cmd.forward);
+        float rotate_scale = SD_MAX_SCALE - (SD_MAX_SCALE - SD_MIN_SCALE) * speed_factor;
+        cmd.rotate *= rotate_scale;
+    } else {
+        cmd.rotate *= FIXED_ROTATE_SCALE;
     }
 
-    /* --------- Execution --------- */
+    /* --- Execution --- */
     if (!ModeManager::is_autonomous()) {
         
         /* --- Priority 1: Direct Manual Control --- */
@@ -129,7 +119,7 @@ void handle(InputWatchdog& watchdog) {
         }
     }
 
-    /* --------- Watchdog (Standard Feed) --------- */
+    /* --- Watchdog (Standard Feed) --- */
     if (valid_input) {
         watchdog.feed();
     }

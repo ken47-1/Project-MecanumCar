@@ -1,13 +1,15 @@
 /* ==================== battery_voltage.cpp ==================== */
-#include "config/Config.h"
-#include "config/HardwareConfig.h"
+#include "sensors/battery_voltage.h"
 
 #if ENABLE_BATTERY_MONITOR
 
 /* =============== INCLUDES =============== */
 
+/* ============ CONFIG ============ */
+#include "config/Config.h"
+#include "config/HardwareConfig.h"
+
 /* ============ PROJECT ============ */
-#include "sensors/battery_voltage.h"
 #include "safety/safety_manager.h"
 #include "comms/comms.h"
 

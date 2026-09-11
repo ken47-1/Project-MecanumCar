@@ -1,10 +1,12 @@
 /* ==================== comms.cpp ==================== */
-#include "config/Config.h"
-#include "config/HardwareConfig.h"
-#include "config/DebugConfig.h"
 #include "comms/comms.h"
 
 /* =============== INCLUDES =============== */
+
+/* ============ CONFIG ============ */
+#include "config/Config.h"
+#include "config/HardwareConfig.h"
+#include "config/DebugConfig.h"
 
 /* ============ PROJECT ============ */
 #include "comms/multi_print.h"
@@ -39,14 +41,11 @@ static void ensure_usb_serial() {
 }
 #endif
 
-/* ===== PUBLIC CHANNELS ===== */
-namespace Comms {
-Print& print  = comms_out;
-Print& system = system_out_impl;
-}
-
 /* =============== PUBLIC API =============== */
 namespace Comms {
+
+Print& print  = comms_out;
+Print& system = system_out_impl;    
 
 void begin() {
     bt_serial.begin(9600);

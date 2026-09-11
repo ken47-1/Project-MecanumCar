@@ -1,6 +1,8 @@
 /* ==================== HardwareConfig.h ==================== */
 #pragma once
 
+/* =============== INCLUDES =============== */
+/* ============ CORE ============ */
 #include <stdint.h>
 #include <Arduino.h>
 

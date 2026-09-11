@@ -1,20 +1,29 @@
 /* ==================== autonomous_controller.h ==================== */
 #pragma once
 
-#if ENABLE_AUTONOMOUS_MODE
+#include "config/Config.h"
 
-/* =============== INCLUDES =============== */
-/* ============ PROJECT ============ */
-#include "input/input_watchdog.h"
+/* =============== TYPES =============== */
+/* ============ FORWARD DECLS ============ */
+class InputWatchdog;
+
+#if ENABLE_AUTONOMOUS_MODE
 
 /* =============== API =============== */
 namespace AutonomousController {
-    /* --------- Lifecycle --------- */
+    /* ============ Lifecycle ============ */
     void reset();
-    
-    /* --------- Logic --------- */
-    // Note: Takes watchdog reference to handle automatic keep-alive
+
+    /* ============ Logic ============ */
     void update(InputWatchdog& watchdog);
 }
 
-#endif // ENABLE_AUTONOMOUS_MODE
+#else
+
+/* =============== API =============== */
+namespace AutonomousController {
+    inline void reset() {}
+    inline void update(InputWatchdog&) {}
+}
+
+#endif

@@ -1,13 +1,16 @@
 /* ==================== motor_ramp.cpp ==================== */
-#include "config/Config.h"
 #include "control/motor_ramp.h"
 
 /* =============== INCLUDES =============== */
+
+/* ============ CONFIG ============ */
+#include "config/Config.h"
 
 /* ============ CORE ============ */
 #include <Arduino.h>
 
 /* =============== INTERNAL STATE =============== */
+/* ============ STATIC VARS ============ */
 static MotorSet cur = {0.0f, 0.0f, 0.0f, 0.0f};
 static MotorSet tgt = {0.0f, 0.0f, 0.0f, 0.0f};
 static uint32_t last_update_ms = millis();
@@ -41,11 +44,10 @@ void reset() {
 }
 
 void set_target(const MotorSet& target) {
-    // clamp intent at subsystem boundary
     tgt.fl = constrain(target.fl, -1.0f, 1.0f);
     tgt.fr = constrain(target.fr, -1.0f, 1.0f);
     tgt.rl = constrain(target.rl, -1.0f, 1.0f);
-    tgt.rr = constrain(target.rr, -1.0f, 1.0f);
+    tgt.rr = constrain(target.rr, -1.0f, 1.0f);  // Clamp at the subsystem boundary
 }
 
 void update() {
@@ -61,7 +63,6 @@ void update() {
         return;
     }
 
-    // prevent stall spikes
     if (dt_ms > 100) dt_ms = 100;
 
     last_update_ms = now;

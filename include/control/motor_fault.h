@@ -20,14 +20,14 @@ enum class MotorFaultReason {
 
 /* =============== API =============== */
 namespace MotorFault {
-    /* --------- Lifecycle --------- */
+    /* ============ Lifecycle ============ */
     void init();
 
-    /* --------- Status --------- */
+    /* ============ Status ============ */
     bool active();
     MotorFaultReason reason();
 
-    /* --------- Control --------- */
+    /* ============ Control ============ */
     void trigger(MotorFaultReason reason);
     void reset();
 }

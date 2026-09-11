@@ -1,18 +1,16 @@
 /* ==================== mode_manager.cpp ==================== */
-#include "config/Config.h"
 #include "control/mode_manager.h"
 
 /* =============== INCLUDES =============== */
 
+/* ============ CONFIG ============ */
+#include "config/Config.h"
+
 /* ============ PROJECT ============ */
 #include "comms/comms.h"
 #include "control/motor_control.h"
-#if ENABLE_AUTONOMOUS_MODE
-    #include "control/autonomous_controller.h"
-#endif
-#if ENABLE_DIRECTIONAL_SCAN
-    #include "sensors/directional_scan.h"
-#endif
+#include "control/autonomous_controller.h"
+#include "sensors/directional_scan.h"
 
 /* ============ CORE ============ */
 #include <Arduino.h>
@@ -39,14 +37,10 @@ void set(DriveMode mode) {
     current_mode = mode;
 
     MotorControl::hard_stop();
-    #if ENABLE_DIRECTIONAL_SCAN
-        DirectionalScan::reset();
-    #endif
+    DirectionalScan::reset();
 
     if (mode == DriveMode::AUTONOMOUS) {
-        #if ENABLE_AUTONOMOUS_MODE
-            AutonomousController::reset();
-        #endif
+        AutonomousController::reset();
         Comms::system.println("Mode: AUTONOMOUS");
     } else {
         Comms::system.println("Mode: MANUAL");

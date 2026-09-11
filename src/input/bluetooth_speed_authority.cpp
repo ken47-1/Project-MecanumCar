@@ -1,22 +1,24 @@
 /* ==================== bluetooth_speed_authority.cpp ==================== */
-#include "config/Config.h"
 #include "input/bluetooth_speed_authority.h"
 
+#if ENABLE_INPUT_SPEED_AUTHORITY
+
 /* =============== INCLUDES =============== */
+
+/* ============ CONFIG ============ */
+#include "config/Config.h"
+
 /* ============ PROJECT ============ */
 #include "comms/comms.h"
 
 /* ============ CORE ============ */
 #include <Arduino.h>
 
+namespace BluetoothSpeedAuthority {
+
 /* =============== INTERNAL STATE =============== */
-// User-facing speed (0–1000)
-static uint16_t speed_user =
-    constrain(SPEED_USER_DEFAULT, SPEED_USER_MIN, SPEED_USER_MAX);
-
-// Step size in user units
+static uint16_t speed_user = constrain(SPEED_USER_DEFAULT, SPEED_USER_MIN, SPEED_USER_MAX);
 static uint16_t speed_step = SPEED_STEP_NORMAL;
-
 static bool awaiting_speed_cmd = false;
 
 /* =============== INTERNAL HELPERS =============== */
@@ -36,13 +38,8 @@ static void send_speed_feedback() {
     Comms::print.println("*");
 }
 
-namespace BluetoothSpeedAuthority {
-
+/* =============== PUBLIC API =============== */
 bool handle_char(char c) {
-#if !ENABLE_INPUT_SPEED_AUTHORITY
-    return false;
-#endif
-
     if (c == '%') {
         awaiting_speed_cmd = true;
         return true;
@@ -82,10 +79,11 @@ bool handle_char(char c) {
     return true;
 }
 
-/* =============== PUBLIC API =============== */
 // Normalized authority [0.0 – 1.0]
 float get_speed_scale() {
     return (float)speed_user / (float)SPEED_USER_MAX;
 }
 
 } // namespace BluetoothSpeedAuthority
+
+#endif // ENABLE_INPUT_SPEED_AUTHORITY

@@ -202,13 +202,6 @@ bool is_settled() {
     return (millis() - last_move_ms) >= get_settle_time(last_settled_dir, active_dir);
 }
 
-void set_angle(int angle) {
-    if (angle == 0) {
-        active_dir = ScanDir::FRONT;
-        Ultrasonic::scan_set_direction(ScanDir::FRONT);
-    }
-}
-
 } // namespace DirectionalScan
 
 #endif // ENABLE_DIRECTIONAL_SCAN

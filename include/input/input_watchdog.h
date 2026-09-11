@@ -5,26 +5,22 @@
 
 #if ENABLE_INPUT_WATCHDOG
 
-/* =============== INCLUDES =============== */
-
 /* ============ CORE ============ */
 #include <stdint.h>
 
 /* =============== API =============== */
-
 /* ============ CLASSES ============ */
 class InputWatchdog {
 public:
     explicit InputWatchdog(uint32_t timeout_ms);
 
-    /* --------- Control --------- */
+    /* ============ Control ============ */
     void feed();
     void reset();
     void enable(bool state);
-    void set_motion_state(bool active);
     void update();
 
-    /* --------- Status --------- */
+    /* ============ Status ============ */
     bool is_expired() const;
 
 private:

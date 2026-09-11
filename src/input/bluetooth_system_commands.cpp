@@ -1,8 +1,11 @@
 /* ==================== bluetooth_system_commands.cpp ==================== */
-#include "config/Config.h"
 #include "input/bluetooth_system_commands.h"
 
 /* =============== INCLUDES =============== */
+
+/* ============ CONFIG ============ */
+#include "config/Config.h"
+
 /* ============ PROJECT ============ */
 #include "control/motor_fault.h"
 #include "safety/safety_manager.h"
@@ -13,11 +16,21 @@
 /* ============ CORE ============ */
 #include <Arduino.h>
 
+namespace BluetoothSystemCommands {
+
 /* =============== INTERNAL STATE =============== */
-bool arc_turn_speed_dependent = ARC_TURN_DEFAULT_MODE;
+/* ============ STATIC VARS ============ */
+static bool arc_turn_speed_dependent_flag = ARC_TURN_DEFAULT_MODE;
 
 /* =============== PUBLIC API =============== */
-namespace BluetoothSystemCommands {
+/* ============ STATE ============ */
+bool arc_turn_speed_dependent() {
+    return arc_turn_speed_dependent_flag;
+}
+
+void set_arc_turn_speed_dependent(bool value) {
+    arc_turn_speed_dependent_flag = value;
+}    
 
 bool handle_char(char c, InputWatchdog& watchdog) {
     switch (c) {
@@ -43,9 +56,9 @@ bool handle_char(char c, InputWatchdog& watchdog) {
 
         /* ============ ARC TURN TOGGLE ============ */
         case 'T':
-            arc_turn_speed_dependent = !arc_turn_speed_dependent;
+            arc_turn_speed_dependent_flag = !arc_turn_speed_dependent_flag;
             Comms::system.print("Arc turn: ");
-            Comms::system.println(arc_turn_speed_dependent ? "Speed-Dependent" : "Fixed");
+            Comms::system.println(arc_turn_speed_dependent() ? "Speed-Dependent" : "Fixed");
             watchdog.feed();
             return true;            
 
@@ -57,6 +70,7 @@ bool handle_char(char c, InputWatchdog& watchdog) {
                 return true;
             #else
                 Comms::system.println("ERROR: Autonomous mode not compiled");
+                watchdog.feed();
                 return false;
             #endif
 

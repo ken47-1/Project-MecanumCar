@@ -18,7 +18,7 @@ Bluetooth-controlled Mecanum wheel robot with autonomous obstacle avoidance. Ard
 This project supports both HC-05 and HC-06 Bluetooth modules.
 
 | Module | STATE Pin | Connection Detection |
-|--------|-----------|----------------------|
+|---|---|---|
 | HC-05  | Yes (D2)  | Detects bluetooth disconnection (disabled by default) |
 | HC-06  | No        | Relies on watchdog timeout only |
 
@@ -29,7 +29,7 @@ This project supports both HC-05 and HC-06 Bluetooth modules.
 ### Pin Configuration
 
 | Component | Pins |
-|-----------|------|
+|---|---|
 | Front Ultrasonic TRIG/ECHO | D11 / D12 |
 | Rear Ultrasonic TRIG/ECHO | D8 / D9 |
 | Servo | D10 |
@@ -43,7 +43,7 @@ This project supports both HC-05 and HC-06 Bluetooth modules.
 ### Motor Mapping (AFMS V2)
 
 | Wheel | Motor Port |
-|-------|------------|
+|---|---|
 | Front Left | M1 |
 | Front Right | M4 |
 | Rear Left | M2 |
@@ -162,7 +162,6 @@ All settings are split across three config files in `include/config/`:
 - **Speed steps**: `SPEED_STEP_ROUGH` (10%), `SPEED_STEP_NORMAL` (5%), `SPEED_STEP_FINE` (1%)
 - **Motor ramp**: `RAMP_UP_TIME_MS` (400ms), `RAMP_DOWN_TIME_MS` (200ms)
 - **Autonomous speed**: `AUTO_SPEED` (600 per-mille)
-- **Turn ratio**: `TURN_RATIO_NUM` / `TURN_RATIO_DEN` (1/2 default)
 
 ### Obstacle Avoidance
 

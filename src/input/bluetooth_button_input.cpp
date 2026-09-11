@@ -1,8 +1,9 @@
 /* ==================== bluetooth_button_input.cpp ==================== */
-#include "config/Config.h"
 #include "input/bluetooth_button_input.h"
 
 /* =============== INCLUDES =============== */
+/* ============ CONFIG ============ */
+#include "config/Config.h"
 
 /* ============ CORE ============ */
 #include <Arduino.h>
@@ -11,10 +12,6 @@
 namespace BluetoothButtonInput {
 
 bool handle_char(char c, MotionCommand& out) {
-#if !ENABLE_INPUT_BUTTONS
-    return false;
-#endif
-
     switch (c) {
         // Forward / Backward
         case 'W': out.forward += 1.0f; break;

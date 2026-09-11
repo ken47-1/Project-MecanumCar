@@ -1,10 +1,12 @@
 /* ==================== obstacle_detection.cpp ==================== */
-#include "config/Config.h"
 #include "safety/obstacle_detection.h"
 
 #if ENABLE_OBSTACLE_AVOIDANCE
 
 /* =============== INCLUDES =============== */
+
+/* ============ CONFIG ============ */
+#include "config/Config.h"
 
 /* ============ PROJECT ============ */
 #include "sensors/ultrasonic.h"
@@ -76,12 +78,7 @@ void init() {
 }
 
 void update() {
-    #if ENABLE_ULTRASONIC_FRONT
     uint16_t front_dist = Ultrasonic::get_front_distance_raw_cm();
-    #else
-    // Return clear
-    uint16_t front_dist = 999;
-    #endif
     #if ENABLE_ULTRASONIC_REAR
     uint16_t rear_dist = Ultrasonic::get_rear_distance_raw_cm();
     #else
@@ -95,13 +92,13 @@ void update() {
         Comms::system.println(buf);
     #endif
 
-    /* ===== FRONT ZONES ===== */
+    /* --- FRONT ZONES --- */
     update_zone(front_dist, FRONT_SLOW_ENTER_CM, FRONT_SLOW_EXIT_CM,
                 front_in_slow, front_last_clear_slow_ms);
     update_zone(front_dist, FRONT_STOP_ENTER_CM, FRONT_STOP_EXIT_CM,
                 front_in_stop, front_last_clear_stop_ms);
 
-    /* ===== REAR ZONES ===== */
+    /* --- REAR ZONES --- */
     update_zone(rear_dist, REAR_SLOW_ENTER_CM, REAR_SLOW_EXIT_CM,
                 rear_in_slow, rear_last_clear_slow_ms);
     update_zone(rear_dist, REAR_STOP_ENTER_CM, REAR_STOP_EXIT_CM,
@@ -119,16 +116,11 @@ void update() {
 }
 
 Proximity get_front() {
-    #if ENABLE_ULTRASONIC_FRONT
     return {
         Ultrasonic::get_front_distance_cm(),
         front_in_slow,
         front_in_stop
     };
-    #else
-    // Return clear
-    return { 999, false, false };
-    #endif
 }
 
 Proximity get_rear() {

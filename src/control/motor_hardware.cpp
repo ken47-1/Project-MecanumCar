@@ -1,8 +1,10 @@
 /* ==================== motor_hardware.cpp ==================== */
-#include "config/Config.h"
 #include "control/motor_hardware.h"
 
 /* =============== INCLUDES =============== */
+
+/* ============ CONFIG ============ */
+#include "config/Config.h"
 
 /* ============ PROJECT ============ */
 #include "control/motor_fault.h"

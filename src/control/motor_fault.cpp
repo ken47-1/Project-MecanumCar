@@ -1,8 +1,10 @@
 /* ==================== motor_fault.cpp ==================== */
-#include "config/Config.h"
 #include "control/motor_fault.h"
 
 /* =============== INCLUDES =============== */
+
+/* ============ CONFIG ============ */
+#include "config/Config.h"
 
 /* ============ PROJECT ============ */
 #include "control/motor_control.h"
@@ -59,6 +61,8 @@ MotorFaultReason reason() {
 void trigger(MotorFaultReason reason) {
     /* Prevent re-triggering if already faulted */
     if (fault_active) {
+        Comms::system.print(">>> Fault ignored (already active): ");
+        Comms::system.println(fault_to_string(reason));
         return;
     }
 
@@ -78,11 +82,7 @@ void trigger(MotorFaultReason reason) {
 }
 
 void reset() {
-    /* 
-       Clear internal state. 
-       SafetyManager will detect this change in its next update() 
-       and allow motion again.
-    */
+    // SafetyManager reads this on its next update and allows motion again.
     fault_active = false;
     fault_reason = MotorFaultReason::NONE;
     

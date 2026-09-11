@@ -1,14 +1,16 @@
 /* ==================== bluetooth_system_commands.h ==================== */
 #pragma once
 
-/* ==================== FORWARD DECLARATIONS ==================== */
+/* =============== TYPES =============== */
+/* ============ FORWARD DECLS ============ */
 class InputWatchdog;
-
-/* =============== INTERNAL STATE =============== */
-extern bool arc_turn_speed_dependent;
 
 /* =============== API =============== */
 namespace BluetoothSystemCommands {
-    // Returns true if the character was a system command and consumed
+    /* ============ State ============ */
+    bool arc_turn_speed_dependent();
+    void set_arc_turn_speed_dependent(bool value);
+
+    /* ============ Input ============ */
     bool handle_char(char c, InputWatchdog& watchdog);
 }

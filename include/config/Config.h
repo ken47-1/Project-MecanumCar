@@ -1,8 +1,12 @@
 /* ==================== Config.h ==================== */
 #pragma once
 
-#include <stdint.h>
+/* =============== INCLUDES =============== */
+/* ============ PROJECT ============ */
 #include "HardwareConfig.h"
+
+/* ============ CORE ============ */
+#include <stdint.h>
 
 /* =============== SOFTWARE FEATURES =============== */
 /* These control what the firmware does, not what hardware is present. */
@@ -13,7 +17,7 @@
 #define ENABLE_INPUT_SPEED_AUTHORITY 1   // Speed slider (%+, %-, etc.)
 
 /* ============ NAVIGATION & AUTONOMY ============ */
-#define ENABLE_DIRECTIONAL_SCAN     1   // Servo sweep for obstacle avoidance
+#define ENABLE_DIRECTIONAL_SCAN     0   // Servo sweep for obstacle avoidance
 #define ENABLE_OBSTACLE_AVOIDANCE   1   // ON by default – Requires ultrasonic front/rear
 #define ENABLE_AUTONOMOUS_MODE      0   // OFF by default – Requires OBSTACLE_AVOIDANCE + DIRECTIONAL_SCAN
 
@@ -88,15 +92,6 @@ constexpr unsigned long BATTERY_CRITICAL_COOLDOWN_MS = 5000;   // 5s between cri
 /* 150ms = 3 missed packets before INPUT_LOSS is asserted */
 constexpr unsigned long INPUT_WATCHDOG_TIMEOUT_MS = 150;
 
-/* ============ BLUETOOTH PARSER ============ */
-/* Max characters to process per loop to prevent blocking */
-constexpr uint8_t BT_PARSER_MAX_CHARS = 50;
-
-/* ============ JOYSTICK ============ */
-// Unused (to be implemented later)
-constexpr float JOYSTICK_DEADZONE  = 30.0f;
-constexpr float JOYSTICK_INPUT_MAX = 127.0f;
-
 /* =============== CONTROL =============== */
 
 /* ============ ARC TURNING ============ */
@@ -115,7 +110,6 @@ constexpr float SD_MIN_SCALE = 0.3f;   // At full speed
 constexpr float SD_MAX_SCALE = 0.7f;   // At low speed
 
 /* ============ OBSTACLE AVOIDANCE ============ */
-constexpr unsigned long OA_ACTION_HOLD_MS     = 500;    // How long to hold action (ms)
 constexpr unsigned long OA_CLEAR_HOLD_MS      = 200;    // hold before clearing a zone flag
 constexpr float         OA_SOFT_AUTHORITY     = 0.5f;   // speed scale in slow zone
 
@@ -125,6 +119,9 @@ constexpr uint16_t AUTO_SPEED = 600;
 
 /* How long to wait before retrying when all directions are blocked */
 constexpr unsigned long AUTO_RETRY_WAIT_MS = 2000;
+
+/* How many retries before stopping */
+constexpr uint8_t STUCK_MAX_RETRIES = 5;
 
 /* Time required to rotate the chassis (milliseconds) */
 /* ONLY USED IF #define ENABLE_ENCODERS IS DISABLED */
@@ -163,11 +160,6 @@ constexpr uint16_t SPEED_STEP_FINE   = 10;   // 1.0%
 */
 constexpr uint16_t RAMP_UP_TIME_MS   = 400;
 constexpr uint16_t RAMP_DOWN_TIME_MS = 200;
-
-/* ------ Turn Rate ------ */
-constexpr int16_t TURN_RATIO_NUM = 1;
-constexpr int16_t TURN_RATIO_DEN = 2;
-static_assert(TURN_RATIO_DEN > 0, "TURN_RATIO_DEN must be > 0");
 
 /* =============== HARDWARE =============== */
 

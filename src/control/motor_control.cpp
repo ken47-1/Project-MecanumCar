@@ -1,10 +1,13 @@
 /* ==================== motor_control.cpp ==================== */
-#include "config/Config.h"
 #include "control/motor_control.h"
 
 /* =============== INCLUDES =============== */
 
+/* ============ CONFIG ============ */
+#include "config/Config.h"
+
 /* ============ PROJECT ============ */
+#include "control/motor_fault.h"
 #include "control/motor_ramp.h"
 #include "safety/motion_policy.h"
 #include "safety/safety_manager.h"
@@ -52,8 +55,10 @@ static void drive_one_motor(Adafruit_DCMotor* m, float value) {
 /* =============== PUBLIC API =============== */
 void init(MotorHardware& hw) {
     if (!hw.ready()) {
+        MotorFault::trigger(MotorFaultReason::INTERNAL_ERROR);
         return;
     }
+
     motor_fl = hw.get(MotorId::FL);
     motor_fr = hw.get(MotorId::FR);
     motor_rl = hw.get(MotorId::RL);
@@ -75,9 +80,8 @@ void hard_stop() {
     motors_stopped = true;
 }
 
-/* ===== INPUT ===== */
+/* ------ INPUT ------ */
 void apply_command(const MotionCommand& cmd) {
-    // Fast path on zero command
     if (cmd.forward == 0.0f && cmd.strafe == 0.0f && cmd.rotate == 0.0f) {
         hard_stop();
         return;
@@ -85,11 +89,11 @@ void apply_command(const MotionCommand& cmd) {
 
     motors_stopped = false;
     
-    /* ===== SAFETY POLICY ===== */
+    /* --- SAFETY POLICY --- */
     // All safety checks, obstacle avoidance, and authority scaling in one place
     MotionCommand safe_cmd = MotionPolicy::apply_safety(cmd);
 
-    /* ===== MECANUM MIX ===== */
+    /* --- MECANUM MIX --- */
     float fl = safe_cmd.forward + safe_cmd.strafe + safe_cmd.rotate;
     float fr = safe_cmd.forward - safe_cmd.strafe - safe_cmd.rotate;
     float rl = safe_cmd.forward - safe_cmd.strafe + safe_cmd.rotate;
@@ -106,7 +110,7 @@ void apply_command(const MotionCommand& cmd) {
     MotorRamp::set_target({fl, fr, rl, rr});
 }
 
-/* ===== UPDATE LOOP ===== */
+/* ------ UPDATE LOOP ------ */
 void update() {
     if (motors_stopped) {
         return;
@@ -125,7 +129,9 @@ void update() {
 
     // HARD STOP on emergency or input loss
     SafetyState safety = SafetyManager::get_state();
-    if (safety == SAFETY_EMERGENCY_STOP || safety == SAFETY_INPUT_LOSS) {
+    if (safety == SAFETY_EMERGENCY_STOP ||
+        safety == SAFETY_INPUT_LOSS ||
+        safety == SAFETY_CONNECTION_LOSS) {
         hard_stop();
         return;
     }

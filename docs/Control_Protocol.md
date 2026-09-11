@@ -14,7 +14,7 @@ App ⇄ Robot Communication Contract
 ```
 
 | Prefix | Domain |
-|--------|--------|
+|---|---|
 | (none) | Movement / system |
 | `%`    | Speed / step mode |
 
@@ -26,7 +26,7 @@ App ⇄ Robot Communication Contract
 Single-character, no prefix.
 
 | Command | Action |
-|---------|--------|
+|---|---|
 | `W` | Forward |
 | `S` | Backward |
 | `A` | Strafe left |
@@ -43,7 +43,7 @@ Single-character, no prefix.
 ### Speed Control (`%` prefix)
 
 | Command | Action |
-|---------|--------|
+|---|---|
 | `%+` | Increase speed |
 | `%-` | Decrease speed |
 | `%F` | Fine step mode |
@@ -55,7 +55,7 @@ Single-character, no prefix.
 ### System
 
 | Command | Action |
-|---------|--------|
+|---|---|
 | `X` | Soft stop (non-latching) |
 | `!` | Emergency stop (latching fault) |
 | `?` | Reset fault |
@@ -71,7 +71,7 @@ Single-character, no prefix.
 ## Feedback (Robot → App)
 
 | Frame | Description |
-|-------|-------------|
+|---|---|
 | `*G[value]*` | Speed gauge — value is `0–1000` |
 | `*%[mode]*` | Step mode — `Fine`, `Normal`, or `Rough` |
 | `*V[value]V*` | Filtered battery voltage — e.g., `*V7.72V*` |

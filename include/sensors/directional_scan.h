@@ -3,15 +3,13 @@
 
 #include "config/Config.h"
 
-#if ENABLE_DIRECTIONAL_SCAN
-
 /* =============== INCLUDES =============== */
-
 /* ============ PROJECT ============ */
 #include "control/motion_command.h"
 #include "sensors/ultrasonic.h"
 
 /* =============== TYPES =============== */
+/* ============ STRUCTS ============ */
 struct SweepResult {
     uint16_t front_left;
     uint16_t front;
@@ -27,24 +25,34 @@ constexpr uint8_t SWEEP_CLEAR_FRONT_RIGHT = (1 << 2);
 constexpr uint8_t SWEEP_CLEAR_LEFT        = (1 << 3);
 constexpr uint8_t SWEEP_CLEAR_RIGHT       = (1 << 4);
 
+#if ENABLE_DIRECTIONAL_SCAN
+
 /* =============== API =============== */
 namespace DirectionalScan {
-    /* --------- Lifecycle --------- */
     void init();
     void reset();
-
-    /* --------- Tracking --------- */
     void update(const MotionCommand& cmd);
     ScanDir current_scan_dir();
-
-    /* --------- Sweep --------- */
     void start_sweep();
     bool sweep_ready();
     SweepResult get_sweep_result();
     void update_sweep();
-
-    /* --------- Status --------- */
     bool is_settled();
 }
 
-#endif // ENABLE_DIRECTIONAL_SCAN
+#else
+
+/* =============== API =============== */
+namespace DirectionalScan {
+    inline void init() {}
+    inline void reset() {}
+    inline void update(const MotionCommand&) {}
+    inline ScanDir current_scan_dir() { return ScanDir::NONE; }
+    inline void start_sweep() {}
+    inline bool sweep_ready() { return false; }
+    inline SweepResult get_sweep_result() { return {}; }
+    inline void update_sweep() {}
+    inline bool is_settled() { return true; }
+}
+
+#endif

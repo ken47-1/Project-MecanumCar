@@ -1,11 +1,13 @@
 /* ==================== ultrasonic.cpp ==================== */
-#include "config/Config.h"
-#include "config/HardwareConfig.h"
 #include "sensors/ultrasonic.h"
 
 #if ENABLE_ULTRASONIC_FRONT || ENABLE_ULTRASONIC_REAR
 
 /* =============== INCLUDES =============== */
+
+/* ============ CONFIG ============ */
+#include "config/Config.h"
+#include "config/HardwareConfig.h"
 
 /* ============ PROJECT ============ */
 #include "comms/comms.h"
@@ -73,6 +75,7 @@ void init() {
 
 /* ============ TELEMETRY ============ */
 /* ------ EMA Filtered (Continuous) ------ */
+#if ENABLE_ULTRASONIC_FRONT
 uint16_t get_front_distance_cm() {
     uint16_t raw = front_sonar.ping_cm();
 
@@ -89,6 +92,7 @@ uint16_t get_front_distance_cm() {
     }
     return (uint16_t)(front_filtered_cm + 0.5f);
 }
+#endif
 
 #if ENABLE_ULTRASONIC_REAR
 uint16_t get_rear_distance_cm() {
@@ -110,10 +114,12 @@ uint16_t get_rear_distance_cm() {
 #endif
 
 /* ------ Raw Access (State Transitions) ------ */
+#if ENABLE_ULTRASONIC_FRONT
 uint16_t get_front_distance_raw_cm() {
     uint16_t raw = front_sonar.ping_cm();
     return (raw == 0) ? 999 : raw;
 }
+#endif
 
 #if ENABLE_ULTRASONIC_REAR
 uint16_t get_rear_distance_raw_cm() {

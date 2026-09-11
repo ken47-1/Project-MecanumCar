@@ -2,10 +2,11 @@
 #pragma once
 
 /* =============== INCLUDES =============== */
-/* ============ THIRD-PARTY ============ */
+/* ============ CORE ============ */
 #include <stdint.h>
 
-/* =============== API =============== */
+/* =============== TYPES =============== */
+/* ============ STRUCTS ============ */
 struct MotionCommand {
     float forward;   // -1 Backward, +1 Forward
     float strafe;    // -1 Left, +1 Right

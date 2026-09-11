@@ -7,17 +7,17 @@
 
 /* =============== API =============== */
 namespace Comms {
-    /* --------- Lifecycle --------- */
+    /* ============ Lifecycle ============ */
     void begin();
 
-    /* --------- Input --------- */
+    /* ============ Input ============ */
     bool available();
     int  read();
 
-    /* --------- Status --------- */
+    /* ============ Status ============ */
     bool is_connected();  // Returns true if HC-05 is connected (STATE pin HIGH)
 
-    /* --------- Output Channels --------- */
+    /* ============ Output Channels ============ */
     extern Print& print;
     extern Print& system;
 }

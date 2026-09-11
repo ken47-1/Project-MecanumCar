@@ -1,9 +1,11 @@
 /* ==================== main.cpp ==================== */
+
+/* =============== INCLUDES =============== */
+
+/* ============ CONFIG ============ */
 #include "config/Config.h"
 #include "config/HardwareConfig.h"
 #include "config/DebugConfig.h"
-
-/* =============== INCLUDES =============== */
 
 /* ============ PROJECT ============ */
 
@@ -23,20 +25,12 @@
 #include "control/autonomous_controller.h"
 
 /* ========= SENSORS ========= */
-#if ENABLE_ULTRASONIC_FRONT || ENABLE_ULTRASONIC_REAR
-    #include "sensors/ultrasonic.h"
-#endif
-#if ENABLE_BATTERY_MONITOR
-    #include "sensors/battery_voltage.h"
-#endif
-#if ENABLE_DIRECTIONAL_SCAN
-    #include "sensors/directional_scan.h"
-#endif
+#include "sensors/ultrasonic.h"
+#include "sensors/battery_voltage.h"
+#include "sensors/directional_scan.h"
 
 /* ========= SAFETY ========= */
-#if ENABLE_OBSTACLE_AVOIDANCE
-    #include "safety/obstacle_detection.h"
-#endif
+#include "safety/obstacle_detection.h"
 #include "safety/safety_manager.h"
 
 /* ============ CORE ============ */
@@ -61,17 +55,11 @@ void setup() {
     MotorControl::init(motor_hw);
     ModeManager::init();
 
-	/* --- Navigation & Safety --- */
-	#if ENABLE_ULTRASONIC_FRONT || ENABLE_ULTRASONIC_REAR
-		Ultrasonic::init();
-	#endif
-	#if ENABLE_DIRECTIONAL_SCAN
-		DirectionalScan::init();
-	#endif
-	#if ENABLE_OBSTACLE_AVOIDANCE
-		ObstacleDetection::init();
-	#endif
-	SafetyManager::init();
+    /* --- Navigation & Safety --- */
+    Ultrasonic::init();
+    DirectionalScan::init();
+    ObstacleDetection::init();
+    SafetyManager::init();
 
     /* --- Watchdog Activation --- */
     input_watchdog.enable(true);
@@ -86,35 +74,31 @@ void loop() {
     /* --- Safety & Watchdog Ticks --- */
     input_watchdog.update();
     
-	/* --- HC-05 Connection Status (if enabled) --- */
-	#if ENABLE_HC05_STATE_PIN
-		if (!Comms::is_connected()) {
-			SafetyManager::set_connection_loss(true);
-		} else {
-			SafetyManager::set_connection_loss(false);
-		}
-	#endif
+    /* --- HC-05 Connection Status (if enabled) --- */
+    #if ENABLE_HC05_STATE_PIN
+        if (!Comms::is_connected()) {
+            SafetyManager::set_connection_loss(true);
+        } else {
+            SafetyManager::set_connection_loss(false);
+        }
+    #endif
 
-	/* --- Obstacle Detection & Safety --- */
-	// Read ultrasonic sensors, apply hysteresis, update proximity flags
-	#if ENABLE_OBSTACLE_AVOIDANCE
-        ObstacleDetection::update();
-	#endif
+    /* --- Obstacle Detection & Safety --- */
+    // Read ultrasonic sensors, apply hysteresis, update proximity flags
+    ObstacleDetection::update();
 
-	// Aggregate all fault states (E-STOP, INPUT_LOSS, CONNECTION_LOSS)
-	SafetyManager::update();
+    // Aggregate all fault states (E-STOP, INPUT_LOSS, CONNECTION_LOSS)
+    SafetyManager::update();
 
     /* --- Battery Monitoring --- */
     #if ENABLE_BATTERY_MONITOR
         BatteryVoltage::report();
     #endif
 
-	/* --- Mode-Specific Logic --- */
-	#if ENABLE_AUTONOMOUS_MODE
-		AutonomousController::update(input_watchdog);
-	#endif
+    /* --- Mode-Specific Logic --- */
+    AutonomousController::update(input_watchdog);
 
-	/* --- Hardware Execution --- */
-	MotorRamp::update();
-	MotorControl::update();
+    /* --- Hardware Execution --- */
+    MotorRamp::update();
+    MotorControl::update();
 }

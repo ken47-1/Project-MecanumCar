@@ -6,6 +6,7 @@
 #include <Adafruit_MotorShield.h>
 
 /* =============== TYPES =============== */
+/* ============ ENUMS ============ */
 enum class MotorId {
     FL, FR,
     RL, RR

@@ -2,10 +2,11 @@
 #pragma once
 
 /* =============== INCLUDES =============== */
-/* ============ THIRD-PARTY ============ */
+/* ============ CORE ============ */
 #include <stdint.h>
 
 /* =============== TYPES =============== */
+/* ============ STRUCTS ============ */
 struct MotorSet {
     float fl, fr, rl, rr;
 };

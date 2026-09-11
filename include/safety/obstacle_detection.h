@@ -1,26 +1,38 @@
 /* ==================== obstacle_detection.h ==================== */
 #pragma once
 
-#if ENABLE_OBSTACLE_AVOIDANCE
+#include "config/Config.h"
 
 /* =============== INCLUDES =============== */
-/* ==================== THIRD-PARTY ==================== */
+/* ============ THIRD-PARTY ============ */
 #include <stdint.h>
 
 /* =============== TYPES =============== */
+/* ============ STRUCTS ============ */
 struct Proximity {
-    uint16_t distance_cm;  // 0 = invalid/no reading
-    bool in_slow_zone;     // within slow threshold (scale down authority)
-    bool in_stop_zone;     // within stop threshold (force backoff or block)
+    uint16_t distance_cm;   // EMA-filtered reading (telemetry)
+    bool in_slow_zone;      // Derived from RAW reading (stable via hysteresis)
+    bool in_stop_zone;      // Derived from RAW reading (stable via hysteresis)
 };
+
+#if ENABLE_OBSTACLE_AVOIDANCE
 
 /* =============== API =============== */
 namespace ObstacleDetection {
     void init();
-    void update();  // call each loop — reads sensors, applies hysteresis
-    
+    void update();
     Proximity get_front();
     Proximity get_rear();
 }
 
-#endif // ENABLE_OBSTACLE_AVOIDANCE
+#else
+
+/* =============== API =============== */
+namespace ObstacleDetection {
+    inline void init() {}
+    inline void update() {}
+    inline Proximity get_front() { return { 999, false, false }; }
+    inline Proximity get_rear()  { return { 999, false, false }; }
+}
+
+#endif

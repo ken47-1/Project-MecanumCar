@@ -1,14 +1,14 @@
 /* ==================== autonomous_controller.cpp ==================== */
-#include "config/Config.h"
+#include "control/autonomous_controller.h"
 
 #if ENABLE_AUTONOMOUS_MODE
 
-#include "control/autonomous_controller.h"
-
 /* =============== INCLUDES =============== */
 
-/* ============ PROJECT ============ */
+/* ============ CONFIG ============ */
+#include "config/Config.h"
 
+/* ============ PROJECT ============ */
 /* ========= COMMS ========= */
 #include "comms/comms.h"
 
@@ -27,6 +27,7 @@
 
 /* ========= INPUT ========= */
 #include "input/input_watchdog.h"
+
 /* ============ CORE ============ */
 #include <Arduino.h>
 
@@ -48,6 +49,7 @@ static AutoState     state          = AutoState::MOVING;
 static float         spin_direction = 0.0f; // -1.0 Left, 1.0 Right
 static uint16_t      spin_limit_ms  = 0;
 static unsigned long timer_ms       = 0;
+static uint8_t       stuck_retries  = 0;
 
 /* =============== INTERNAL HELPERS =============== */
 /* ============ NAVIGATION ============ */
@@ -101,6 +103,7 @@ static uint16_t pick_best_spin_time(const SweepResult& r, float& dir_out) {
 /* ============ LIFECYCLE ============ */
 void reset() {
     state = AutoState::MOVING;
+    stuck_retries = 0;
     DirectionalScan::reset();
 }
 
@@ -127,7 +130,7 @@ void update(InputWatchdog& watchdog) {
     /* --- State Machine --- */
     switch (state) {
 
-        /* ---------------- MOVING ---------------- */
+        /* ------ MOVING ------ */
         case AutoState::MOVING: {
             if (ObstacleDetection::get_front().in_stop_zone) {
                 MotorControl::hard_stop();
@@ -139,7 +142,7 @@ void update(InputWatchdog& watchdog) {
             break;
         }
 
-        /* ---------------- SCANNING ---------------- */
+        /* ------ SCANNING ------ */
         case AutoState::SCANNING: {
             DirectionalScan::update_sweep();
             if (DirectionalScan::sweep_ready()) {
@@ -165,7 +168,7 @@ void update(InputWatchdog& watchdog) {
             break;
         }
 
-        /* ---------------- SPINNING ---------------- */
+        /* ------ SPINNING ------ */
         case AutoState::SPINNING: {
             // Check if hardcoded rotation duration has elapsed
             if (millis() - timer_ms >= (unsigned long)spin_limit_ms) {
@@ -178,14 +181,14 @@ void update(InputWatchdog& watchdog) {
             break;
         }
 
-        /* ---------------- BACKING_UP ---------------- */
+        /* ------ BACKING_UP ------ */
         case AutoState::BACKING_UP: {
-			bool rear_blocked = false;
-			#if ENABLE_ULTRASONIC_REAR
-				rear_blocked = (Ultrasonic::get_rear_distance_raw_cm() <= REAR_STOP_ENTER_CM);
-			#else
-				rear_blocked = false;  // assume clear
-			#endif
+            bool rear_blocked = false;
+            #if ENABLE_ULTRASONIC_REAR
+                rear_blocked = (Ultrasonic::get_rear_distance_raw_cm() <= REAR_STOP_ENTER_CM);
+            #else
+                rear_blocked = false;  // assume clear
+            #endif
             
             if (millis() - timer_ms >= 1000 || rear_blocked) {
                 MotorControl::hard_stop();
@@ -197,10 +200,16 @@ void update(InputWatchdog& watchdog) {
             break;
         }
 
-        /* ---------------- STUCK ---------------- */
+        /* ------ STUCK ------ */
         case AutoState::STUCK: {
             MotorControl::hard_stop();
+
+            if (stuck_retries >= STUCK_MAX_RETRIES) {
+                break;  // Give up. Wait for user intervention.
+            }
+
             if (millis() - timer_ms >= AUTO_RETRY_WAIT_MS) {
+                stuck_retries++;
                 DirectionalScan::start_sweep();
                 enter(AutoState::SCANNING);
             }
