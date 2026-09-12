@@ -1,11 +1,17 @@
 /* ==================== directional_scan.h ==================== */
 #pragma once
 
+/* =============== INCLUDES =============== */
+
+/* ============ CONFIG ============ */
 #include "config/Config.h"
 
-/* =============== INCLUDES =============== */
 /* ============ PROJECT ============ */
+
+/* ========= CONTROL ========= */
 #include "control/motion_command.h"
+
+/* ========= SENSORS ========= */
 #include "sensors/ultrasonic.h"
 
 /* =============== TYPES =============== */
@@ -55,4 +61,4 @@ namespace DirectionalScan {
     inline bool is_settled() { return true; }
 }
 
-#endif
+#endif // ENABLE_DIRECTIONAL_SCAN

@@ -15,6 +15,7 @@ struct MotorSet {
 namespace MotorRamp {
     void reset();
     void set_target(const MotorSet& target);
+    void snap_to_target();
     void update();
     MotorSet current();
     MotorSet target();

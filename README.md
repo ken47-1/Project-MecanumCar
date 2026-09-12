@@ -35,8 +35,8 @@ This project supports both HC-05 and HC-06 Bluetooth modules.
 | Servo | D10 |
 | Bluetooth RX/TX | D0 / D1 (Hardware Serial) |
 | Bluetooth STATE (HC-05 only) | D2 (disabled by default) |
-| Battery Monitor (Rev 2) | A0 |
-| Encoders (Rev 3) | D7, D6, D5, D4 |
+| Battery Monitor (Rev 2) | A0 (disabled by default) |
+| Encoders (Rev 3) | D7, D6, D5, D4 (disabled by default) |
 
 **Note**: On R3, disconnect Bluetooth when uploading (pins shared with USB). On R4, upload with Bluetooth connected (Serial1 is independent).
 
@@ -203,6 +203,7 @@ All settings are split across three config files in `include/config/`:
 - `1` — Autonomous mode
 - `T` — Arc turn toggle
 - `^` — Force watchdog feed
+- `P` — Toggle closed-loop PID (encoders only)
 
 ## Safety Features
 

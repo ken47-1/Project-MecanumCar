@@ -5,13 +5,24 @@
 
 /* ============ CONFIG ============ */
 #include "config/Config.h"
+#include "config/DebugConfig.h"
 
 /* ============ PROJECT ============ */
+
+/* ========= COMMS ========= */
+#include "comms/comms.h"
+
+/* ========= CONTROL ========= */
 #include "control/motor_fault.h"
 #include "control/motor_ramp.h"
+#include "control/motor_pid.h"
+
+/* ========= SAFETY ========= */
 #include "safety/motion_policy.h"
 #include "safety/safety_manager.h"
-#include "comms/comms.h"
+
+/* ========= SENSORS ========= */
+#include "sensors/encoder.h"
 
 /* ============ CORE ============ */
 #include <Arduino.h>
@@ -52,6 +63,12 @@ static void drive_one_motor(Adafruit_DCMotor* m, float value) {
     m->setSpeedFine(float_to_pwm(value));
 }
 
+static inline int8_t sign_i8(float v) {
+    if (v > 0.01f)  return 1;
+    if (v < -0.01f) return -1;
+    return 0;
+}
+
 /* =============== PUBLIC API =============== */
 void init(MotorHardware& hw) {
     if (!hw.ready()) {
@@ -72,6 +89,7 @@ void init(MotorHardware& hw) {
 
 void hard_stop() {
     MotorRamp::reset();
+    MotorPID::reset();
     drive_one_motor(motor_fl, 0.0f);
     drive_one_motor(motor_fr, 0.0f);
     drive_one_motor(motor_rl, 0.0f);
@@ -110,6 +128,45 @@ void apply_command(const MotionCommand& cmd) {
     MotorRamp::set_target({fl, fr, rl, rr});
 }
 
+void apply_command_instant(const MotionCommand& cmd) {
+    if (cmd.forward == 0.0f && cmd.strafe == 0.0f && cmd.rotate == 0.0f) {
+        hard_stop();
+        return;
+    }
+
+    motors_stopped = false;
+
+    /* --- SAFETY POLICY --- */
+    // All safety checks, obstacle avoidance, and authority scaling in one place
+    MotionCommand safe_cmd = MotionPolicy::apply_safety(cmd);
+
+    /* --- MECANUM MIX --- */
+    float fl = safe_cmd.forward + safe_cmd.strafe + safe_cmd.rotate;
+    float fr = safe_cmd.forward - safe_cmd.strafe - safe_cmd.rotate;
+    float rl = safe_cmd.forward - safe_cmd.strafe + safe_cmd.rotate;
+    float rr = safe_cmd.forward + safe_cmd.strafe - safe_cmd.rotate;
+
+    float max_mag = max(max(fabsf(fl), fabsf(fr)), max(fabsf(rl), fabsf(rr)));
+    if (max_mag > 1.0f) {
+        fl /= max_mag; fr /= max_mag; rl /= max_mag; rr /= max_mag;
+    }
+
+    MotorRamp::set_target({fl, fr, rl, rr});
+    MotorRamp::snap_to_target();   /* <- new: skip the ramp curve */
+    #if ENABLE_ENCODERS
+        MotorSet out = MotorPID::apply({fl, fr, rl, rr});
+        drive_one_motor(motor_fl, out.fl);
+        drive_one_motor(motor_fr, out.fr);
+        drive_one_motor(motor_rl, out.rl);
+        drive_one_motor(motor_rr, out.rr);
+    #else
+        drive_one_motor(motor_fl, fl);
+        drive_one_motor(motor_fr, fr);
+        drive_one_motor(motor_rl, rl);
+        drive_one_motor(motor_rr, rr);
+    #endif
+}
+
 /* ------ UPDATE LOOP ------ */
 void update() {
     if (motors_stopped) {
@@ -136,10 +193,39 @@ void update() {
         return;
     }
 
-    drive_one_motor(motor_fl, cur.fl);
-    drive_one_motor(motor_fr, cur.fr);
-    drive_one_motor(motor_rl, cur.rl);
-    drive_one_motor(motor_rr, cur.rr);
+    #if ENABLE_ENCODERS
+        Encoder::set_direction(0, sign_i8(cur.fl));
+        Encoder::set_direction(1, sign_i8(cur.fr));
+        Encoder::set_direction(2, sign_i8(cur.rl));
+        Encoder::set_direction(3, sign_i8(cur.rr));
+
+        MotorSet out = MotorPID::apply(cur);
+
+        drive_one_motor(motor_fl, out.fl);
+        drive_one_motor(motor_fr, out.fr);
+        drive_one_motor(motor_rl, out.rl);
+        drive_one_motor(motor_rr, out.rr);
+    #else
+        drive_one_motor(motor_fl, cur.fl);
+        drive_one_motor(motor_fr, cur.fr);
+        drive_one_motor(motor_rl, cur.rl);
+        drive_one_motor(motor_rr, cur.rr);
+    #endif
+
+    #if ENABLE_ENCODERS && DEBUG_WHEEL_SPEED
+        static unsigned long last_speed_print = 0;
+        if (millis() - last_speed_print >= 500) {
+            last_speed_print = millis();
+            char buf[64];
+            snprintf(buf, sizeof(buf),
+                     "RPM FL=%d FR=%d RL=%d RR=%d",
+                     (int)Encoder::get_rpm(0),
+                     (int)Encoder::get_rpm(1),
+                     (int)Encoder::get_rpm(2),
+                     (int)Encoder::get_rpm(3));
+            Comms::system.println(buf);
+        }
+    #endif
 }
 
 } // namespace MotorControl

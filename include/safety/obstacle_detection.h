@@ -1,10 +1,12 @@
 /* ==================== obstacle_detection.h ==================== */
 #pragma once
 
+/* =============== INCLUDES =============== */
+
+/* ============ CONFIG ============ */
 #include "config/Config.h"
 
-/* =============== INCLUDES =============== */
-/* ============ THIRD-PARTY ============ */
+/* ============ CORE ============ */
 #include <stdint.h>
 
 /* =============== TYPES =============== */
@@ -35,4 +37,4 @@ namespace ObstacleDetection {
     inline Proximity get_rear()  { return { 999, false, false }; }
 }
 
-#endif
+#endif // ENABLE_OBSTACLE_AVOIDANCE

@@ -6,7 +6,11 @@
 /* =============== INCLUDES =============== */
 
 /* ============ PROJECT ============ */
+
+/* ========= COMMS ========= */
 #include "comms/comms.h"
+
+/* ========= SENSORS ========= */
 #include "sensors/ultrasonic.h"
 
 /* ============ CORE ============ */

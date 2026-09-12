@@ -501,9 +501,9 @@ Enable in `DebugConfig.h`:
 - **Front Ultrasonic:** TRIG D11, ECHO D12
 - **Rear Ultrasonic:** TRIG D8, ECHO D9
 - **Bluetooth:** D0/D1 (Hardware Serial) — R3 uses Serial, R4 uses Serial1
-- **Bluetooth STATE (HC-05 only):** D2 (enabled by default — disable in HardwareConfig.h for HC-06)
-- **Battery Monitoring (Rev 2):** A0
-- **Encoders (Rev 3):** D3 (FL), D4 (FR), D5 (RL), D6 (RR)
+- **Bluetooth STATE (HC-05 only):** D2 (disabled by default — enable in HardwareConfig.h for HC-05)
+- **Battery Monitoring (Rev 2):** A0 (disabled by default)
+- **Encoders (Rev 3):** D7 (FL), D6 (FR), D5 (RL), D4 (RR)
 
 ### Bluetooth Hardware
 
@@ -518,18 +518,30 @@ Enable in `DebugConfig.h`:
 
 ### Servo Angles (degrees)
 
+Two mounting modes, selected by `SERVO_MIRRORED` in `HardwareConfig.h`.
+
+**Normal mounting** (`SERVO_MIRRORED = 0` — servo faces up)
+
 - `SERVO_LEFT = 180`
 - `SERVO_FRONT_LEFT = 135`
 - `SERVO_CENTER = 90`
 - `SERVO_FRONT_RIGHT = 45`
 - `SERVO_RIGHT = 0`
 
+**Mirrored mounting** (`SERVO_MIRRORED = 1`, default — servo faces down)
+
+- `SERVO_LEFT = 0`
+- `SERVO_FRONT_LEFT = 45`
+- `SERVO_CENTER = 90`
+- `SERVO_FRONT_RIGHT = 135`
+- `SERVO_RIGHT = 180`
+
 ### Obstacle Thresholds (cm)
 
-- **Front Slow:** 40–50cm
-- **Front Stop:** 15–25cm
-- **Rear Slow:** 40–50cm
-- **Rear Stop:** 15–25cm
+- **Front Slow:** 30–35cm
+- **Front Stop:** 15–20cm
+- **Rear Slow:** 35–40cm
+- **Rear Stop:** 15–20cm
 
 ### EMA Filter
 
@@ -542,7 +554,6 @@ Enable in `DebugConfig.h`:
 
 - `ENABLE_INPUT_WATCHDOG = 1` (ON)
 - `ENABLE_INPUT_BUTTONS = 1` (ON)
-- `ENABLE_INPUT_JOYSTICK = 0` (OFF)
 - `ENABLE_INPUT_SPEED_AUTHORITY = 1` (ON)
 - `ENABLE_DIRECTIONAL_SCAN = 1` (ON)
 - `ENABLE_OBSTACLE_AVOIDANCE = 1` (ON)
@@ -555,23 +566,23 @@ Enable in `DebugConfig.h`:
 - `ENABLE_ULTRASONIC_REAR = 1` (ON)
 - `ENABLE_SERVO = 1` (ON)
 - `ENABLE_BATTERY_MONITOR = 1` (ON)
-- `ENABLE_ENCODERS = 0` (OFF — Rev 3 planned)
+- `ENABLE_ENCODERS = 0` (OFF)
 
 All modules are fully optional. Each can be enabled/disabled at compile time via flags in `Config.h` and `HardwareConfig.h`.
 
 ### Revision History
 
-**Rev 2 (Current)**
+**Rev 2**
 
 - Double-deck chassis
-- Battery monitoring (A0)
+- Battery monitoring (A0, disabled by default)
 - New pin layout (ultrasonics moved to D8/D9 and D11/D12)
 
-**Rev 3 (Planned)**
+**Rev 3 (Current)**
 
-- 4x H206 optical encoders (D3, D4, D5, D6)
-- Closed-loop PID speed control
-- Encoder-based odometry
+- 4x H206 encoders (D7, D6, D5, D4)
+- Closed-loop PID speed control (compiled, disabled by default)
+- Encoder-based odometry (planned)
 
 ### Watchdog & Input
 
@@ -579,13 +590,16 @@ All modules are fully optional. Each can be enabled/disabled at compile time via
 
 ### Servo & Scan
 
-- `SCAN_SERVO_SETTLE_MS = 500` (per position)
+Dynamic settle time based on the angle change between positions:
+
+- `SCAN_SERVO_SETTLE_MS_45 = 200` (45° moves)
+- `SCAN_SERVO_SETTLE_MS_90 = 300` (90° moves)
+- `SCAN_SERVO_SETTLE_MS_135 = 500` (135° moves)
 
 ### Obstacle Avoidance
 
 - `OA_CLEAR_HOLD_MS = 200` (hysteresis hold time)
 - `OA_SOFT_AUTHORITY = 0.5` (speed scale in slow zone)
-- `OA_BACKOFF_SPEED = 0.25` (nudge-away backoff speed)
 
 ### Autonomous Mode
 
@@ -616,7 +630,6 @@ All modules are fully optional. Each can be enabled/disabled at compile time via
 - **Speed:** MIN (200), MAX (1000), DEFAULT (1000) per-mille
 - **Speed steps:** ROUGH (100 = 10%), NORMAL (50 = 5%), FINE (10 = 1%)
 - **Motor ramp:** UP (400ms), DOWN (200ms)
-- **Turn ratio:** 1/2 (half speed on one side for turns) — constant defined but not currently used in motion mix
 
 ### Motor Output
 
@@ -669,7 +682,7 @@ Enforced via `docs/Code_Layout_Standard.md`:
 | Command latency | <10ms |
 | Motor response | <50ms |
 | Ultrasonic sampling | ~50ms per sensor |
-| Servo sweep | ~2.5 seconds (5 positions x 500ms settle) |
+| Servo sweep | ~1.2 seconds (5 positions, 200–500ms settle by angle) |
 | Speed ramp | 400ms accel, 200ms decel |
 | Watchdog timeout | 150ms |
 | Max speed | ~1.5 m/s (depends on gearing and PWM_MAX scaling) |
@@ -680,14 +693,13 @@ Enforced via `docs/Code_Layout_Standard.md`:
 - Core firmware complete and tested
 - Autonomous state machine validated on test runs
 - Bluetooth control stable with HC-06
-- Obstacle avoidance tuned for typical indoor environments (currently disabled by default)
+- Obstacle avoidance tuned for typical indoor environments (enabled by default)
 - Ready for deployment or further customization
 
 ## Known Limitations
 
 - Arduino Uno has limited RAM (2KB) — keep code modular
 - HC-SR04 is slow (~50ms per reading) — not real-time capable
-- Servo sweep blocks briefly (~2.5s) during autonomous scan
+- Servo sweep blocks briefly (~1.2s) during autonomous scan
 - 150ms watchdog timeout is hardcoded; may need adjustment for other Bluetooth modules
 - Time-based spin (not feedback-driven) due to sensor unreliability during rotation
-- Turn ratio constants are defined but not active in the motion mix

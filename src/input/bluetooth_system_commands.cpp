@@ -7,11 +7,22 @@
 #include "config/Config.h"
 
 /* ============ PROJECT ============ */
-#include "control/motor_fault.h"
-#include "safety/safety_manager.h"
-#include "input/input_watchdog.h"
-#include "control/mode_manager.h"
+
+/* ========= COMMS ========= */
 #include "comms/comms.h"
+
+/* ========= CONTROL ========= */
+#include "control/motor_fault.h"
+#include "control/mode_manager.h"
+#if ENABLE_ENCODERS
+    #include "control/motor_pid.h"
+#endif
+
+/* ========= SAFETY ========= */
+#include "safety/safety_manager.h"
+
+/* ========= INPUT ========= */
+#include "input/input_watchdog.h"
 
 /* ============ CORE ============ */
 #include <Arduino.h>
@@ -60,7 +71,20 @@ bool handle_char(char c, InputWatchdog& watchdog) {
             Comms::system.print("Arc turn: ");
             Comms::system.println(arc_turn_speed_dependent() ? "Speed-Dependent" : "Fixed");
             watchdog.feed();
-            return true;            
+            return true;
+
+        /* ============ PID TOGGLE ============ */
+        case 'P':
+            #if ENABLE_ENCODERS
+                MotorPID::set_closed_loop(!MotorPID::is_closed_loop());
+                Comms::system.print("PID: ");
+                Comms::system.println(MotorPID::is_closed_loop() ? "closed" : "open");
+                watchdog.feed();
+                return true;
+            #else
+                Comms::system.println("ERROR: Encoders not compiled");
+                return false;
+            #endif
 
         /* ============ DRIVE MODES ============ */
         case '1':

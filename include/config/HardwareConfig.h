@@ -13,9 +13,9 @@
 #define ENABLE_ULTRASONIC_FRONT    1   // Front HC-SR04 installed
 #define ENABLE_ULTRASONIC_REAR     1   // Rear HC-SR04 installed
 #define ENABLE_SERVO               1   // Servo for directional scan installed
-#define ENABLE_BATTERY_MONITOR     1   // 0-25V voltage sensor installed (Rev 2)
+#define ENABLE_BATTERY_MONITOR     0   // 0-25V voltage sensor installed (Rev 2)
 #define ENABLE_ENCODERS            0   // H206 encoders installed (Rev 3)
-
+    
 /* =============== BLUETOOTH =============== */
 /* Bluetooth: R3 uses Serial (pins 0/1), R4 uses Serial1 (pins 0/1)
    R3: Disconnect Bluetooth when uploading (pins shared with USB)
@@ -74,9 +74,10 @@ constexpr float BATTERY_VOLTAGE_MIN = 6.0f;     // Matches CRITICAL in Config.h
 constexpr float BATTERY_VOLTAGE_MAX = 8.4f;     // 2S Li-Ion fully charged
 
 /* =============== ENCODERS (REV 3) =============== */
-/*
+/* Single-channel H206 sensors. One wire per wheel to a PCINT-capable pin. */
 constexpr uint8_t ENCODER_FL_PIN = 7;
 constexpr uint8_t ENCODER_FR_PIN = 6;
 constexpr uint8_t ENCODER_RL_PIN = 5;
 constexpr uint8_t ENCODER_RR_PIN = 4;
-*/
+
+/* A1 reserved for PRNG seed. Leave unconnected. */ 

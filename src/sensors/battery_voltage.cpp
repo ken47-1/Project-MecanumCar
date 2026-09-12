@@ -10,8 +10,12 @@
 #include "config/HardwareConfig.h"
 
 /* ============ PROJECT ============ */
-#include "safety/safety_manager.h"
+
+/* ========= COMMS ========= */
 #include "comms/comms.h"
+
+/* ========= SAFETY ========= */
+#include "safety/safety_manager.h"
 
 /* ============ CORE ============ */
 #include <Arduino.h>

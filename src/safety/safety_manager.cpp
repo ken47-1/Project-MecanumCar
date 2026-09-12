@@ -9,8 +9,14 @@
 #include "config/DebugConfig.h"
 
 /* ============ PROJECT ============ */
+
+/* ========= COMMS ========= */
 #include "comms/comms.h"
+
+/* ========= CONTROL ========= */
 #include "control/motor_fault.h"
+
+/* ========= SENSORS ========= */
 #include "sensors/battery_voltage.h"
 
 /* ============ CORE ============ */

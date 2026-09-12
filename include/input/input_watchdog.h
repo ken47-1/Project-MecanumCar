@@ -1,12 +1,15 @@
 /* ==================== input_watchdog.h ==================== */
 #pragma once
 
-#include "config/Config.h"
+/* =============== INCLUDES =============== */
 
-#if ENABLE_INPUT_WATCHDOG
+/* ============ CONFIG ============ */
+#include "config/Config.h"
 
 /* ============ CORE ============ */
 #include <stdint.h>
+
+#if ENABLE_INPUT_WATCHDOG
 
 /* =============== API =============== */
 /* ============ CLASSES ============ */
@@ -45,4 +48,4 @@ public:
     bool is_expired() const { return false; }
 };
 
-#endif
+#endif // ENABLE_INPUT_WATCHDOG

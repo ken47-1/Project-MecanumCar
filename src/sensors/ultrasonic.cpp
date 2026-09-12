@@ -10,6 +10,8 @@
 #include "config/HardwareConfig.h"
 
 /* ============ PROJECT ============ */
+
+/* ========= COMMS ========= */
 #include "comms/comms.h"
 
 /* ============ THIRD-PARTY ============ */

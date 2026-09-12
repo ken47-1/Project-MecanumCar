@@ -1,14 +1,17 @@
 /* ==================== input_watchdog.cpp ==================== */
 #include "input/input_watchdog.h"
 
+#if ENABLE_INPUT_WATCHDOG
+
 /* =============== INCLUDES =============== */
+
 /* ============ PROJECT ============ */
+
+/* ========= SAFETY ========= */
 #include "safety/safety_manager.h"
 
 /* ============ CORE ============ */
 #include <Arduino.h>
-
-#if ENABLE_INPUT_WATCHDOG
 
 InputWatchdog::InputWatchdog(uint32_t timeout_ms)
     : _timeout_ms(timeout_ms),
@@ -61,4 +64,4 @@ uint32_t InputWatchdog::_now() const {
     return millis();
 }
 
-#endif
+#endif // ENABLE_INPUT_WATCHDOG

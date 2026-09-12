@@ -7,8 +7,12 @@
 #include "config/Config.h"
 
 /* ============ PROJECT ============ */
-#include "control/motor_fault.h"
+
+/* ========= COMMS ========= */
 #include "comms/comms.h"
+
+/* ========= CONTROL ========= */
+#include "control/motor_fault.h"
 
 /* ============ CORE ============ */
 #include <Arduino.h>

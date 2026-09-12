@@ -38,6 +38,8 @@ Single-character, no prefix.
 | `J` | Spin left (CCW) |
 | `L` | Spin right (CW) |
 
+Multiple keys combine. The parser accumulates every command in one cycle. Holding `W` and `A` together produces the same result as `Q`.
+
 ---
 
 ### Speed Control (`%` prefix)
@@ -63,8 +65,15 @@ Single-character, no prefix.
 | `0` | Autonomous mode OFF |
 | `^` | Force watchdog feed (master keepalive) |
 | `T` | Toggle arc turn mode (Fixed ↔ Speed-Dependent) |
+| `P` | Toggle closed-loop PID (requires `ENABLE_ENCODERS`) |
 
-**Notes:** HC-05 STATE pin (optional) detects physical disconnection. See `ENABLE_HC05_STATE_PIN` in Config.h. `T` toggles between Fixed (always 0.5× rotation) and Speed-Dependent (tighter at low speed, wider at high) arc turning. Prints current mode.
+**Notes:**
+
+HC-05 STATE pin (optional) detects physical disconnection. See `ENABLE_HC05_STATE_PIN` in HardwareConfig.h.
+
+`T` toggles between Fixed (always 0.5× rotation) and Speed-Dependent (tighter at low speed, wider at high) arc turning. Prints current mode.
+
+`P` requires `ENABLE_ENCODERS = 1` in `HardwareConfig.h`. When encoders are off, the command prints an error and does nothing. When on, it prints `PID: closed` or `PID: open`.
 
 ---
 
@@ -76,6 +85,8 @@ Single-character, no prefix.
 | `*%[mode]*` | Step mode — `Fine`, `Normal`, or `Rough` |
 | `*V[value]V*` | Filtered battery voltage — e.g., `*V7.72V*` |
 | `*M[value]V*` | Minimum battery voltage (with decay) — e.g., `*M7.70V*` |
+
+Speed frames re-emit on change. When the value is stable, `*G` and `*%` re-send every `SPEED_FEEDBACK_INTERVAL_MS` (default 2000ms). A reconnecting app recovers the current speed and step mode without waiting for a change.
 
 ### Battery Voltage
 

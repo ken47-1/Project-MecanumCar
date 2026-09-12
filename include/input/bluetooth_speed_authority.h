@@ -13,16 +13,18 @@
 
 /* =============== API =============== */
 namespace BluetoothSpeedAuthority {
-    bool handle_char(char c);
+    bool  handle_char(char c);
     float get_speed_scale();
+    void  feedback_tick();
 }
 
 #else
 
 /* =============== API =============== */
 namespace BluetoothSpeedAuthority {
-    inline bool handle_char(char) { return false; }
+    inline bool  handle_char(char) { return false; }
     inline float get_speed_scale() { return 1.0f; }
+    void         feedback_tick() {}
 }
 
-#endif
+#endif // ENABLE_INPUT_SPEED_AUTHORITY

@@ -7,9 +7,15 @@
 #include "config/Config.h"
 
 /* ============ PROJECT ============ */
+
+/* ========= COMMS ========= */
 #include "comms/comms.h"
+
+/* ========= CONTROL ========= */
 #include "control/motor_control.h"
 #include "control/autonomous_controller.h"
+
+/* ========= SENSORS ========= */
 #include "sensors/directional_scan.h"
 
 /* ============ CORE ============ */

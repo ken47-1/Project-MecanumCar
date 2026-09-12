@@ -9,6 +9,7 @@
 #include "config/Config.h"
 
 /* ============ PROJECT ============ */
+
 /* ========= COMMS ========= */
 #include "comms/comms.h"
 
@@ -58,6 +59,11 @@ static void enter(AutoState next) {
     timer_ms = millis();
 }
 
+/* Direct spin command. Bypasses MotorRamp so the burst duration equals actual rotation time. */
+static void spin_direct(float direction, float magnitude) {
+    MotorControl::apply_command_instant({0.0f, 0.0f, magnitude * direction});
+}
+
 /* --- Search all swept directions for the absolute widest path --- */
 static uint16_t pick_best_spin_time(const SweepResult& r, float& dir_out) {
     
@@ -75,16 +81,18 @@ static uint16_t pick_best_spin_time(const SweepResult& r, float& dir_out) {
         { r.right,        1.0f, AUTO_SPIN_SIDE_MS     }  // 90 deg
     };
 
-    uint16_t max_dist  = 0;
-    uint16_t best_time = 0;
-    float    best_dir  = 0.0f;
+    uint16_t max_dist = 0;
+    uint8_t  best_idx[4] = {0, 0, 0, 0};
+    uint8_t  best_n = 0;
 
     /* --- Absolute Best Search --- */
     for (uint8_t i = 0; i < 4; i++) {
         if (candidates[i].dist > max_dist) {
-            max_dist  = candidates[i].dist;
-            best_dir  = candidates[i].direction;
-            best_time = candidates[i].duration;
+            max_dist = candidates[i].dist;
+            best_n = 1;
+            best_idx[0] = i;
+        } else if (candidates[i].dist == max_dist && best_n < 4) {
+            best_idx[best_n++] = i;
         }
     }
 
@@ -95,8 +103,9 @@ static uint16_t pick_best_spin_time(const SweepResult& r, float& dir_out) {
         return 0;
     }
 
-    dir_out = best_dir;
-    return best_time;
+    uint8_t pick = best_idx[random(best_n)];
+    dir_out     = candidates[pick].direction;
+    return candidates[pick].duration;
 }
 
 /* =============== PUBLIC API =============== */
@@ -176,7 +185,7 @@ void update(InputWatchdog& watchdog) {
                 enter(AutoState::MOVING);
             } else {
                 // Fixed duration rotation at autonomous speed
-                MotorControl::apply_command({ 0.0f, 0.0f, (speed * spin_direction) });
+                spin_direct(spin_direction, speed);
             }
             break;
         }

@@ -9,12 +9,13 @@
 
 /* ============ PROJECT ============ */
 
-/* ========= COMMUNICATION ========= */
+/* ========= COMMS ========= */
 #include "comms/comms.h"
 
 /* ========= INPUT ========= */
-#include "input/bluetooth_command_parser.h"
 #include "input/input_watchdog.h"
+#include "input/bluetooth_command_parser.h"
+#include "input/bluetooth_speed_authority.h"
 
 /* ========= CONTROL ========= */
 #include "control/mode_manager.h"
@@ -28,6 +29,7 @@
 #include "sensors/ultrasonic.h"
 #include "sensors/battery_voltage.h"
 #include "sensors/directional_scan.h"
+#include "sensors/encoder.h"
 
 /* ========= SAFETY ========= */
 #include "safety/obstacle_detection.h"
@@ -49,6 +51,10 @@ void setup() {
     Comms::begin();
     Wire.begin();
 
+    /* Seed the PRNG from an unconnected analog pin. */
+    analogRead(A1);
+    randomSeed(analogRead(A1));
+
     /* --- Control System --- */
     MotorFault::init();
     motor_hw.init();
@@ -57,6 +63,7 @@ void setup() {
 
     /* --- Navigation & Safety --- */
     Ultrasonic::init();
+    Encoder::init();
     DirectionalScan::init();
     ObstacleDetection::init();
     SafetyManager::init();
@@ -73,6 +80,9 @@ void loop() {
 
     /* --- Safety & Watchdog Ticks --- */
     input_watchdog.update();
+
+    /* --- Speed feedback keepalive --- */
+    BluetoothSpeedAuthority::feedback_tick();
     
     /* --- HC-05 Connection Status (if enabled) --- */
     #if ENABLE_HC05_STATE_PIN

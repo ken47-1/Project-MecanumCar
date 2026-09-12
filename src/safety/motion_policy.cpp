@@ -7,9 +7,15 @@
 #include "config/Config.h"
 
 /* ============ PROJECT ============ */
+
+/* ========= COMMS ========= */
 #include "comms/comms.h"
+
+/* ========= SAFETY ========= */
 #include "safety/safety_manager.h"
 #include "safety/obstacle_detection.h"
+
+/* ========= INPUT ========= */
 #include "input/bluetooth_speed_authority.h"
 
 /* ============ CORE ============ */

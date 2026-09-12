@@ -1,10 +1,12 @@
 /* ==================== battery_voltage.h ==================== */
 #pragma once
 
+/* =============== INCLUDES =============== */
+
+/* ============ CONFIG ============ */
 #include "config/Config.h"
 
-/* =============== INCLUDES =============== */
-/* ============ THIRD-PARTY ============ */
+/* ============ CORE ============ */
 #include <stdint.h>
 
 #if ENABLE_BATTERY_MONITOR
@@ -25,4 +27,4 @@ namespace BatteryVoltage {
     inline void report() {}
 }
 
-#endif
+#endif // ENABLE_BATTERY_MONITOR

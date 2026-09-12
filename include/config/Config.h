@@ -2,7 +2,8 @@
 #pragma once
 
 /* =============== INCLUDES =============== */
-/* ============ PROJECT ============ */
+
+/* ============ CONFIG ============ */
 #include "HardwareConfig.h"
 
 /* ============ CORE ============ */
@@ -19,7 +20,7 @@
 /* ============ NAVIGATION & AUTONOMY ============ */
 #define ENABLE_DIRECTIONAL_SCAN     1   // Servo sweep for obstacle avoidance
 #define ENABLE_OBSTACLE_AVOIDANCE   1   // ON by default – Requires ultrasonic front/rear
-#define ENABLE_AUTONOMOUS_MODE      0   // OFF by default – Requires OBSTACLE_AVOIDANCE + DIRECTIONAL_SCAN
+#define ENABLE_AUTONOMOUS_MODE      1   // OFF by default – Requires OBSTACLE_AVOIDANCE + DIRECTIONAL_SCAN
 
 /* =============== SENSORS =============== */
 
@@ -91,6 +92,11 @@ constexpr unsigned long BATTERY_CRITICAL_COOLDOWN_MS = 5000;   // 5s between cri
 /* App sends every 50ms ('X' on idle, motion command when active) */
 /* 150ms = 3 missed packets before INPUT_LOSS is asserted */
 constexpr unsigned long INPUT_WATCHDOG_TIMEOUT_MS = 150;
+
+/* ============ SPEED FEEDBACK ============ */
+/* Re-send *G (gauge) and *% (step mode) periodically, not only on change.
+   Lets a reconnecting app recover the current state. */
+constexpr unsigned long SPEED_FEEDBACK_INTERVAL_MS = 2000;
 
 /* =============== CONTROL =============== */
 
@@ -169,12 +175,26 @@ constexpr uint16_t PWM_MAX = 4095;     // AFMS V2 (12-bit)
 // constexpr uint16_t PWM_MAX = 255;   // AFMS V1 (8-bit)
 
 /* ============ ENCODERS (REV 3) ============ */
+/* Single-channel. Rotate one wheel by hand through one full revolution and
+   read Encoder::get_count(idx) to measure this value. */
 constexpr uint16_t ENCODER_TICKS_PER_REV = 20;
 
-/* ============ PID ============ */
-constexpr float PID_KP = 1.0f;
+/* --- Motor Limits --- */
+/* Your hardware will differ. Measure yours with tools/drive.py. */
+constexpr float MOTOR_MAX_RPM = 255.0f;
+
+/* --- PID (per-wheel, normalized) --- */
+/* Gains depend on motor, gearbox, load, and battery. Retune per build. */
+constexpr float PID_KP = 1.5f;
 constexpr float PID_KI = 0.0f;
 constexpr float PID_KD = 0.0f;
+constexpr float PID_INTEGRAL_LIMIT = 0.5f;
+constexpr uint16_t PID_PERIOD_MS = 20;
+
+/* --- Mode --- */
+/* 1 = closed loop (PID active), 0 = open loop (raw intent passthrough).
+   Runtime toggle with the 'P' command. */
+#define PID_CLOSED_LOOP_DEFAULT  0
 
 /* =============== DEPENDENCY CHECKS =============== */
 
@@ -196,4 +216,8 @@ constexpr float PID_KD = 0.0f;
 
 #if ENABLE_AUTONOMOUS_MODE && !ENABLE_DIRECTIONAL_SCAN
     #error "Autonomous mode requires directional scan (ENABLE_DIRECTIONAL_SCAN)"
+#endif
+
+#if PID_CLOSED_LOOP_DEFAULT && !ENABLE_ENCODERS
+    #error "Closed-loop PID requires encoders (ENABLE_ENCODERS)"
 #endif

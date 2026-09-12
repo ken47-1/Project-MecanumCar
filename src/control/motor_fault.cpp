@@ -7,9 +7,15 @@
 #include "config/Config.h"
 
 /* ============ PROJECT ============ */
-#include "control/motor_control.h"
-#include "safety/safety_manager.h"
+
+/* ========= COMMS ========= */
 #include "comms/comms.h"
+
+/* ========= CONTROL ========= */
+#include "control/motor_control.h"
+
+/* ========= SAFETY ========= */
+#include "safety/safety_manager.h"
 
 /* ============ CORE ============ */
 #include <Arduino.h>

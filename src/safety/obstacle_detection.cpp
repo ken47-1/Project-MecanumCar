@@ -9,8 +9,12 @@
 #include "config/Config.h"
 
 /* ============ PROJECT ============ */
-#include "sensors/ultrasonic.h"
+
+/* ========= COMMS ========= */
 #include "comms/comms.h"
+
+/* ========= SENSORS ========= */
+#include "sensors/ultrasonic.h"
 
 /* ============ CORE ============ */
 #include <Arduino.h>

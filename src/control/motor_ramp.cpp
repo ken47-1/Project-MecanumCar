@@ -50,6 +50,11 @@ void set_target(const MotorSet& target) {
     tgt.rr = constrain(target.rr, -1.0f, 1.0f);  // Clamp at the subsystem boundary
 }
 
+void snap_to_target() {
+    cur = tgt;
+    last_update_ms = millis();
+}
+
 void update() {
     if (RAMP_UP_TIME_MS <= 0 || RAMP_DOWN_TIME_MS <= 0) {
         cur = tgt;

@@ -1,6 +1,9 @@
 /* ==================== autonomous_controller.h ==================== */
 #pragma once
 
+/* =============== INCLUDES =============== */
+
+/* ============ CONFIG ============ */
 #include "config/Config.h"
 
 /* =============== TYPES =============== */
@@ -26,4 +29,4 @@ namespace AutonomousController {
     inline void update(InputWatchdog&) {}
 }
 
-#endif
+#endif // ENABLE_AUTONOMOUS_MODE

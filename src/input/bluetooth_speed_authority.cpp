@@ -9,6 +9,8 @@
 #include "config/Config.h"
 
 /* ============ PROJECT ============ */
+
+/* ========= COMMS ========= */
 #include "comms/comms.h"
 
 /* ============ CORE ============ */
@@ -20,6 +22,7 @@ namespace BluetoothSpeedAuthority {
 static uint16_t speed_user = constrain(SPEED_USER_DEFAULT, SPEED_USER_MIN, SPEED_USER_MAX);
 static uint16_t speed_step = SPEED_STEP_NORMAL;
 static bool awaiting_speed_cmd = false;
+static unsigned long last_feedback_ms = 0;
 
 /* =============== INTERNAL HELPERS =============== */
 static void send_speed_feedback() {
@@ -74,6 +77,7 @@ bool handle_char(char c) {
 
     if (speed_user != old_speed || speed_step != old_step) {
         send_speed_feedback();
+        last_feedback_ms = millis();
     }
 
     return true;
@@ -82,6 +86,15 @@ bool handle_char(char c) {
 // Normalized authority [0.0 – 1.0]
 float get_speed_scale() {
     return (float)speed_user / (float)SPEED_USER_MAX;
+}
+
+void feedback_tick() {
+    unsigned long now = millis();
+    if (now - last_feedback_ms < SPEED_FEEDBACK_INTERVAL_MS) {
+        return;
+    }
+    last_feedback_ms = now;
+    send_speed_feedback();
 }
 
 } // namespace BluetoothSpeedAuthority
