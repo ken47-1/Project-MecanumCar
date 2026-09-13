@@ -22,14 +22,7 @@ struct SweepResult {
     uint16_t front_right;
     uint16_t left;
     uint16_t right;
-    uint8_t  clear_mask;
 };
-
-constexpr uint8_t SWEEP_CLEAR_FRONT       = (1 << 0);
-constexpr uint8_t SWEEP_CLEAR_FRONT_LEFT  = (1 << 1);
-constexpr uint8_t SWEEP_CLEAR_FRONT_RIGHT = (1 << 2);
-constexpr uint8_t SWEEP_CLEAR_LEFT        = (1 << 3);
-constexpr uint8_t SWEEP_CLEAR_RIGHT       = (1 << 4);
 
 #if ENABLE_DIRECTIONAL_SCAN
 

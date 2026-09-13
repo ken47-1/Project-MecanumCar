@@ -92,6 +92,10 @@ void update() {
             }
         }
     #endif
+    
+    #if ENABLE_BATTERY_MONITOR
+        BatteryVoltage::clear_sample();
+    #endif
 
     SafetyState next_state;
 
@@ -133,10 +137,6 @@ float get_min_voltage() {
     return min_voltage_seen;
 }
 
-void reset_min_voltage() {
-    min_voltage_seen = 10.0f;
-}
-
 /* ============ STATE MODIFICATION ============ */
 void set_input_loss(bool active) {
     input_loss_active = active;
@@ -144,11 +144,6 @@ void set_input_loss(bool active) {
 
 void set_connection_loss(bool active) {
     connection_loss_active = active;
-}
-
-void set_emergency_stop() {
-    emergency_stop_latched = true;
-    MotorFault::trigger(MotorFaultReason::ESTOP);
 }
 
 void clear_emergency_stop() {

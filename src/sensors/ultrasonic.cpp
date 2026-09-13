@@ -65,12 +65,12 @@ void init() {
     char buf[40];
 
     #if ENABLE_ULTRASONIC_FRONT
-        snprintf(buf, sizeof(buf), "- Front: EMA (a = %.2f)", ULTRASONIC_EMA_ALPHA_FRONT);
+        snprintf(buf, sizeof(buf), "- Front: EMA (a = %.2f)", (double)ULTRASONIC_EMA_ALPHA_FRONT);
         Comms::system.println(buf);
     #endif
     
     #if ENABLE_ULTRASONIC_REAR
-        snprintf(buf, sizeof(buf), "- Rear:  EMA (a = %.2f)", ULTRASONIC_EMA_ALPHA_REAR);
+        snprintf(buf, sizeof(buf), "- Rear:  EMA (a = %.2f)", (double)ULTRASONIC_EMA_ALPHA_REAR);
         Comms::system.println(buf);
     #endif
 }

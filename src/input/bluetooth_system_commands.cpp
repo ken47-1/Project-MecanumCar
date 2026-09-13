@@ -61,7 +61,7 @@ bool handle_char(char c, InputWatchdog& watchdog) {
             case 'S': Debug::toggle(Debug::Ch::SENSORS);  break;
             case 'F': Debug::toggle(Debug::Ch::SAFETY);   break;
             case 'W': Debug::toggle(Debug::Ch::WATCHDOG); break;
-            case 'G': Debug::dump();                      break;
+            case 'G': verbose = true;                     break;
             case '+': Debug::set_all(true);               break;
             case '-': Debug::set_all(false);              break;
             default: break;
@@ -133,7 +133,7 @@ bool handle_char(char c, InputWatchdog& watchdog) {
 
 				char buf[64];
 				snprintf(buf, sizeof(buf), "[PID] KP=%.2f KI=%.2f KD=%.2f MODE=%s",
-						 PID_KP, PID_KI, PID_KD,
+						 (double)PID_KP, (double)PID_KI, (double)PID_KD,
 						 MotorPID::is_closed_loop() ? "CLOSED" : "OPEN");
 				Comms::system.println(buf);
 
@@ -141,7 +141,7 @@ bool handle_char(char c, InputWatchdog& watchdog) {
 				for (uint8_t i = 0; i < 4; i++) {
 					WheelPID w = MotorPID::get_wheel(i);
 					snprintf(buf, sizeof(buf), "[PID] %s T=%.2f M=%.2f E=%+.2f O=%.2f",
-							 names[i], w.target, w.measured, w.error, w.output);
+                             names[i], (double)w.target, (double)w.measured, (double)w.error, (double)w.output);
 					Comms::system.println(buf);
 				}
 

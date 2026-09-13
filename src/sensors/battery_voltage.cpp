@@ -29,24 +29,35 @@ static bool initialized = false;
 
 /* =============== INTERNAL HELPERS =============== */
 /* ============ FILTERING ============ */
-static float read_voltage() {
+static bool sampled = false;
+
+static void sample() {
+    if (sampled) {
+        return;
+    }
+
     int raw = analogRead(BATTERY_SENSOR_PIN);
     float v = (raw / 1023.0f) * 5.0f * BATTERY_DIVIDER_RATIO;
-    
+
     if (!initialized) {
         filtered_voltage = v;
         initialized = true;
     } else {
         filtered_voltage += BATTERY_EMA_ALPHA * (v - filtered_voltage);
     }
-    
-    return filtered_voltage;
+
+    sampled = true;
 }
 
 /* =============== PUBLIC API =============== */
 /* ============ TELEMETRY ============ */
 float get_voltage() {
-    return read_voltage();
+    sample();
+    return filtered_voltage;
+}
+
+void clear_sample() {
+    sampled = false;
 }
 
 bool is_low() {
@@ -63,11 +74,11 @@ void report() {
         char buf[20];
 
         /* Filtered Voltage */
-        snprintf(buf, sizeof(buf), "*V%.2fV*", v);
+        snprintf(buf, sizeof(buf), "*V%.2fV*", (double)v);
         Comms::print.println(buf);
 
         /* Minimum Voltage */
-        snprintf(buf, sizeof(buf), "*M%.2fV*", min);
+        snprintf(buf, sizeof(buf), "*M%.2fV*", (double)min);
         Comms::print.println(buf);
     
         last_report = millis();

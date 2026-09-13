@@ -102,7 +102,7 @@ MotionCommand apply_safety(MotionCommand cmd) {
     cmd.rotate  *= scale;
 
 	DBG_PRINT(Debug::Ch::SAFETY, "SCALE=%.2f F=%.2f S=%.2f R=%.2f",
-			  scale, cmd.forward, cmd.strafe, cmd.rotate);
+			  (double)scale, (double)cmd.forward, (double)cmd.strafe, (double)cmd.rotate);
 
     return cmd;
 }

@@ -24,12 +24,14 @@ namespace ObstacleDetection {
 
 /* =============== INTERNAL STATE =============== */
 /* ============ FRONT SENSOR ============ */
+static Proximity front_cache = { 999, false, false };
 static bool     front_in_slow = false;
 static bool     front_in_stop = false;
 static uint32_t front_last_clear_slow_ms = 0;
 static uint32_t front_last_clear_stop_ms = 0;
 
 /* ============ REAR SENSOR ============ */
+static Proximity rear_cache  = { 999, false, false };
 static bool     rear_in_slow = false;
 static bool     rear_in_stop = false;
 static uint32_t rear_last_clear_slow_ms = 0;
@@ -105,29 +107,24 @@ void update() {
     update_zone(rear_dist, REAR_STOP_ENTER_CM, REAR_STOP_EXIT_CM,
                 rear_in_stop, rear_last_clear_stop_ms);
 
+    front_cache.distance_cm = Ultrasonic::get_front_distance_cm();
+    front_cache.in_slow_zone = front_in_slow;
+    front_cache.in_stop_zone = front_in_stop;
+
+    rear_cache.distance_cm = Ultrasonic::get_rear_distance_cm();
+    rear_cache.in_slow_zone = rear_in_slow;
+    rear_cache.in_stop_zone = rear_in_stop;
+
 	DBG_PRINT(Debug::Ch::SAFETY, "F_SLOW=%d F_STOP=%d R_SLOW=%d R_STOP=%d",
 			  front_in_slow, front_in_stop, rear_in_slow, rear_in_stop);
 }
 
 Proximity get_front() {
-    return {
-        Ultrasonic::get_front_distance_cm(),
-        front_in_slow,
-        front_in_stop
-    };
+    return front_cache;
 }
 
 Proximity get_rear() {
-    #if ENABLE_ULTRASONIC_REAR
-    return {
-        Ultrasonic::get_rear_distance_cm(),
-        rear_in_slow,
-        rear_in_stop
-    };
-    #else
-    // Return clear
-    return { 999, false, false };
-    #endif
+    return rear_cache;
 }
 
 } // namespace ObstacleDetection

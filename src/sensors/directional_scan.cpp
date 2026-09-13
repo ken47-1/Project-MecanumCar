@@ -164,18 +164,7 @@ void update_sweep() {
 
         uint16_t* slot = result_slot(sweep_step);
         if (slot) *slot = dist;
-
-        if (dist > FRONT_STOP_ENTER_CM) {
-            switch (SWEEP_DIRS[sweep_step]) {
-                case ScanDir::FRONT:       sweep_result.clear_mask |= SWEEP_CLEAR_FRONT;       break;
-                case ScanDir::FRONT_LEFT:  sweep_result.clear_mask |= SWEEP_CLEAR_FRONT_LEFT;  break;
-                case ScanDir::FRONT_RIGHT: sweep_result.clear_mask |= SWEEP_CLEAR_FRONT_RIGHT; break;
-                case ScanDir::LEFT:        sweep_result.clear_mask |= SWEEP_CLEAR_LEFT;        break;
-                case ScanDir::RIGHT:       sweep_result.clear_mask |= SWEEP_CLEAR_RIGHT;       break;
-                default: break;
-            }
-        }
-
+        
         sweep_step++;
 
         if (sweep_step >= SWEEP_COUNT) {

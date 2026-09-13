@@ -129,8 +129,8 @@ constexpr unsigned long AUTO_RETRY_WAIT_MS = 2000;
 /* How many retries before stopping */
 constexpr uint8_t STUCK_MAX_RETRIES = 5;
 
-/* Time required to rotate the chassis (milliseconds) */
-/* ONLY USED IF #define ENABLE_ENCODERS IS DISABLED */
+/* Time to rotate the chassis (milliseconds). Used by the autonomous
+   state machine for a fixed-duration spin. */
 constexpr uint16_t AUTO_SPIN_DIAGONAL_MS = 500;   // For 45-degree adjustments
 constexpr uint16_t AUTO_SPIN_SIDE_MS     = 1000;  // For 90-degree adjustments
 

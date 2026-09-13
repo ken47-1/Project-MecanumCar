@@ -27,13 +27,6 @@
 
 namespace BluetoothCommandParser {
 
-/* =============== INTERNAL STATE =============== */
-/* ============ TIMED ACTIONS ============ */
-static unsigned long manual_spin_start_ms = 0;
-static uint16_t      manual_spin_limit_ms = 0;
-static float         manual_spin_dir      = 0.0f;
-static bool          manual_spin_active   = false;
-
 /* =============== PUBLIC API =============== */
 void handle(InputWatchdog& watchdog) {
     MotionCommand cmd = {0.0f, 0.0f, 0.0f};
@@ -65,19 +58,6 @@ void handle(InputWatchdog& watchdog) {
             valid_input = true;
             continue;
         }
-
-        /* --- Manual Motion Input --- */
-        if (BluetoothButtonInput::handle_char(c, cmd)) {
-            
-            /* Manual Override: Cancel timed actions if joystick/buttons move */
-            manual_spin_active = false;
-
-            if (ModeManager::is_autonomous()) {
-                ModeManager::set(DriveMode::MANUAL);
-            }
-            motion_applied = true;
-            valid_input    = true;
-        }
     }
 
     /* --- ARC TURNING --- */
@@ -97,23 +77,7 @@ void handle(InputWatchdog& watchdog) {
             DirectionalScan::update(cmd);
             MotorControl::apply_command(cmd);
         } 
-        /* --- Priority 2: Timed Spin Action --- */
-        else if (manual_spin_active) {
-            
-            /* --- Timed Authority --- */
-            // Feed the watchdog while the timed spin is in progress
-            watchdog.feed();
-
-            if (millis() - manual_spin_start_ms >= manual_spin_limit_ms) {
-                manual_spin_active = false;
-                MotorControl::apply_command({0.0f, 0.0f, 0.0f});
-            } else {
-                // Use AUTO_SPEED for turns to ensure calculated accuracy
-                float spd = (float)AUTO_SPEED / 1000.0f;
-                MotorControl::apply_command({0.0f, 0.0f, (spd * manual_spin_dir)});
-            }
-        }
-        /* --- Priority 3: Explicit Stop --- */
+        /* --- Priority 2: Explicit Stop --- */
         else if (explicit_stop) {
             MotorControl::apply_command({0.0f, 0.0f, 0.0f});
         }

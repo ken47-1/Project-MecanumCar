@@ -31,7 +31,6 @@ private:
     uint32_t _last_seen;
     bool     _armed;
     bool     _enabled;
-    bool     _motion_active;
     uint32_t _now() const;
 };
 
