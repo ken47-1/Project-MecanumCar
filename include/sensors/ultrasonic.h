@@ -6,7 +6,6 @@
 /* ============ CONFIG ============ */
 #include "config/Config.h"
 
-/* =============== INCLUDES =============== */
 /* ============ CORE ============ */
 #include <stdint.h>
 
