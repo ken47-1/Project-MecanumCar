@@ -80,7 +80,7 @@ Every file uses this comment scale to show the logical tree. Omit a section if i
 /* =============== INCLUDES =============== */
 
 /* ============ CONFIG ============ */
-#include "config/Config.h"        // Only if the header reads a feature flag
+#include "config/Config.h"        // Project configuration headers
 
 /* ============ PROJECT ============ */
 #include "..."                  // Project headers the public API needs
@@ -107,7 +107,7 @@ Rules:
 
 - Only include headers that the public API needs. Internal-only includes belong in the `.cpp` file.
 - Put `CONFIG` first under `INCLUDES`. Its position is fixed.
-- Include `Config.h` only if the header reads a feature flag.
+- Put every configuration header under `CONFIG`. A configuration header holds constants, pin maps, protocol layouts, timeouts, or feature flags.
 - A forward declaration is a T4 entry under `TYPES`.
 
 ---
@@ -171,7 +171,7 @@ Rules:
 
 - Sections appear in the order shown. Omit any section that has no content.
 - Put `CONFIG` first under `INCLUDES`. Its position is fixed. It is not an exception.
-- The module header on line 1 must include `Config.h` itself if it reads a feature flag.
+- The module header on line 1 includes every configuration header its public API reads.
 - Make every internal helper `static`.
 - Omit a group label when its group is empty. Do not leave an empty label.
 
@@ -231,25 +231,3 @@ namespace DirectionalScan {
 
 - Protocols, standards, and design notes belong in `docs/`.
 - Do not embed large documentation blocks in headers or source files.
-
----
-
-## Debug Message Format
-
-Runtime debug lines use one shape:
-
-    [TAG] KEY=value KEY=value ...
-
-- TAG is 2-4 uppercase letters. Added by the emitter. Not passed by call sites.
-- Keys uppercase. Underscores for multi-word keys.
-- Booleans print as 0 or 1.
-- Signed values include the sign (`%+d`, `%+.2f`).
-- Units live in the key name, not the value (`TEMP_C=45`).
-- No prose. No colons. No pipes.
-
-Two things do not use this format:
-
-- Boot banners: one-shot startup lines. No tag.
-- Protocol frames: structured messages to an external peer. Different rules.
-
-Do not print lines with no data. No "OK", "Done", or "Success".
