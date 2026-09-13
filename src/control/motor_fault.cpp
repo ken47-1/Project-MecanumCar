@@ -51,7 +51,7 @@ static const char* fault_to_string(MotorFaultReason r) {
 void init() {
     fault_active = false;
     fault_reason = MotorFaultReason::NONE;
-    Comms::system.println("MotorFault INIT");
+    Comms::system.println(F("MotorFault INIT"));
 }
 
 /* ============ STATUS ============ */
@@ -67,7 +67,7 @@ MotorFaultReason reason() {
 void trigger(MotorFaultReason reason) {
     /* Prevent re-triggering if already faulted */
     if (fault_active) {
-        Comms::system.print(">>> Fault ignored (already active): ");
+        Comms::system.print(F(">>> Fault ignored (already active): "));
         Comms::system.println(fault_to_string(reason));
         return;
     }
@@ -76,23 +76,22 @@ void trigger(MotorFaultReason reason) {
     fault_reason = reason;
 
     /* --- Critical Alert Output --- */
-    Comms::print.println("===================");
-    Comms::print.println("!!! MOTOR FAULT !!!");
-    Comms::print.print(">>> ");
+    Comms::print.println(F("==================="));
+    Comms::print.println(F("!!! MOTOR FAULT !!!"));
+    Comms::print.print(F(">>> "));
     Comms::print.print(fault_to_string(reason));
-    Comms::print.println(" <<<");
-    Comms::print.println("===================");
+    Comms::print.println(F(" <<<"));
+    Comms::print.println(F("==================="));
 
     /* Immediate hardware halt */
     MotorControl::hard_stop();
 }
 
 void reset() {
-    // SafetyManager reads this on its next update and allows motion again.
     fault_active = false;
     fault_reason = MotorFaultReason::NONE;
-    
-    Comms::system.println("MotorFault RESET - System Clear");
+
+    Comms::system.println(F("MotorFault RESET - System Clear"));
 }
 
 } // namespace MotorFault

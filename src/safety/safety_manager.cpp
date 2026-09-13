@@ -12,6 +12,7 @@
 
 /* ========= COMMS ========= */
 #include "comms/comms.h"
+#include "comms/debug.h"
 
 /* ========= CONTROL ========= */
 #include "control/motor_fault.h"
@@ -48,7 +49,7 @@ void init() {
     min_voltage_seen = 10.0f;
     last_warning_ms = 0;
     last_critical_ms = 0;
-    Comms::system.println("SafetyManager INIT");
+    Comms::system.println(F("SafetyManager INIT"));
 }
 
 /* ============ LOGIC ============ */
@@ -67,29 +68,26 @@ void update() {
         if (min_voltage_seen > v) min_voltage_seen = v;
         if (min_voltage_seen > 10.0f) min_voltage_seen = 10.0f;
         
-        // Critical: E-stop if min voltage drops below threshold
         if (min_voltage_seen < BATTERY_CRITICAL_VOLTAGE && !estop_active) {
             estop_active = true;
             MotorFault::trigger(MotorFaultReason::BATTERY_CRITICAL);
-            Comms::system.print("!!! BATTERY CRITICAL: ");
+            Comms::system.print(F("!!! BATTERY CRITICAL: "));
             Comms::system.print(min_voltage_seen);
-            Comms::system.println("V - E-STOP !!!");
+            Comms::system.println(F("V - E-STOP !!!"));
         }
-        // Critical warning (pre-E-stop)
         else if (v < BATTERY_CRITICAL_VOLTAGE + 0.3f) {
             if (now - last_critical_ms >= BATTERY_CRITICAL_COOLDOWN_MS) {
-                Comms::system.print("BATTERY NEAR CRITICAL: ");
+                Comms::system.print(F("BATTERY NEAR CRITICAL: "));
                 Comms::system.print(v);
-                Comms::system.println("V");
+                Comms::system.println(F("V"));
                 last_critical_ms = now;
             }
         }
-        // Warning only
         else if (v < BATTERY_WARNING_VOLTAGE) {
             if (now - last_warning_ms >= BATTERY_WARNING_COOLDOWN_MS) {
-                Comms::system.print("BATTERY LOW: ");
+                Comms::system.print(F("BATTERY LOW: "));
                 Comms::system.print(v);
-                Comms::system.println("V");
+                Comms::system.println(F("V"));
                 last_warning_ms = now;
             }
         }
@@ -108,25 +106,19 @@ void update() {
     }
 
     if (next_state != current_state) {
-        #if DEBUG_WATCHDOG
-            switch (next_state) {
-                case SAFETY_EMERGENCY_STOP:
-                    Comms::system.println("!!! SAFETY: EMERGENCY STOP ACTIVE !!!");
-                    break;
-                case SAFETY_CONNECTION_LOSS:
-                    Comms::system.println("!!! SAFETY: CONNECTION LOSS (HC-05 STATE) !!!");
-                    break;
-                case SAFETY_INPUT_LOSS:
-                    Comms::system.println("!!! SAFETY: INPUT LOSS (WATCHDOG) !!!");
-                    break;
-                default:
-                    break;
-            }
-        #else
-            if (next_state == SAFETY_EMERGENCY_STOP) {
-                Comms::system.println("!!! SAFETY: EMERGENCY STOP ACTIVE !!!");
-            }
-        #endif
+        switch (next_state) {
+            case SAFETY_EMERGENCY_STOP:
+                Comms::system.println(F("!!! SAFETY: EMERGENCY STOP ACTIVE !!!"));
+                break;
+            case SAFETY_CONNECTION_LOSS:
+                DBG_PRINT(Debug::Ch::WATCHDOG, "CONNECTION_LOSS HC05_STATE");
+                break;
+            case SAFETY_INPUT_LOSS:
+                DBG_PRINT(Debug::Ch::WATCHDOG, "INPUT_LOSS WATCHDOG");
+                break;
+            default:
+                break;
+        }
     }
 
     current_state = next_state;
@@ -161,9 +153,9 @@ void set_emergency_stop() {
 
 void clear_emergency_stop() {
     emergency_stop_latched = false;
-    min_voltage_seen = 10.0f;  // Reset on E-stop clear
+    min_voltage_seen = 10.0f;
     MotorFault::reset();
-    Comms::system.println(">>> SAFETY: ESTOP cleared <<<");
+    Comms::system.println(F(">>> SAFETY: ESTOP cleared <<<"));
 }
 
 } // namespace SafetyManager

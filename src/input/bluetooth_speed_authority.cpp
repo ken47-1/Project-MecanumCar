@@ -26,19 +26,19 @@ static unsigned long last_feedback_ms = 0;
 
 /* =============== INTERNAL HELPERS =============== */
 static void send_speed_feedback() {
-    Comms::print.print("*G");
+    Comms::print.print(F("*G"));
     Comms::print.print(speed_user);
-    Comms::print.println("*");
+    Comms::print.println(F("*"));
 
-    Comms::print.print("*%");
+    Comms::print.print(F("*%"));
     if (speed_step == SPEED_STEP_FINE) {
-        Comms::print.print("Fine");
+        Comms::print.print(F("Fine"));
     } else if (speed_step == SPEED_STEP_NORMAL) {
-        Comms::print.print("Normal");
+        Comms::print.print(F("Normal"));
     } else {
-        Comms::print.print("Rough");
+        Comms::print.print(F("Rough"));
     }
-    Comms::print.println("*");
+    Comms::print.println(F("*"));
 }
 
 /* =============== PUBLIC API =============== */

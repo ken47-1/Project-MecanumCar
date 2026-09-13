@@ -101,7 +101,7 @@ void init() {
     PCICR  |= (1 << PCIE2);
 #endif
 
-    Comms::system.println("Encoder INIT");
+    Comms::system.println(F("Encoder INIT"));
 }
 
 void reset() {

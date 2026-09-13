@@ -31,7 +31,7 @@ static DriveMode current_mode = DriveMode::MANUAL;
 /* ============ LIFECYCLE ============ */
 void init() {
     current_mode = DriveMode::MANUAL;
-    Comms::system.println("ModeManager INIT");
+    Comms::system.println(F("ModeManager INIT"));
 }
 
 /* ============ STATE ============ */
@@ -47,9 +47,9 @@ void set(DriveMode mode) {
 
     if (mode == DriveMode::AUTONOMOUS) {
         AutonomousController::reset();
-        Comms::system.println("Mode: AUTONOMOUS");
+        Comms::system.println(F("Mode: AUTONOMOUS"));
     } else {
-        Comms::system.println("Mode: MANUAL");
+        Comms::system.println(F("Mode: MANUAL"));
     }
 }
 

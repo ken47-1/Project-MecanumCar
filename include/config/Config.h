@@ -179,9 +179,13 @@ constexpr uint16_t PWM_MAX = 4095;     // AFMS V2 (12-bit)
    read Encoder::get_count(idx) to measure this value. */
 constexpr uint16_t ENCODER_TICKS_PER_REV = 20;
 
-/* --- Motor Limits --- */
-/* Your hardware will differ. Measure yours with tools/drive.py. */
-constexpr float MOTOR_MAX_RPM = 255.0f;
+/* --- Per-Wheel Speed Ceiling --- */
+/* Full-throttle open-loop RPM per wheel. Motors differ. Measure each wheel
+   with tools/drive.py before trusting these. */
+constexpr float MOTOR_MAX_RPM_FL = 255.0f;
+constexpr float MOTOR_MAX_RPM_FR = 255.0f;
+constexpr float MOTOR_MAX_RPM_RL = 255.0f;
+constexpr float MOTOR_MAX_RPM_RR = 255.0f;
 
 /* --- PID (per-wheel, normalized) --- */
 /* Gains depend on motor, gearbox, load, and battery. Retune per build. */
@@ -190,6 +194,17 @@ constexpr float PID_KI = 0.0f;
 constexpr float PID_KD = 0.0f;
 constexpr float PID_INTEGRAL_LIMIT = 0.5f;
 constexpr uint16_t PID_PERIOD_MS = 20;
+
+/* Cap on dt fed to the integral term. Absorbs a stalled main loop. */
+constexpr float PID_DT_MAX = 0.05f;
+
+/* Minimum output floor (motor deadband). 0 = disabled. */
+constexpr float PID_MIN_OUTPUT = 0.0f;
+
+/* Encoder stall detection. Fault if |intent| >= MIN and RPM == 0
+   for STALL_TICKS consecutive PID cycles. */
+constexpr float PID_STALL_INTENT_MIN = 0.3f;
+constexpr uint16_t PID_STALL_TICKS = 25;
 
 /* --- Mode --- */
 /* 1 = closed loop (PID active), 0 = open loop (raw intent passthrough).

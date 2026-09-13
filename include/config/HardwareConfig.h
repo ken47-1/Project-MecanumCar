@@ -80,4 +80,4 @@ constexpr uint8_t ENCODER_FR_PIN = 6;
 constexpr uint8_t ENCODER_RL_PIN = 5;
 constexpr uint8_t ENCODER_RR_PIN = 4;
 
-/* A1 reserved for PRNG seed. Leave unconnected. */ 
+/* A1 reserved for PRNG seed. Leave unconnected. */

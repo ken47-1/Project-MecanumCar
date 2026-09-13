@@ -34,13 +34,13 @@ bool MotorHardware::init() {
         return false;
     }
 
-    Comms::system.println("MotorHardware INIT");
+    Comms::system.println(F("MotorHardware INIT"));
     if (PWM_MAX == 4095) {
-        Comms::system.println("- PWM: 12-bit (AFMS V2)");
+        Comms::system.println(F("- PWM: 12-bit (AFMS V2)"));
     } else if (PWM_MAX == 255) {
-        Comms::system.println("- PWM: 8-bit (AFMS V1)");
+        Comms::system.println(F("- PWM: 8-bit (AFMS V1)"));
     } else {
-        Comms::system.print("- PWM_MAX: ");
+        Comms::system.print(F("- PWM_MAX: "));
         Comms::system.println(PWM_MAX);
     }
 

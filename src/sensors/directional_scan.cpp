@@ -107,8 +107,8 @@ void reset() {
 
 void init() {
     reset();
-    Comms::system.println("DirectionalScan INIT");
-    Comms::system.println("- Modes: Tracking, Sweep");
+    Comms::system.println(F("DirectionalScan INIT"));
+    Comms::system.println(F("- Modes: Tracking, Sweep"));
 }
 
 /* ============ TRACKING ============ */

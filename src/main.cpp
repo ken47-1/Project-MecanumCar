@@ -11,6 +11,7 @@
 
 /* ========= COMMS ========= */
 #include "comms/comms.h"
+#include "comms/debug.h"
 
 /* ========= INPUT ========= */
 #include "input/input_watchdog.h"
@@ -50,6 +51,9 @@ void setup() {
     /* --- Comms & Bus --- */
     Comms::begin();
     Wire.begin();
+
+    /* --- Debug --- */
+    Debug::init();
 
     /* Seed the PRNG from an unconnected analog pin. */
     analogRead(A1);

@@ -12,6 +12,7 @@
 
 /* ========= COMMS ========= */
 #include "comms/comms.h"
+#include "comms/debug.h"
 
 /* ========= SENSORS ========= */
 #include "sensors/ultrasonic.h"
@@ -78,7 +79,7 @@ void init() {
     rear_last_clear_slow_ms = 0;
     rear_last_clear_stop_ms = 0;
 
-    Comms::system.println("ObstacleDetection INIT");
+    Comms::system.println(F("ObstacleDetection INIT"));
 }
 
 void update() {
@@ -90,11 +91,7 @@ void update() {
     uint16_t rear_dist = 999;
     #endif
 
-    #if DEBUG_SENSORS
-        char buf[50];
-        snprintf(buf, sizeof(buf), "Front: %u cm | Rear: %u cm", front_dist, rear_dist);
-        Comms::system.println(buf);
-    #endif
+    DBG_PRINT(Debug::Ch::SENSORS, "FRONT=%u REAR=%u", front_dist, rear_dist);
 
     /* --- FRONT ZONES --- */
     update_zone(front_dist, FRONT_SLOW_ENTER_CM, FRONT_SLOW_EXIT_CM,
@@ -108,15 +105,8 @@ void update() {
     update_zone(rear_dist, REAR_STOP_ENTER_CM, REAR_STOP_EXIT_CM,
                 rear_in_stop, rear_last_clear_stop_ms);
 
-    #if DEBUG_OA_REASON
-        char buf[40];
-        
-        snprintf(buf, sizeof(buf), "Front slow: %d | stop: %d", front_in_slow, front_in_stop);
-        Comms::system.println(buf);
-        
-        snprintf(buf, sizeof(buf), "Rear slow: %d | stop: %d", rear_in_slow, rear_in_stop);
-        Comms::system.println(buf);
-    #endif
+	DBG_PRINT(Debug::Ch::SAFETY, "F_SLOW=%d F_STOP=%d R_SLOW=%d R_STOP=%d",
+			  front_in_slow, front_in_stop, rear_in_slow, rear_in_stop);
 }
 
 Proximity get_front() {

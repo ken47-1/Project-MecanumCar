@@ -10,6 +10,7 @@
 
 /* ========= COMMS ========= */
 #include "comms/comms.h"
+#include "comms/debug.h"
 
 /* ========= SAFETY ========= */
 #include "safety/safety_manager.h"
@@ -60,9 +61,7 @@ MotionCommand apply_safety(MotionCommand cmd) {
     if (safety == SAFETY_EMERGENCY_STOP ||
         safety == SAFETY_INPUT_LOSS ||
         safety == SAFETY_CONNECTION_LOSS) {
-        #if DEBUG_OA_SCALE
-            Comms::system.println("POLICY: HARD STOP (fault/input loss/conn loss)");
-        #endif
+        DBG_PRINT(Debug::Ch::SAFETY, "HALT REASON=FAULT");
         return { 0.0f, 0.0f, 0.0f };
     }
 
@@ -102,12 +101,8 @@ MotionCommand apply_safety(MotionCommand cmd) {
     cmd.strafe  *= scale;
     cmd.rotate  *= scale;
 
-    #if DEBUG_OA_SCALE
-        char buf[80];
-        snprintf(buf, sizeof(buf), "POLICY: scale=%.2f | F=%.2f S=%.2f R=%.2f",
-                scale, cmd.forward, cmd.strafe, cmd.rotate);
-        Comms::system.println(buf);
-    #endif
+	DBG_PRINT(Debug::Ch::SAFETY, "SCALE=%.2f F=%.2f S=%.2f R=%.2f",
+			  scale, cmd.forward, cmd.strafe, cmd.rotate);
 
     return cmd;
 }

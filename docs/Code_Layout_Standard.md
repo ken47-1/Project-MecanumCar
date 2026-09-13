@@ -231,3 +231,25 @@ namespace DirectionalScan {
 
 - Protocols, standards, and design notes belong in `docs/`.
 - Do not embed large documentation blocks in headers or source files.
+
+---
+
+## Debug Message Format
+
+Runtime debug lines use one shape:
+
+    [TAG] KEY=value KEY=value ...
+
+- TAG is 2-4 uppercase letters. Added by the emitter. Not passed by call sites.
+- Keys uppercase. Underscores for multi-word keys.
+- Booleans print as 0 or 1.
+- Signed values include the sign (`%+d`, `%+.2f`).
+- Units live in the key name, not the value (`TEMP_C=45`).
+- No prose. No colons. No pipes.
+
+Two things do not use this format:
+
+- Boot banners: one-shot startup lines. No tag.
+- Protocol frames: structured messages to an external peer. Different rules.
+
+Do not print lines with no data. No "OK", "Done", or "Success".

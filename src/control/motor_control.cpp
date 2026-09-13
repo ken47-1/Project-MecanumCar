@@ -11,6 +11,7 @@
 
 /* ========= COMMS ========= */
 #include "comms/comms.h"
+#include "comms/debug.h"
 
 /* ========= CONTROL ========= */
 #include "control/motor_fault.h"
@@ -84,7 +85,7 @@ void init(MotorHardware& hw) {
     hw.release_all();
     MotorRamp::reset();
 
-    Comms::system.println("MotorControl INIT");
+    Comms::system.println(F("MotorControl INIT"));
 }
 
 void hard_stop() {
@@ -212,18 +213,15 @@ void update() {
         drive_one_motor(motor_rr, cur.rr);
     #endif
 
-    #if ENABLE_ENCODERS && DEBUG_WHEEL_SPEED
+    #if ENABLE_ENCODERS
         static unsigned long last_speed_print = 0;
         if (millis() - last_speed_print >= 500) {
             last_speed_print = millis();
-            char buf[64];
-            snprintf(buf, sizeof(buf),
-                     "RPM FL=%d FR=%d RL=%d RR=%d",
-                     (int)Encoder::get_rpm(0),
-                     (int)Encoder::get_rpm(1),
-                     (int)Encoder::get_rpm(2),
-                     (int)Encoder::get_rpm(3));
-            Comms::system.println(buf);
+            DBG_PRINT(Debug::Ch::PID, "FL=%d FR=%d RL=%d RR=%d",
+                      (int)Encoder::get_rpm(0),
+                      (int)Encoder::get_rpm(1),
+                      (int)Encoder::get_rpm(2),
+                      (int)Encoder::get_rpm(3));
         }
     #endif
 }

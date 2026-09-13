@@ -565,7 +565,7 @@ Two mounting modes, selected by `SERVO_MIRRORED` in `HardwareConfig.h`.
 - `ENABLE_ULTRASONIC_FRONT = 1` (ON)
 - `ENABLE_ULTRASONIC_REAR = 1` (ON)
 - `ENABLE_SERVO = 1` (ON)
-- `ENABLE_BATTERY_MONITOR = 1` (ON)
+- `ENABLE_BATTERY_MONITOR = 0` (OFF)
 - `ENABLE_ENCODERS = 0` (OFF)
 
 All modules are fully optional. Each can be enabled/disabled at compile time via flags in `Config.h` and `HardwareConfig.h`.

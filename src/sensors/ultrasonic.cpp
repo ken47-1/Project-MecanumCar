@@ -60,7 +60,7 @@ void init() {
         scan_set_direction(ScanDir::FRONT);
     #endif
 
-    Comms::system.println("Sensors INIT");
+    Comms::system.println(F("Sensors INIT"));
 
     char buf[40];
 
