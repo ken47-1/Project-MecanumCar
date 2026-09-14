@@ -41,7 +41,7 @@ This firmware rebuilds the kit from the ground up with:
 - **Sensor filtering** – exponential moving average (EMA) and hysteresis for stable readings.
 - **Motor ramping** – smooth acceleration and deceleration (400 ms up, 200 ms down).
 - **Dual‑board support** – works on Arduino Uno R3 and R4 Minima/WiFi.
-- **Fully configurable** – all settings are in `Config.h`, `HardwareConfig.h`, and `DebugConfig.h`.
+- **Fully configurable** – all settings are in `Config.h`, `HardwareConfig.h`, and `LogConfig.h`.
 - **Real feedback** – speed gauge, step mode, and debug output.
 
 The same hardware now delivers autonomous driving, reliable obstacle avoidance, and safe operation – all in a clean, maintainable codebase.
@@ -57,7 +57,12 @@ A professional-grade firmware for a hobbyist robot kit. The same hardware, now c
 **Comms** (`src/comms/`)
 - `Comms` — Serial output multiplexing (debug mirror + Bluetooth feedback) with support for HC-05 (STATE pin optional) and HC-06 modules. `Comms::is_connected()` uses STATE pin when enabled, otherwise assumes always connected.
 - `MultiPrint` — Fans output to two channels simultaneously
-- Handles message formatting and transmission
+    - Handles message formatting and transmission
+    
+**Log** (`src/log/`)
+- `Log` — Two-mask runtime logging (level + channel). `LOG_D/I/W/E` macros.
+    - `LogConfig.h` — Compile-time gate (`LOG_ENABLED`).
+    - Levels and channels toggle at runtime over Bluetooth (`G` commands).
 
 **Control** (`src/control/`)
 - `MotorHardware` — Singleton hardware ownership of motors; raw PWM interface to AFMS V2
@@ -81,8 +86,6 @@ A professional-grade firmware for a hobbyist robot kit. The same hardware, now c
   - Rear: SLOW (35–40cm), STOP (15–20cm)
   - Returns `Proximity` struct: `in_slow_zone`, `in_stop_zone`, `distance_cm`
   - `distance_cm` is EMA-filtered. Zone flags use RAW.
-
-**Note**: `distance_cm` is EMA-fltered. Zone flags use RAW.
 
 - `SafetyManager` — System fault aggregation (emergency stop, input loss)
 - `MotionPolicy` — Decision logic for motion vetoes
@@ -261,12 +264,12 @@ Single-character commands sent one at a time or batched.
 
 ### Watchdog Behavior
 
-- **Always active:** Watchdog runs continuously, reset by any valid command.
+- **Armed only while moving:** `MotorControl::is_moving()` gates the timeout check.
+- **Idle:** `_last_seen` refreshes every loop. No INPUT_LOSS fires.
 - **Timeout:** 150ms (`INPUT_WATCHDOG_TIMEOUT_MS`)
-- **Trigger:** No valid command received within timeout
+- **Trigger:** No valid command received within timeout while driving
 - **Action:** InputWatchdog asserts INPUT_LOSS -> SafetyManager blocks motion
 - **Recovery:** Any valid command clears INPUT_LOSS and resumes operation
-- **Idle command:** `X` is a soft stop that also resets the watchdog when the robot is idle.
 
 ## Safety Subsystem
 
@@ -277,10 +280,10 @@ Single-character commands sent one at a time or batched.
 ### Watchdog
 
 - **Timeout:** 150ms (`INPUT_WATCHDOG_TIMEOUT_MS`)
-- **Trigger:** No valid command received within timeout
-- **Action:** InputWatchdog notifies SafetyManager, which asserts INPUT_LOSS flag
-- **Result:** MotorPolicy blocks all motion until the next valid command
-- **Emergent design:** Idle `X` command resets timeout without requiring dedicated keepalive frame
+- **Trigger:** No valid command received while moving
+- **Action:** InputWatchdog notifies SafetyManager, which asserts INPUT_LOSS
+- **Result:** MotionPolicy blocks all motion until the next valid command
+- **Idle:** The watchdog does not fire while the robot is stopped.
 
 ### Safety States (Priority Order)
 
@@ -450,31 +453,20 @@ flowchart LR
     E -->|wait & retry| B
 ```
 
-### Debug Output
+### Log Output
 
-Enable in `DebugConfig.h`:
+Runtime-toggled over Bluetooth.
 
-```cpp
-#define DEBUG_ENABLED  1   // Master toggle
+| Command | Action |
+|---|---|
+| `G` + letter | Toggle one channel |
+| `G` + `G` | Dump full mask |
+| `G` + `+` / `G` + `-` | All on / all off |
+| `G` + `L` + letter | Toggle one level |
 
-#if DEBUG_ENABLED   // EDIT BELOW
-    #define COMMS_DEBUG_MIRROR  1   // Echo commands to debug serial
-    #define DEBUG_COMMS         0   // Log Bluetooth communication
-    #define DEBUG_MOTOR_RAMP    0   // Print ramp calculations
-    #define DEBUG_OA_REASON     1   // Print veto reasons
-    #define DEBUG_OA_SCALE      1   // Print speed scaling
-    #define DEBUG_SENSORS       1   // Print sensor readings
-    #define DEBUG_WATCHDOG      1   // Print watchdog resets
-#else   // DO NOT EDIT BELOW
-    #define COMMS_DEBUG_MIRROR  0
-    #define DEBUG_COMMS         0
-    #define DEBUG_WATCHDOG      0
-    #define DEBUG_SENSORS       0
-    #define DEBUG_MOTOR_RAMP    0
-    #define DEBUG_OA_REASON     0
-    #define DEBUG_OA_SCALE      0
-#endif
-```
+See `docs/Log_Standard.md` for format and channel list.
+
+Sample line: `[D][SNR ] FRONT=42 REAR=999`
 
 ### Migration from Old Code
 
@@ -491,9 +483,9 @@ Enable in `DebugConfig.h`:
 
 **Config files:** `include/config/` contains three files:
 
-- `DebugConfig.h` – Debug output toggles
 - `HardwareConfig.h` – Physical hardware presence (pins, sensors installed)
 - `Config.h` – Software behavior (thresholds, timing, speed, features)
+- `LogConfig.h` – Compile-time log gate
 
 ### Hardware Pins
 

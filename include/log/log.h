@@ -33,6 +33,7 @@ void init();
 void reset();
 
 bool enabled(Lvl l, Ch c);
+bool isLevelEnabled(Lvl l);
 bool isChannelEnabled(Ch c);
 
 void setLevel(Lvl l, bool on);

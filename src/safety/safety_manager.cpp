@@ -99,15 +99,15 @@ void update() {
         BatteryVoltage::clear_sample();
     #endif
 
-	/* ESTOP edge: force scan state to FRONT */
-	if (estop_active != last_estop) {
-		if (estop_active) {
-			LOG_I(Log::Ch::CH_SNR, "ESTOP: scan held (was dir %d)",
-				  (int)DirectionalScan::current_scan_dir());
-		}
-		DirectionalScan::set_hold(estop_active);
-	}
-	last_estop = estop_active;
+    /* ESTOP edge: force scan state to FRONT */
+    if (estop_active != last_estop) {
+        if (estop_active) {
+            LOG_I(Log::Ch::CH_SNR, "ESTOP: scan held (was dir %d)",
+                  (int)DirectionalScan::current_scan_dir());
+        }
+        DirectionalScan::set_hold(estop_active);
+    }
+    last_estop = estop_active;
     
     SafetyState next_state;
 

@@ -74,7 +74,7 @@ This rewrite addresses every limitation:
 - **Sensor filtering** – exponential moving average (EMA) and hysteresis for stable readings.
 - **Motor ramping** – smooth acceleration and deceleration (400 ms up, 200 ms down).
 - **Dual‑board support** – works on Arduino Uno R3 and R4 Minima/WiFi.
-- **Fully configurable** – all settings are in `Config.h`, `HardwareConfig.h`, and `DebugConfig.h`.
+- **Fully configurable** – all settings are in `Config.h`, `HardwareConfig.h`, and `LogConfig.h`.
 - **Real feedback** – speed gauge, step mode, and debug output.
 
 The same hardware now delivers autonomous driving, reliable obstacle avoidance, and safe operation in a clean, maintainable codebase.
@@ -118,9 +118,9 @@ pio device monitor -b 9600
 
 All settings are split across three config files in `include/config/`:
 
-- `DebugConfig.h` – Debug output toggles
 - `HardwareConfig.h` – Physical hardware presence (pins, sensors installed)
 - `Config.h` – Software behavior (thresholds, timing, speed, features)
+- `LogConfig.h` – Compile-time log gate (`LOG_ENABLED`)
 
 ### Hardware Configuration (HardwareConfig.h)
 
@@ -154,7 +154,7 @@ All settings are split across three config files in `include/config/`:
 - `ENABLE_ULTRASONIC_FRONT` — Front HC-SR04 installed (default: ON)
 - `ENABLE_ULTRASONIC_REAR` — Rear HC-SR04 installed (default: ON)
 - `ENABLE_SERVO` — Servo for directional scan installed (default: ON)
-- `ENABLE_BATTERY_MONITOR` — 0-25V voltage sensor (default: ON)
+- `ENABLE_BATTERY_MONITOR` — 0-25V voltage sensor (default: OFF)
 - `ENABLE_ENCODERS` — H206 optical encoders (default: OFF)
 
 ### Drive Behavior
@@ -204,10 +204,14 @@ All settings are split across three config files in `include/config/`:
 - `T` — Arc turn toggle
 - `^` — Force watchdog feed
 - `P` — Toggle closed-loop PID (encoders only)
+- `G` + letter — Toggle log channel (C/I/M/R/P/S/F/W)
+- `G` + `G` — Dump full mask
+- `G` + `+` / `G` + `-` — All channels on / off
+- `G` + `L` + letter — Toggle log level (D/I/W/E)
 
 ## Safety Features
 
-- **Watchdog**: 150ms Bluetooth timeout, always active. Any valid command (`X`, `W`, `%+`, `T`, etc.) resets the timer. If no command arrives within 150ms, INPUT_LOSS is asserted and motors stop. auto-resumes on any valid command; only E-STOP latches.
+- **Watchdog**: 150ms Bluetooth timeout, armed only while moving. Any valid command (`X`, `W`, `%+`, `T`, etc.) resets the timer. If no command arrives within 150ms while driving, INPUT_LOSS is asserted and motors stop. Auto-resumes on the next valid command. Only E-STOP latches.
 
 - **Obstacle Detection**: Front/rear independent
   - Clear: >35cm front, >40cm rear — full speed
@@ -265,9 +269,9 @@ All settings are split across three config files in `include/config/`:
 **Obstacle avoidance not working**
 
 - Check sensor wires (HC-SR04 needs GND, 5V, TRIG, ECHO)
-- Watch serial output: `[SENS] Front: XX cm`
+- Watch serial output: `[D][SNR ] FRONT=XX REAR=XX`
 - Adjust thresholds in `Config.h` if using different sensors
-- Enable `DEBUG_OA_REASON` in `DebugConfig.h` to debug veto logic
+- Toggle the SNR channel (`G` + `S`) to watch sensor lines
 
 **Servo doesn't scan**
 
@@ -282,40 +286,12 @@ All settings are split across three config files in `include/config/`:
 - Re-pair Bluetooth or restart the app
 - HC-06 users: disable `ENABLE_HC05_STATE_PIN` in `Config.h`
 
-## Debug Flags
-
-Enable in `DebugConfig.h`:
-
-```cpp
-#define DEBUG_ENABLED  1   // Master toggle
-
-#if DEBUG_ENABLED   // EDIT BELOW
-    #define COMMS_DEBUG_MIRROR  1   // Echo commands to debug serial
-    #define DEBUG_COMMS         0   // Log Bluetooth communication
-    #define DEBUG_MOTOR_RAMP    0   // Print ramp calculations
-    #define DEBUG_OA_REASON     1   // Print veto reasons
-    #define DEBUG_OA_SCALE      1   // Print speed scaling
-    #define DEBUG_SENSORS       1   // Print sensor readings
-    #define DEBUG_WATCHDOG      1   // Print watchdog resets
-#else   // DO NOT EDIT BELOW
-    #define COMMS_DEBUG_MIRROR  0
-    #define DEBUG_COMMS         0
-    #define DEBUG_WATCHDOG      0
-    #define DEBUG_SENSORS       0
-    #define DEBUG_MOTOR_RAMP    0
-    #define DEBUG_OA_REASON     0
-    #define DEBUG_OA_SCALE      0
-#endif
-```
-
-Then `pio device monitor -b 9600` to see output.
-
 ## Performance
 
 - Command latency: <10ms
 - Motor response: <50ms
 - Ultrasonic sampling: ~50ms per sensor
-- Servo sweep: ~2.5 seconds (5 positions x 500ms settle)
+- Servo sweep: ~1.2 seconds (5 positions, 200–500ms settle by angle)
 - Speed ramp: 400ms accel, 200ms decel
 - Watchdog timeout: 150ms
 - Max speed: ~1.5 m/s (depends on gearing)
@@ -330,6 +306,17 @@ This project enforces a strict code layout standard documented in [`docs/Code_La
 - Comment hierarchy: T1 (file header) → T7 (inline notes)
 
 When contributing, follow the visual hierarchy scale defined in the standard document.
+
+## Log Channels
+
+Runtime-toggled over Bluetooth. See `docs/Log_Standard.md` and `docs/Control_Protocol.md`.
+
+| Command | Action |
+|---|---|
+| `G` + letter | Toggle one channel |
+| `G` + `G` | Dump full mask |
+| `G` + `+` / `G` + `-` | All on / all off |
+| `G` + `L` + letter | Toggle one level |
 
 ## License
 

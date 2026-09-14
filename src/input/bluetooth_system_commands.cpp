@@ -33,6 +33,7 @@ namespace BluetoothSystemCommands {
 /* =============== INTERNAL STATE =============== */
 /* ============ STATIC VARS ============ */
 static bool awaiting_log_cmd              = false;
+static bool awaiting_level_cmd            = false;
 static bool arc_turn_speed_dependent_flag = ARC_TURN_DEFAULT_MODE;
 
 /* =============== INTERNAL HELPERS =============== */
@@ -58,6 +59,11 @@ bool handle_char(char c, InputWatchdog& watchdog) {
         awaiting_log_cmd = false;
         bool verbose = false;
 
+        if (c == 'L') {
+            awaiting_level_cmd = true;
+            return true;
+        }
+
         switch (c) {
             case 'C': toggle_ch(Log::Ch::CH_COM);  break;
             case 'I': toggle_ch(Log::Ch::CH_INP);  break;
@@ -81,10 +87,26 @@ bool handle_char(char c, InputWatchdog& watchdog) {
         return true;
     }
 
+    /* ============ LEVEL TOGGLE ============ */
+    if (awaiting_level_cmd) {
+        awaiting_level_cmd = false;
+        switch (c) {
+            case 'D': Log::setLevel(Log::Lvl::D, !Log::isLevelEnabled(Log::Lvl::D)); break;
+            case 'I': Log::setLevel(Log::Lvl::I, !Log::isLevelEnabled(Log::Lvl::I)); break;
+            case 'W': Log::setLevel(Log::Lvl::W, !Log::isLevelEnabled(Log::Lvl::W)); break;
+            case 'E': Log::setLevel(Log::Lvl::E, !Log::isLevelEnabled(Log::Lvl::E)); break;
+            default: break;
+        }
+        Log::dumpShort();    
+        watchdog.feed();
+        return true;
+    }
+
     switch (c) {
         /* ============ LOG ============ */
         case 'G':
             awaiting_log_cmd = true;
+            awaiting_level_cmd = false;
             return true;
 
         /* ============ SAFETY & WATCHDOG ============ */

@@ -66,6 +66,13 @@ Multiple keys combine. The parser accumulates every command in one cycle. Holdin
 | `^` | Force watchdog feed (master keepalive) |
 | `T` | Toggle arc turn mode (Fixed ↔ Speed-Dependent) |
 | `P` | Toggle closed-loop PID (requires `ENABLE_ENCODERS`) |
+| `G` + letter | Toggle one log channel (`C I M R P S F W`; `G` reserved for dump) |
+| `G` + `G` | Dump full mask |
+| `G` + `+` | All channels on |
+| `G` + `-` | All channels off |
+| `G` + `L` + letter | Toggle one log level (`D I W E`) |
+
+Log commands feed the watchdog.
 
 **Notes:**
 
