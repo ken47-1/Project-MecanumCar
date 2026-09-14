@@ -17,6 +17,8 @@
 #include "control/motor_fault.h"
 
 /* ========= SENSORS ========= */
+#include "sensors/ultrasonic.h"
+#include "sensors/directional_scan.h"
 #include "sensors/battery_voltage.h"
 
 /* ============ CORE ============ */
@@ -36,6 +38,9 @@ static bool connection_loss_active = false;
 static float min_voltage_seen = 10.0f;
 static unsigned long last_warning_ms = 0;
 static unsigned long last_critical_ms = 0;
+
+/* ============ ESTOP EDGE ============ */
+static bool last_estop = false;
 
 /* =============== PUBLIC API =============== */
 /* ============ LIFECYCLE ============ */
@@ -90,12 +95,20 @@ void update() {
                 last_warning_ms = now;
             }
         }
-    #endif
-    
-    #if ENABLE_BATTERY_MONITOR
+
         BatteryVoltage::clear_sample();
     #endif
 
+	/* ESTOP edge: force scan state to FRONT */
+	if (estop_active != last_estop) {
+		if (estop_active) {
+			LOG_I(Log::Ch::CH_SNR, "ESTOP: scan held (was dir %d)",
+				  (int)DirectionalScan::current_scan_dir());
+		}
+		DirectionalScan::set_hold(estop_active);
+	}
+	last_estop = estop_active;
+    
     SafetyState next_state;
 
     if (estop_active) {

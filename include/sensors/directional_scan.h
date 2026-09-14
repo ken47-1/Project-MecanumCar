@@ -30,6 +30,7 @@ struct SweepResult {
 namespace DirectionalScan {
     void init();
     void reset();
+    void set_hold(bool state);
     void update(const MotionCommand& cmd);
     ScanDir current_scan_dir();
     void start_sweep();
@@ -45,6 +46,7 @@ namespace DirectionalScan {
 namespace DirectionalScan {
     inline void init() {}
     inline void reset() {}
+    inline void set_hold(bool) {}
     inline void update(const MotionCommand&) {}
     inline ScanDir current_scan_dir() { return ScanDir::NONE; }
     inline void start_sweep() {}

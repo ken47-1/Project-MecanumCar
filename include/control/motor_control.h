@@ -16,4 +16,6 @@ namespace MotorControl {
     void apply_command(const MotionCommand& cmd);
     void apply_command_instant(const MotionCommand& cmd);
     void update();
+
+    bool is_moving();
 }

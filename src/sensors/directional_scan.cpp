@@ -20,9 +20,10 @@ namespace DirectionalScan {
 
 /* =============== INTERNAL STATE =============== */
 /* ============ TRACKING STATE ============ */
-static ScanDir active_dir = ScanDir::FRONT;
+static bool           held = false;
+static ScanDir       active_dir = ScanDir::FRONT;
 static unsigned long last_move_ms = 0;
-static ScanDir last_settled_dir = ScanDir::NONE;
+static ScanDir       last_settled_dir = ScanDir::NONE;
 
 /* ============ SWEEP STATE ============ */
 enum class SweepPhase : uint8_t {
@@ -105,6 +106,13 @@ void reset() {
     Ultrasonic::scan_set_direction(active_dir);
 }
 
+void set_hold(bool state) {
+    held = state;
+    if (held) {
+        reset();
+    }
+}
+
 void init() {
     reset();
     Comms::system.println(F("DirectionalScan INIT"));
@@ -113,6 +121,10 @@ void init() {
 
 /* ============ TRACKING ============ */
 void update(const MotionCommand& cmd) {
+    if (held) {
+        return;
+    }
+
     if (sweep_phase != SweepPhase::IDLE) {
         return;
     }

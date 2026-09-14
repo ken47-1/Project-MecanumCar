@@ -225,4 +225,9 @@ void update() {
     #endif
 }
 
+/* ------ STATUS ------ */
+bool is_moving() {
+    return !motors_stopped;
+}
+
 } // namespace MotorControl

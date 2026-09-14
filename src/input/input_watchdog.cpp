@@ -7,6 +7,9 @@
 
 /* ============ PROJECT ============ */
 
+/* ========= CONTROL ========= */
+#include "control/motor_control.h"
+
 /* ========= SAFETY ========= */
 #include "safety/safety_manager.h"
 
@@ -49,7 +52,11 @@ void InputWatchdog::update() {
         return;
     }
 
-    // Only set true. feed() clears it.
+    if (!MotorControl::is_moving()) {
+        _last_seen = millis();
+        return;
+    }
+
     if (is_expired()) {
         SafetyManager::set_input_loss(true);
     }

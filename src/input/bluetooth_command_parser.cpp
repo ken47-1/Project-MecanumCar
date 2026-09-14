@@ -58,6 +58,13 @@ void handle(InputWatchdog& watchdog) {
             valid_input = true;
             continue;
         }
+
+        /* --- Button Input --- */
+        if (BluetoothButtonInput::handle_char(c, cmd)) {
+            motion_applied = true;
+            valid_input    = true;
+            continue;
+        }
     }
 
     /* --- ARC TURNING --- */
