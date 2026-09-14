@@ -6,12 +6,12 @@
 /* ============ CONFIG ============ */
 #include "config/Config.h"
 #include "config/HardwareConfig.h"
-#include "config/DebugConfig.h"
 
 /* ============ PROJECT ============ */
 
 /* ========= COMMS ========= */
 #include "comms/multi_print.h"
+#include "log/log.h"
 
 /* ============ CORE ============ */
 #include <Arduino.h>

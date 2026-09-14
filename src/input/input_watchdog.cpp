@@ -60,8 +60,4 @@ bool InputWatchdog::is_expired() const {
     return (millis() - _last_seen) > _timeout_ms;
 }
 
-uint32_t InputWatchdog::_now() const {
-    return millis();
-}
-
 #endif // ENABLE_INPUT_WATCHDOG

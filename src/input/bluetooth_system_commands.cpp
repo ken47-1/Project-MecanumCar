@@ -10,7 +10,7 @@
 
 /* ========= COMMS ========= */
 #include "comms/comms.h"
-#include "comms/debug.h"
+#include "log/log.h"
 
 /* ========= CONTROL ========= */
 #include "control/motor_fault.h"
@@ -32,8 +32,14 @@ namespace BluetoothSystemCommands {
 
 /* =============== INTERNAL STATE =============== */
 /* ============ STATIC VARS ============ */
-static bool awaiting_debug_cmd            = false;
+static bool awaiting_log_cmd              = false;
 static bool arc_turn_speed_dependent_flag = ARC_TURN_DEFAULT_MODE;
+
+/* =============== INTERNAL HELPERS =============== */
+/* ============ LOGIC ============ */
+static void toggle_ch(Log::Ch c) {
+    Log::setChannel(c, !Log::isChannelEnabled(c));
+}
 
 /* =============== PUBLIC API =============== */
 /* ============ STATE ============ */
@@ -46,39 +52,39 @@ void set_arc_turn_speed_dependent(bool value) {
 }
 
 bool handle_char(char c, InputWatchdog& watchdog) {
-    /* ============ DEBUG TOGGLE ============ */
+    /* ============ LOG TOGGLE ============ */
     /* Intercept first. 'GP' must not fall through to the 'P' PID toggle. */
-    if (awaiting_debug_cmd) {
-        awaiting_debug_cmd = false;
+    if (awaiting_log_cmd) {
+        awaiting_log_cmd = false;
         bool verbose = false;
 
         switch (c) {
-            case 'C': Debug::toggle(Debug::Ch::COMMS);    break;
-            case 'I': Debug::toggle(Debug::Ch::IN);       break;
-            case 'M': Debug::toggle(Debug::Ch::MOTOR);    break;
-            case 'R': Debug::toggle(Debug::Ch::RAMP);     break;
-            case 'P': Debug::toggle(Debug::Ch::PID);      break;
-            case 'S': Debug::toggle(Debug::Ch::SENSORS);  break;
-            case 'F': Debug::toggle(Debug::Ch::SAFETY);   break;
-            case 'W': Debug::toggle(Debug::Ch::WATCHDOG); break;
-            case 'G': verbose = true;                     break;
-            case '+': Debug::set_all(true);               break;
-            case '-': Debug::set_all(false);              break;
+            case 'C': toggle_ch(Log::Ch::CH_COM);  break;
+            case 'I': toggle_ch(Log::Ch::CH_INP);  break;
+            case 'M': toggle_ch(Log::Ch::CH_MOT);  break;
+            case 'R': toggle_ch(Log::Ch::CH_RMP);  break;
+            case 'P': toggle_ch(Log::Ch::CH_PID);  break;
+            case 'S': toggle_ch(Log::Ch::CH_SNR);  break;
+            case 'F': toggle_ch(Log::Ch::CH_SAF);  break;
+            case 'W': toggle_ch(Log::Ch::CH_WDG);  break;
+            case 'G': verbose = true;              break;
+            case '+': Log::setAllChannels(true);   break;
+            case '-': Log::setAllChannels(false);  break;
             default: break;
         }
         if (verbose) {
-            Debug::dump();
+            Log::dump();
         } else {
-            Debug::dump_short();
+            Log::dumpShort();
         }
         watchdog.feed();
         return true;
     }
 
     switch (c) {
-        /* ============ DEBUG ============ */
+        /* ============ LOG ============ */
         case 'G':
-            awaiting_debug_cmd = true;
+            awaiting_log_cmd = true;
             return true;
 
         /* ============ SAFETY & WATCHDOG ============ */

@@ -9,12 +9,12 @@
 /* =============== PHYSICAL HARDWARE PRESENCE =============== */
 /* These flags indicate what sensors/modules are physically installed. */
 
-#define ENABLE_HC05_STATE_PIN      0   // HC-05 STATE pin (enable for HC-05)
-#define ENABLE_ULTRASONIC_FRONT    1   // Front HC-SR04 installed
-#define ENABLE_ULTRASONIC_REAR     1   // Rear HC-SR04 installed
-#define ENABLE_SERVO               1   // Servo for directional scan installed
-#define ENABLE_BATTERY_MONITOR     0   // 0-25V voltage sensor installed (Rev 2)
-#define ENABLE_ENCODERS            0   // H206 encoders installed (Rev 3)
+#define ENABLE_HC05_STATE_PIN   0   // HC-05 STATE pin (enable for HC-05)
+#define ENABLE_ULTRASONIC_FRONT 1   // Front HC-SR04 installed
+#define ENABLE_ULTRASONIC_REAR  1   // Rear HC-SR04 installed
+#define ENABLE_SERVO            1   // Servo for directional scan installed
+#define ENABLE_BATTERY_MONITOR  0   // 0-25V voltage sensor installed (Rev 2)
+#define ENABLE_ENCODERS         0   // H206 encoders installed (Rev 3)
     
 /* =============== BLUETOOTH =============== */
 /* Bluetooth: R3 uses Serial (pins 0/1), R4 uses Serial1 (pins 0/1)

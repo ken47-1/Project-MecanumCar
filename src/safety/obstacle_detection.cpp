@@ -12,7 +12,7 @@
 
 /* ========= COMMS ========= */
 #include "comms/comms.h"
-#include "comms/debug.h"
+#include "log/log.h"
 
 /* ========= SENSORS ========= */
 #include "sensors/ultrasonic.h"
@@ -93,7 +93,7 @@ void update() {
     uint16_t rear_dist = 999;
     #endif
 
-    DBG_PRINT(Debug::Ch::SENSORS, "FRONT=%u REAR=%u", front_dist, rear_dist);
+    LOG_D(Log::Ch::CH_SNR, "FRONT=%u REAR=%u", front_dist, rear_dist);
 
     /* --- FRONT ZONES --- */
     update_zone(front_dist, FRONT_SLOW_ENTER_CM, FRONT_SLOW_EXIT_CM,
@@ -115,7 +115,7 @@ void update() {
     rear_cache.in_slow_zone = rear_in_slow;
     rear_cache.in_stop_zone = rear_in_stop;
 
-    DBG_PRINT(Debug::Ch::SAFETY, "F_SLOW=%d F_STOP=%d R_SLOW=%d R_STOP=%d",
+    LOG_D(Log::Ch::CH_SAF, "F_SLOW=%d F_STOP=%d R_SLOW=%d R_STOP=%d",
               front_in_slow, front_in_stop, rear_in_slow, rear_in_stop);
 }
 

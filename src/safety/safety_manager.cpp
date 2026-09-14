@@ -6,13 +6,12 @@
 /* ============ CONFIG ============ */
 #include "config/Config.h"
 #include "config/HardwareConfig.h"
-#include "config/DebugConfig.h"
 
 /* ============ PROJECT ============ */
 
 /* ========= COMMS ========= */
 #include "comms/comms.h"
-#include "comms/debug.h"
+#include "log/log.h"
 
 /* ========= CONTROL ========= */
 #include "control/motor_fault.h"
@@ -115,10 +114,10 @@ void update() {
                 Comms::system.println(F("!!! SAFETY: EMERGENCY STOP ACTIVE !!!"));
                 break;
             case SAFETY_CONNECTION_LOSS:
-                DBG_PRINT(Debug::Ch::WATCHDOG, "CONNECTION_LOSS HC05_STATE");
+                LOG_D(Log::Ch::CH_WDG, "CONNECTION_LOSS HC05_STATE");
                 break;
             case SAFETY_INPUT_LOSS:
-                DBG_PRINT(Debug::Ch::WATCHDOG, "INPUT_LOSS WATCHDOG");
+                LOG_D(Log::Ch::CH_WDG, "INPUT_LOSS WATCHDOG");
                 break;
             default:
                 break;

@@ -10,7 +10,7 @@
 
 /* ========= COMMS ========= */
 #include "comms/comms.h"
-#include "comms/debug.h"
+#include "log/log.h"
 
 /* ========= SAFETY ========= */
 #include "safety/safety_manager.h"
@@ -61,7 +61,7 @@ MotionCommand apply_safety(MotionCommand cmd) {
     if (safety == SAFETY_EMERGENCY_STOP ||
         safety == SAFETY_INPUT_LOSS ||
         safety == SAFETY_CONNECTION_LOSS) {
-        DBG_PRINT(Debug::Ch::SAFETY, "HALT REASON=FAULT");
+        LOG_D(Log::Ch::CH_SAF, "HALT REASON=FAULT");
         return { 0.0f, 0.0f, 0.0f };
     }
 
@@ -101,8 +101,9 @@ MotionCommand apply_safety(MotionCommand cmd) {
     cmd.strafe  *= scale;
     cmd.rotate  *= scale;
 
-    DBG_PRINT(Debug::Ch::SAFETY, "SCALE=%.2f F=%.2f S=%.2f R= ",
-              (double)scale, (double)cmd.forward, (double)cmd.strafe, (double)cmd.rotate);
+    LOG_D(Log::Ch::CH_SAF, "SCALE=%.2f F=%.2f S=%.2f R=%.2f",
+        (double)scale, (double)cmd.forward,
+        (double)cmd.strafe, (double)cmd.rotate);
 
     return cmd;
 }

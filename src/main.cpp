@@ -5,13 +5,12 @@
 /* ============ CONFIG ============ */
 #include "config/Config.h"
 #include "config/HardwareConfig.h"
-#include "config/DebugConfig.h"
 
 /* ============ PROJECT ============ */
 
 /* ========= COMMS ========= */
 #include "comms/comms.h"
-#include "comms/debug.h"
+#include "log/log.h"
 
 /* ========= INPUT ========= */
 #include "input/input_watchdog.h"
@@ -52,8 +51,8 @@ void setup() {
     Comms::begin();
     Wire.begin();
 
-    /* --- Debug --- */
-    Debug::init();
+    /* --- Logging --- */
+    Log::init();
 
     /* Seed the PRNG from an unconnected analog pin. */
     analogRead(A1);

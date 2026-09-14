@@ -5,13 +5,12 @@
 
 /* ============ CONFIG ============ */
 #include "config/Config.h"
-#include "config/DebugConfig.h"
 
 /* ============ PROJECT ============ */
 
 /* ========= COMMS ========= */
 #include "comms/comms.h"
-#include "comms/debug.h"
+#include "log/log.h"
 
 /* ========= CONTROL ========= */
 #include "control/motor_fault.h"
@@ -217,7 +216,7 @@ void update() {
         static unsigned long last_speed_print = 0;
         if (millis() - last_speed_print >= 500) {
             last_speed_print = millis();
-            DBG_PRINT(Debug::Ch::PID, "FL=%d FR=%d RL=%d RR=%d",
+            LOG_D(Log::Ch::CH_PID, "FL=%d FR=%d RL=%d RR=%d",
                       (int)Encoder::get_rpm(0),
                       (int)Encoder::get_rpm(1),
                       (int)Encoder::get_rpm(2),
