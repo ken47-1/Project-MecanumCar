@@ -124,35 +124,35 @@ bool handle_char(char c, InputWatchdog& watchdog) {
                 return false;
             #endif
 
-		/* ============ PID TELEMETRY ============ */
-		case 'K':
-			#if ENABLE_ENCODERS
-			{
-				Comms::system.println(F("==================="));
-				Comms::system.println(F("[PID] K STATUS"));
+        /* ============ PID TELEMETRY ============ */
+        case 'K':
+            #if ENABLE_ENCODERS
+            {
+                Comms::system.println(F("==================="));
+                Comms::system.println(F("[PID] K STATUS"));
 
-				char buf[64];
-				snprintf(buf, sizeof(buf), "[PID] KP=%.2f KI=%.2f KD=%.2f MODE=%s",
-						 (double)PID_KP, (double)PID_KI, (double)PID_KD,
-						 MotorPID::is_closed_loop() ? "CLOSED" : "OPEN");
-				Comms::system.println(buf);
+                char buf[64];
+                snprintf(buf, sizeof(buf), "[PID] KP=%.2f KI=%.2f KD=%.2f MODE=%s",
+                         (double)PID_KP, (double)PID_KI, (double)PID_KD,
+                         MotorPID::is_closed_loop() ? "CLOSED" : "OPEN");
+                Comms::system.println(buf);
 
-				const char* names[4] = { "FL", "FR", "RL", "RR" };
-				for (uint8_t i = 0; i < 4; i++) {
-					WheelPID w = MotorPID::get_wheel(i);
-					snprintf(buf, sizeof(buf), "[PID] %s T=%.2f M=%.2f E=%+.2f O=%.2f",
+                const char* names[4] = { "FL", "FR", "RL", "RR" };
+                for (uint8_t i = 0; i < 4; i++) {
+                    WheelPID w = MotorPID::get_wheel(i);
+                    snprintf(buf, sizeof(buf), "[PID] %s T=%.2f M=%.2f E=%+.2f O=%.2f",
                              names[i], (double)w.target, (double)w.measured, (double)w.error, (double)w.output);
-					Comms::system.println(buf);
-				}
+                    Comms::system.println(buf);
+                }
 
-				Comms::system.println(F("==================="));
-				watchdog.feed();
-				return true;
-			}
-			#else
-				Comms::system.println(F("ERROR: Encoders not compiled"));
-				return false;
-			#endif
+                Comms::system.println(F("==================="));
+                watchdog.feed();
+                return true;
+            }
+            #else
+                Comms::system.println(F("ERROR: Encoders not compiled"));
+                return false;
+            #endif
 
         /* ============ DRIVE MODES ============ */
         case '1':

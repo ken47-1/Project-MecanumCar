@@ -115,8 +115,8 @@ void update() {
     rear_cache.in_slow_zone = rear_in_slow;
     rear_cache.in_stop_zone = rear_in_stop;
 
-	DBG_PRINT(Debug::Ch::SAFETY, "F_SLOW=%d F_STOP=%d R_SLOW=%d R_STOP=%d",
-			  front_in_slow, front_in_stop, rear_in_slow, rear_in_stop);
+    DBG_PRINT(Debug::Ch::SAFETY, "F_SLOW=%d F_STOP=%d R_SLOW=%d R_STOP=%d",
+              front_in_slow, front_in_stop, rear_in_slow, rear_in_stop);
 }
 
 Proximity get_front() {
