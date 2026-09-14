@@ -209,7 +209,7 @@ constexpr uint16_t PID_STALL_TICKS = 25;
 /* --- Mode --- */
 /* 1 = closed loop (PID active), 0 = open loop (raw intent passthrough).
    Runtime toggle with the 'P' command. */
-#define PID_CLOSED_LOOP_DEFAULT  0
+#define PID_CLOSED_LOOP_DEFAULT 0
 
 /* =============== DEPENDENCY CHECKS =============== */
 
