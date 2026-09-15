@@ -74,14 +74,6 @@ Multiple keys combine. The parser accumulates every command in one cycle. Holdin
 
 Log commands feed the watchdog.
 
-**Notes:**
-
-HC-05 STATE pin (optional) detects physical disconnection. See `ENABLE_HC05_STATE_PIN` in HardwareConfig.h.
-
-`T` toggles between Fixed (always 0.5× rotation) and Speed-Dependent (tighter at low speed, wider at high) arc turning. Prints current mode.
-
-`P` requires `ENABLE_ENCODERS = 1` in `HardwareConfig.h`. When encoders are off, the command prints an error and does nothing. When on, it prints `PID: closed` or `PID: open`.
-
 ---
 
 ## Feedback (Robot → App)
@@ -113,4 +105,6 @@ Speed frames re-emit on change. When the value is stable, `*G` and `*%` re-send 
 - Watchdog asserts input loss if no valid command arrives within timeout
 - Autonomous mode ON (`1`) and OFF (`0`) are stateless — safe to resend
 - Autonomous mode exits immediately on any manual input
-- HC-05 STATE pin (optional) detects physical disconnection — `CONNECTION_LOSS` state has higher priority than `INPUT_LOSS`
+- HC-05 STATE pin (optional) detects physical disconnection. See `ENABLE_HC05_STATE_PIN` in HardwareConfig.h. `CONNECTION_LOSS` has higher priority than `INPUT_LOSS`.
+- `T` toggles between Fixed (0.5× rotation) and Speed-Dependent (tighter at low speed, wider at high) arc turning. Prints current mode.
+- `P` requires `ENABLE_ENCODERS = 1` in `HardwareConfig.h`. When encoders are off, the command prints an error and does nothing. When on, it prints `PID: closed` or `PID: open`.
