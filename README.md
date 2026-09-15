@@ -1,5 +1,7 @@
 # Project MecanumCar
 
+*This project was developed with AI-assisted code generation and human oversight.*
+
 Bluetooth-controlled Mecanum wheel robot with autonomous obstacle avoidance. Arduino Uno + Motor Shield V2, modular C++ firmware on the Arduino Framework, dual HC-SR04 ultrasonic sensors with servo turret, real-time safety subsystem. Manual driving via Bluetooth app or autonomous mode with pathfinding. Complete rewrite of the ZYC0044 Mini Mecanum Wheel Car kit.
 
 ## Hardware
