@@ -145,6 +145,7 @@ bool handle_char(char c, InputWatchdog& watchdog) {
                 return true;
             #else
                 Comms::system.println(F("ERROR: Encoders not compiled"));
+                watchdog.feed();
                 return false;
             #endif
 
@@ -175,6 +176,7 @@ bool handle_char(char c, InputWatchdog& watchdog) {
             }
             #else
                 Comms::system.println(F("ERROR: Encoders not compiled"));
+                watchdog.feed();
                 return false;
             #endif
 
