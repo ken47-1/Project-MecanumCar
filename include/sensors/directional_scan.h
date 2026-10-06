@@ -35,7 +35,7 @@ namespace DirectionalScan {
     ScanDir current_scan_dir();
     void start_sweep();
     bool sweep_ready();
-    SweepResult get_sweep_result();
+    SweepResult consume_sweep_result();
     void update_sweep();
     bool is_settled();
     bool is_sweeping();
@@ -52,7 +52,7 @@ namespace DirectionalScan {
     inline ScanDir current_scan_dir() { return ScanDir::NONE; }
     inline void start_sweep() {}
     inline bool sweep_ready() { return false; }
-    inline SweepResult get_sweep_result() { return {}; }
+    inline SweepResult consume_sweep_result() { return {}; }
     inline void update_sweep() {}
     inline bool is_settled() { return true; }
     inline bool is_sweeping() { return false; }

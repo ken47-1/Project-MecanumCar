@@ -196,7 +196,7 @@ bool sweep_ready() {
     return sweep_phase == SweepPhase::DONE;
 }
 
-SweepResult get_sweep_result() {
+SweepResult consume_sweep_result() {
     sweep_phase = SweepPhase::IDLE;
     return sweep_result;
 }

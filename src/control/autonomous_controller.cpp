@@ -155,7 +155,7 @@ void update(InputWatchdog& watchdog) {
         case AutoState::SCANNING: {
             DirectionalScan::update_sweep();
             if (DirectionalScan::sweep_ready()) {
-                spin_limit_ms = pick_best_spin_time(DirectionalScan::get_sweep_result(), spin_direction);
+                spin_limit_ms = pick_best_spin_time(DirectionalScan::consume_sweep_result(), spin_direction);
 
                 if (spin_limit_ms > 0) {
                     // Center the sensor for the next MOVING state
