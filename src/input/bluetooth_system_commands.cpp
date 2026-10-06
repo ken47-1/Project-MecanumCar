@@ -119,10 +119,6 @@ bool handle_char(char c, InputWatchdog& watchdog) {
             SafetyManager::clear_emergency_stop();
             return true;
 
-        case '^':
-            watchdog.feed();
-            return true;
-
         case 'X':
             watchdog.feed();
             return true;

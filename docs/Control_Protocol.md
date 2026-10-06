@@ -63,7 +63,6 @@ Multiple keys combine. The parser accumulates every command in one cycle. Holdin
 | `?` | Reset fault |
 | `1` | Autonomous mode ON |
 | `0` | Autonomous mode OFF |
-| `^` | Force watchdog feed (master keepalive) |
 | `T` | Toggle arc turn mode (Fixed ↔ Speed-Dependent) |
 | `P` | Toggle closed-loop PID (requires `ENABLE_ENCODERS`) |
 | `G` + letter | Toggle one log channel (`C I M R P S F W`; `G` reserved for dump) |
@@ -101,7 +100,6 @@ Speed frames re-emit on change. When the value is stable, `*G` and `*%` re-send 
 - Emergency stop overrides all motion and latches until reset with `?`
 - Soft stop (`X`) does not latch — also feeds watchdog
 - Any valid command feeds watchdog and prevents INPUT_LOSS
-- `^` is an explicit keepalive — feeds watchdog without affecting motion
 - Watchdog asserts input loss if no valid command arrives within timeout
 - Autonomous mode ON (`1`) and OFF (`0`) are stateless — safe to resend
 - Autonomous mode exits immediately on any manual input
