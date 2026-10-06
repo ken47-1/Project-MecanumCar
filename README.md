@@ -168,6 +168,7 @@ All settings are split across three config files in `include/config/`:
 
 ### Obstacle Avoidance
 
+- **Autonomous mode**: user speed slider is bypassed. `AUTO_SPEED` is used as-is.
 - **Front slow**: 30–35cm → 0.5x
 - **Front stop**: 15–20cm → block
 - **Rear slow**: 35–40cm → 0.5x
@@ -311,7 +312,7 @@ When contributing, follow the visual hierarchy scale defined in the standard doc
 
 ## Log Channels
 
-Runtime-toggled over Bluetooth. See `docs/Log_Standard.md` and `docs/Control_Protocol.md`.
+Runtime-toggled over Bluetooth. See [`docs/Log_Standard.md`](docs/Log_Standard.md) and [`docs/Control_Protocol.md`](docs/Control_Protocol.md).
 
 | Command | Action |
 |---|---|

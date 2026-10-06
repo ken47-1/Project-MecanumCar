@@ -12,6 +12,9 @@
 #include "comms/comms.h"
 #include "log/log.h"
 
+/* ========= CONTROL ========= */
+#include "control/mode_manager.h"
+
 /* ========= SAFETY ========= */
 #include "safety/safety_manager.h"
 #include "safety/obstacle_detection.h"
@@ -27,14 +30,24 @@ namespace MotionPolicy {
 /* =============== INTERNAL HELPERS =============== */
 /* ============ AUTHORITY SCALING ============ */
 static float compute_authority_scale() {
-    float speed_scale = BluetoothSpeedAuthority::get_speed_scale();
-    
     SafetyState safety = SafetyManager::get_state();
     if (safety == SAFETY_EMERGENCY_STOP ||
         safety == SAFETY_INPUT_LOSS ||
         safety == SAFETY_CONNECTION_LOSS) {
         return 0.0f;
     }
+
+    /* --- Autonomous: user slider does not apply --- */
+    if (ModeManager::is_autonomous()) {
+        Proximity front = ObstacleDetection::get_front();
+        Proximity rear  = ObstacleDetection::get_rear();
+
+        bool any_slow = front.in_slow_zone || rear.in_slow_zone;
+        return any_slow ? OA_SOFT_AUTHORITY : 1.0f;
+    }
+
+    /* --- Manual: user slider scales authority --- */
+    float speed_scale = BluetoothSpeedAuthority::get_speed_scale();
 
     constexpr float SPEED_AUTHORITY_THRESHOLD = SPEED_AUTHORITY_THRESHOLD_USER / 1000.0f;
     if (speed_scale <= SPEED_AUTHORITY_THRESHOLD) {
