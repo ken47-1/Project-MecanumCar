@@ -1,20 +1,21 @@
 /* ==================== multi_print.h ==================== */
 #pragma once
+
+/* =============== INCLUDES =============== */
+/* ============ CORE ============ */
 #include <Arduino.h>
 
 /* =============== TYPES =============== */
 /* ============ CLASSES ============ */
 class MultiPrint final : public Print {
 public:
-    MultiPrint(Print* a, Print* b = nullptr) : _a(a), _b(b) {}
-    void set_secondary(Print* b) { _b = b; }
+    MultiPrint(Print* a, Print* b = nullptr);
 
-    size_t write(uint8_t c) override {
-        size_t n = 0;
-        if (_a) n += _a->write(c);
-        if (_b) n += _b->write(c);
-        return n;
-    }
+    void set_secondary(Print* b);
+
+    size_t write(uint8_t c) override;
+    size_t write(const uint8_t* buffer, size_t size) override;
+
 private:
     Print* _a;
     Print* _b;

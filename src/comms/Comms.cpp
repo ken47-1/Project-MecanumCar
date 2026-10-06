@@ -31,18 +31,6 @@ static MultiPrint comms_out(&bt_serial);
   static MultiPrint system_out_impl(&bt_serial, nullptr);   // Bluetooth only (no USB debug on R3)
 #endif
 
-/* =============== INTERNAL HELPERS =============== */
-#if COMMS_DEBUG_MIRROR && defined(BOARD_UNO_R4)
-static bool usb_serial_enabled = false;
-
-static void ensure_usb_serial() {
-    if (!usb_serial_enabled) {
-        Serial.begin(9600);
-        usb_serial_enabled = true;
-    }
-}
-#endif
-
 /* =============== PUBLIC API =============== */
 namespace Comms {
 
@@ -52,8 +40,13 @@ Print& system = system_out_impl;
 void begin() {
     bt_serial.begin(9600);
 
+#ifdef BOARD_UNO_R4
+    /* system_out_impl binds &Serial at static init. Open USB CDC
+       unconditionally, not only for the debug mirror. */
+    Serial.begin(9600);
+#endif
+
 #if COMMS_DEBUG_MIRROR && defined(BOARD_UNO_R4)
-    ensure_usb_serial();
     comms_out.set_secondary(&Serial);
 #endif
 
