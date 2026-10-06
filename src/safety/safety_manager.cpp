@@ -41,6 +41,15 @@ static unsigned long last_critical_ms = 0;
 /* ============ ESTOP EDGE ============ */
 static bool last_estop = false;
 
+/* =============== INTERNAL HELPERS =============== */
+/* ============ STATE RESOLUTION ============ */
+static SafetyState compute_state() {
+    if (MotorFault::active())   return SAFETY_EMERGENCY_STOP;
+    if (connection_loss_active) return SAFETY_CONNECTION_LOSS;
+    if (input_loss_active)      return SAFETY_INPUT_LOSS;
+    return SAFETY_CLEAR;
+}
+
 /* =============== PUBLIC API =============== */
 /* ============ LIFECYCLE ============ */
 void init() {
@@ -106,17 +115,7 @@ void update() {
     }
     last_estop = estop_active;
     
-    SafetyState next_state;
-
-    if (estop_active) {
-        next_state = SAFETY_EMERGENCY_STOP;
-    } else if (connection_loss_active) {
-        next_state = SAFETY_CONNECTION_LOSS;
-    } else if (input_loss_active) {
-        next_state = SAFETY_INPUT_LOSS;
-    } else {
-        next_state = SAFETY_CLEAR;
-    }
+    SafetyState next_state = compute_state();
 
     if (next_state != current_state) {
         switch (next_state) {
@@ -149,10 +148,12 @@ float get_min_voltage() {
 /* ============ STATE MODIFICATION ============ */
 void set_input_loss(bool active) {
     input_loss_active = active;
+    current_state = compute_state();
 }
 
 void set_connection_loss(bool active) {
     connection_loss_active = active;
+    current_state = compute_state();
 }
 
 void clear_emergency_stop() {
