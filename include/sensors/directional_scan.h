@@ -38,6 +38,7 @@ namespace DirectionalScan {
     SweepResult get_sweep_result();
     void update_sweep();
     bool is_settled();
+    bool is_sweeping();
 }
 
 #else
@@ -54,6 +55,7 @@ namespace DirectionalScan {
     inline SweepResult get_sweep_result() { return {}; }
     inline void update_sweep() {}
     inline bool is_settled() { return true; }
+    inline bool is_sweeping() { return false; }
 }
 
 #endif // ENABLE_DIRECTIONAL_SCAN

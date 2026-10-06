@@ -207,6 +207,11 @@ bool is_settled() {
     return (millis() - last_move_ms) >= get_settle_time(last_settled_dir, active_dir);
 }
 
+bool is_sweeping() {
+    return sweep_phase == SweepPhase::SETTLING
+        || sweep_phase == SweepPhase::READING;
+}
+
 } // namespace DirectionalScan
 
 #endif // ENABLE_DIRECTIONAL_SCAN

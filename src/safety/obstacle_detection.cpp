@@ -16,6 +16,7 @@
 
 /* ========= SENSORS ========= */
 #include "sensors/ultrasonic.h"
+#include "sensors/directional_scan.h"
 
 /* ============ CORE ============ */
 #include <Arduino.h>
@@ -85,36 +86,51 @@ void init() {
 }
 
 void update() {
-    /* --- One Ping Per Sensor --- */
-    uint16_t front_raw = Ultrasonic::get_front_distance_raw_cm();
+    /* --- Sweep In Progress: Hold Front Cache --- */
+    #if ENABLE_DIRECTIONAL_SCAN
+    bool sweep_active = DirectionalScan::is_sweeping();
+    #else
+    bool sweep_active = false;
+    #endif
+
+    /* --- Rear Sensor: Always Polled --- */
     #if ENABLE_ULTRASONIC_REAR
     uint16_t rear_raw = Ultrasonic::get_rear_distance_raw_cm();
     #else
-    // Return clear
     uint16_t rear_raw = 999;
     #endif
 
-    LOG_D(Log::Ch::CH_SNR, "FRONT=%u REAR=%u", front_raw, rear_raw);
+    LOG_D(Log::Ch::CH_SNR, "FRONT_DIR=%d REAR=%u SWEEP=%d",
+          (int)Ultrasonic::scan_get_direction(), rear_raw, sweep_active);
 
-    /* --- FRONT ZONES --- */
-    update_zone(front_raw, FRONT_SLOW_ENTER_CM, FRONT_SLOW_EXIT_CM,
-                front_in_slow, front_last_clear_slow_ms);
-    update_zone(front_raw, FRONT_STOP_ENTER_CM, FRONT_STOP_EXIT_CM,
-                front_in_stop, front_last_clear_stop_ms);
-
-    /* --- REAR ZONES --- */
+    /* --- Rear Zones --- */
     update_zone(rear_raw, REAR_SLOW_ENTER_CM, REAR_SLOW_EXIT_CM,
                 rear_in_slow, rear_last_clear_slow_ms);
     update_zone(rear_raw, REAR_STOP_ENTER_CM, REAR_STOP_EXIT_CM,
                 rear_in_stop, rear_last_clear_stop_ms);
 
-    front_cache.distance_cm = Ultrasonic::apply_front_ema(front_raw);
-    front_cache.in_slow_zone = front_in_slow;
-    front_cache.in_stop_zone = front_in_stop;
-
     rear_cache.distance_cm = Ultrasonic::apply_rear_ema(rear_raw);
     rear_cache.in_slow_zone = rear_in_slow;
     rear_cache.in_stop_zone = rear_in_stop;
+
+    /* --- Front Sensor: Only When Servo Is At FRONT And Not Sweeping --- */
+    bool front_poll_ok = !sweep_active
+                      && (Ultrasonic::scan_get_direction() == ScanDir::FRONT);
+
+    if (front_poll_ok) {
+        uint16_t front_raw = Ultrasonic::get_front_distance_raw_cm();
+
+        LOG_D(Log::Ch::CH_SNR, "FRONT=%u", front_raw);
+
+        update_zone(front_raw, FRONT_SLOW_ENTER_CM, FRONT_SLOW_EXIT_CM,
+                    front_in_slow, front_last_clear_slow_ms);
+        update_zone(front_raw, FRONT_STOP_ENTER_CM, FRONT_STOP_EXIT_CM,
+                    front_in_stop, front_last_clear_stop_ms);
+
+        front_cache.distance_cm = Ultrasonic::apply_front_ema(front_raw);
+        front_cache.in_slow_zone = front_in_slow;
+        front_cache.in_stop_zone = front_in_stop;
+    }
 
     LOG_D(Log::Ch::CH_SAF, "F_SLOW=%d F_STOP=%d R_SLOW=%d R_STOP=%d",
               front_in_slow, front_in_stop, rear_in_slow, rear_in_stop);
