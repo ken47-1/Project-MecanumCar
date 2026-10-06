@@ -34,7 +34,7 @@ The original code works, but it has severe limitations for real‑world use:
 
 This firmware rebuilds the kit from the ground up with:
 - **Modular C++ architecture** – separate modules for communication, control, input, safety, and sensors.
-- **Non‑blocking timing** – all delays use `millis()`, so the car stays responsive.
+- **Non-blocking scheduling** — all scheduling uses `millis()`. Each ultrasonic ping blocks for ~30 ms. A two-sensor loop costs ~60 ms. No `delay()` freezes the loop.
 - **Real‑time safety** – a watchdog, input loss detection, and a latching emergency stop.
 - **Autonomous navigation** – a state machine with pathfinding (MOVING → SCANNING → SPINNING → BACKING_UP → STUCK).
 - **Dual ultrasonic sensors** – front (servo‑mounted, 5‑position sweep) and rear.
@@ -633,8 +633,8 @@ Dynamic settle time based on the angle change between positions:
 ### Non-Blocking Architecture
 
 - No `delay()` anywhere in codebase
-- All timing based on `millis()`
-- Sensor reads polled on demand
+- All scheduling based on `millis()`
+- Sensor reads polled on demand. Each ping blocks for ~30 ms
 - Commands processed asynchronously
 
 ### Hardware Ownership

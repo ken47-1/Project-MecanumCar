@@ -69,7 +69,7 @@ The original code has several problems:
 
 This rewrite addresses every limitation:
 - **Modular C++ architecture** – separate modules for comms, control, input, safety, and sensors.
-- **Non‑blocking timing** – all delays use `millis()`, so the car stays responsive.
+- **Non‑blocking scheduling** – all scheduling uses `millis()`. Sensor reads block for ~30 ms each. A four-ping loop costs about 120 ms. No `delay()` freezes the loop.
 - **Real‑time safety** – a watchdog, input loss detection, and a latching emergency stop.
 - **Autonomous navigation** – a state machine with pathfinding (MOVING → SCANNING → SPINNING → BACKING_UP → STUCK).
 - **Dual ultrasonic sensors** – front (servo‑mounted, 5‑position sweep) and rear.
