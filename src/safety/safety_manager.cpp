@@ -94,7 +94,6 @@ void update() {
             }
         }
 
-        BatteryVoltage::clear_sample();
     #endif
 
     /* ESTOP edge: force scan state to FRONT */

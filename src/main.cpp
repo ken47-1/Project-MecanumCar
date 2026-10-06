@@ -106,6 +106,7 @@ void loop() {
     /* --- Battery Monitoring --- */
     #if ENABLE_BATTERY_MONITOR
         BatteryVoltage::report();
+        BatteryVoltage::clear_sample();
     #endif
 
     /* --- Mode-Specific Logic --- */
