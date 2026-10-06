@@ -5,7 +5,6 @@
 
 /* ============ CONFIG ============ */
 #include "config/Config.h"
-#include "config/HardwareConfig.h"
 
 /* ============ PROJECT ============ */
 
@@ -17,7 +16,6 @@
 #include "control/motor_fault.h"
 
 /* ========= SENSORS ========= */
-#include "sensors/ultrasonic.h"
 #include "sensors/directional_scan.h"
 #include "sensors/battery_voltage.h"
 
@@ -53,13 +51,13 @@ static SafetyState compute_state() {
 /* =============== PUBLIC API =============== */
 /* ============ LIFECYCLE ============ */
 void init() {
-    current_state = SAFETY_CLEAR;
     last_decay_ms = millis();
     input_loss_active = false;
     connection_loss_active = false;
     min_voltage_seen = 10.0f;
     last_warning_ms = 0;
     last_critical_ms = 0;
+    current_state = compute_state();
     Comms::system.println(F("SafetyManager INIT"));
 }
 
@@ -102,7 +100,6 @@ void update() {
                 last_warning_ms = now;
             }
         }
-
     #endif
 
     /* ESTOP edge: force scan state to FRONT */
@@ -146,20 +143,24 @@ float get_min_voltage() {
 }
 
 /* ============ STATE MODIFICATION ============ */
+void refresh() {
+    current_state = compute_state();
+}
+
 void set_input_loss(bool active) {
     input_loss_active = active;
-    current_state = compute_state();
+    refresh();
 }
 
 void set_connection_loss(bool active) {
     connection_loss_active = active;
-    current_state = compute_state();
+    refresh();
 }
 
 void clear_emergency_stop() {
     min_voltage_seen = 10.0f;
     MotorFault::reset_user_faults();
-    Comms::system.println(F(">>> SAFETY: ESTOP cleared <<<"));
+    refresh();
 }
 
 } // namespace SafetyManager

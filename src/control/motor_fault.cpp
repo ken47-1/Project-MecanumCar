@@ -3,9 +3,6 @@
 
 /* =============== INCLUDES =============== */
 
-/* ============ CONFIG ============ */
-#include "config/Config.h"
-
 /* ============ PROJECT ============ */
 
 /* ========= COMMS ========= */
@@ -85,6 +82,7 @@ void trigger(MotorFaultReason reason) {
 
     /* Immediate hardware halt */
     MotorControl::hard_stop();
+    SafetyManager::refresh();
 }
 
 void reset() {
@@ -92,6 +90,7 @@ void reset() {
     fault_reason = MotorFaultReason::NONE;
 
     Comms::system.println(F("MotorFault CLEAR - all faults"));
+    SafetyManager::refresh();
 }
 
 void reset_user_faults() {
@@ -103,18 +102,18 @@ void reset_user_faults() {
         case MotorFaultReason::SENSOR_FAIL:
             Comms::system.print(F("Cannot clear hardware fault: "));
             Comms::system.println(fault_to_string(fault_reason));
-            return;
+            break;
         case MotorFaultReason::NONE:
             Comms::system.println(F("MotorFault CLEAR - no fault"));
-            return;
+            break;
         default:
+            fault_active = false;
+            fault_reason = MotorFaultReason::NONE;
+            Comms::system.println(F("MotorFault CLEAR - user fault"));
             break;
     }
 
-    fault_active = false;
-    fault_reason = MotorFaultReason::NONE;
-
-    Comms::system.println(F("MotorFault CLEAR - user fault"));
+    SafetyManager::refresh();
 }
 
 } // namespace MotorFault

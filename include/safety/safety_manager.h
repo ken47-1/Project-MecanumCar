@@ -23,6 +23,7 @@ namespace SafetyManager {
     float get_min_voltage();
 
     /* ============ State Modification ============ */
+    void refresh();
     void set_input_loss(bool active);
     void set_connection_loss(bool active);
     void clear_emergency_stop();
