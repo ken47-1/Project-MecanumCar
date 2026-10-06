@@ -43,12 +43,12 @@ void set(DriveMode mode) {
     current_mode = mode;
 
     MotorControl::hard_stop();
-    DirectionalScan::reset();
 
     if (mode == DriveMode::AUTONOMOUS) {
         AutonomousController::reset();
         Comms::system.println(F("Mode: AUTONOMOUS"));
     } else {
+        DirectionalScan::reset();
         Comms::system.println(F("Mode: MANUAL"));
     }
 }
