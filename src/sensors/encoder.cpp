@@ -35,9 +35,15 @@ static volatile int8_t   dir_state[4]    = {0, 0, 0, 0};
 static inline void count_pulse(uint8_t idx) {
     uint32_t now  = micros();
     uint32_t prev = last_edge_us[idx];
+
+    /* --- Debounce --- */
+    if (prev != 0 && (now - prev) < ENCODER_DEBOUNCE_US) {
+        return;
+    }
+
     last_edge_us[idx] = now;
 
-    /* First pulse after a reset has no reference. */
+    /* --- First Pulse After Reset --- */
     if (prev == 0) {
         return;
     }

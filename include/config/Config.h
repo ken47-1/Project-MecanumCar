@@ -179,6 +179,11 @@ constexpr uint16_t PWM_MAX = 4095;     // AFMS V2 (12-bit)
    read Encoder::get_count(idx) to measure this value. */
 constexpr uint16_t ENCODER_TICKS_PER_REV = 20;
 
+/* Reject edges closer than this. Absorbs contact bounce and EMI glitches.
+   Real period at max RPM (255) with 20 ticks/rev is ~11.7 ms, so 50 µs
+   discards only spurious edges. */
+constexpr uint32_t ENCODER_DEBOUNCE_US = 50;
+
 /* --- Per-Wheel Speed Ceiling --- */
 /* Full-throttle open-loop RPM per wheel. Motors differ. Measure each wheel
    with tools/drive.py before trusting these. */
