@@ -67,9 +67,9 @@ static float apply_one(uint8_t idx, float intent, float dt) {
 
     /* --- Direction Reversal --- */
     int8_t dir = (intent > 0.0f) ? 1 : -1;
-    if (dir != s.last_dir) {
+    bool   flipped = (dir != s.last_dir);
+    if (flipped) {
         s.integral    = 0.0f;
-        s.last_meas   = 0.0f;
         s.stall_ticks = 0;
         s.last_dir    = dir;
     }
@@ -79,13 +79,23 @@ static float apply_one(uint8_t idx, float intent, float dt) {
     float measured_frac = rpm / max_rpm;
     float error         = intent - measured_frac;
 
+    /* On the first sample after a flip, seed last_meas and skip the
+       derivative this cycle. Prevents a spike from (measured - 0) / dt. */
+    if (flipped) {
+        s.last_meas = measured_frac;
+    }
+
     s.target   = intent;
     s.measured = measured_frac;
     s.error    = error;
 
     /* --- Proportional + Derivative --- */
-    float d_meas       = (measured_frac - s.last_meas) / dt;
-    s.last_meas        = measured_frac;
+    float d_meas = 0.0f;
+    if (!flipped) {
+        d_meas = (measured_frac - s.last_meas) / dt;
+    }
+    s.last_meas = measured_frac;
+
     float proportional = PID_KP * error;
     float derivative   = -PID_KD * d_meas;
 
