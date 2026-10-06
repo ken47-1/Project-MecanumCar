@@ -19,7 +19,4 @@ namespace MotorRamp {
     void update();
     MotorSet current();
     MotorSet target();
-
-    /* ============ Status ============ */
-    bool is_ramping();
 }
