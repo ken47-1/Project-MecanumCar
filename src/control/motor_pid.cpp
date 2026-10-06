@@ -167,9 +167,16 @@ MotorSet apply(const MotorSet& intent) {
     if (dt > PID_DT_MAX) dt = PID_DT_MAX;
 
     last_out.fl = apply_one(0, intent.fl, dt);
+    if (MotorFault::active()) { last_out = {}; return last_out; }
+
     last_out.fr = apply_one(1, intent.fr, dt);
+    if (MotorFault::active()) { last_out = {}; return last_out; }
+
     last_out.rl = apply_one(2, intent.rl, dt);
+    if (MotorFault::active()) { last_out = {}; return last_out; }
+
     last_out.rr = apply_one(3, intent.rr, dt);
+    if (MotorFault::active()) { last_out = {}; return last_out; }
 
     return last_out;
 }
