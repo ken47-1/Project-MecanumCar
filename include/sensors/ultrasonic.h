@@ -62,4 +62,5 @@ namespace Ultrasonic {
     #endif
 
     void scan_set_direction(ScanDir dir);
+    ScanDir scan_get_direction();
 }

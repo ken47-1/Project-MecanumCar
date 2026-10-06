@@ -42,6 +42,9 @@ static UltraPing rear_sonar(
 );
 #endif
 
+/* ============ SERVO STATE ============ */
+static ScanDir active_scan_dir = ScanDir::NONE;
+
 /* ============ FILTERING ============ */
 static float front_filtered_cm     = 0.0f;
 static bool  front_ema_initialized  = false;
@@ -134,31 +137,32 @@ uint16_t get_rear_distance_raw_cm() {
 
 /* ============ ACTUATION ============ */
 void scan_set_direction(ScanDir dir) {
-    static ScanDir last_dir = ScanDir::NONE;
-
-    #if !ENABLE_SERVO
+    if (dir == ScanDir::NONE) {
         return;
+    }
+
+    if (dir == active_scan_dir) {
+        return;
+    }
+
+    active_scan_dir = dir;
+
+    #if ENABLE_SERVO
+        if (servo_ready) {
+            switch (dir) {
+                case ScanDir::FRONT:       scan_servo.write(SERVO_CENTER);      break;
+                case ScanDir::FRONT_LEFT:  scan_servo.write(SERVO_FRONT_LEFT);  break;
+                case ScanDir::FRONT_RIGHT: scan_servo.write(SERVO_FRONT_RIGHT); break;
+                case ScanDir::LEFT:        scan_servo.write(SERVO_LEFT);        break;
+                case ScanDir::RIGHT:       scan_servo.write(SERVO_RIGHT);       break;
+                default: break;
+            }
+        }
     #endif
+}
 
-    if (!servo_ready) {
-        return;
-    }
-    
-    if (dir == last_dir || dir == ScanDir::NONE) {
-        return;
-    }
-
-    last_dir = dir;
-
-    /* --- Servo Write --- */
-    switch (dir) {
-        case ScanDir::FRONT:       scan_servo.write(SERVO_CENTER);      break;
-        case ScanDir::FRONT_LEFT:  scan_servo.write(SERVO_FRONT_LEFT);  break;
-        case ScanDir::FRONT_RIGHT: scan_servo.write(SERVO_FRONT_RIGHT); break;
-        case ScanDir::LEFT:        scan_servo.write(SERVO_LEFT);        break;
-        case ScanDir::RIGHT:       scan_servo.write(SERVO_RIGHT);       break;
-        default: break;
-    }
+ScanDir scan_get_direction() {
+    return active_scan_dir;
 }
 
 } // namespace Ultrasonic
