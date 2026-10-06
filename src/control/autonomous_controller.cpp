@@ -199,12 +199,13 @@ void update(InputWatchdog& watchdog) {
                 rear_blocked = false;  // assume clear
             #endif
             
-            if (millis() - timer_ms >= 1000 || rear_blocked) {
+            if (millis() - timer_ms >= AUTO_BACKUP_MS || rear_blocked) {
                 MotorControl::hard_stop();
-                DirectionalScan::start_sweep(); 
+                DirectionalScan::start_sweep();
                 enter(AutoState::SCANNING);
             } else {
-                MotorControl::apply_command({ -speed, 0.0f, 0.0f });
+                constexpr float rev = (float)AUTO_REVERSE_SPEED / 1000.0f;
+                MotorControl::apply_command({ -rev, 0.0f, 0.0f });
             }
             break;
         }

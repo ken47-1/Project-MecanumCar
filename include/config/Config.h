@@ -123,6 +123,12 @@ constexpr float         OA_SOFT_AUTHORITY     = 0.5f;   // speed scale in slow z
 /* Max speed cap in autonomous mode (per-mille, 0-1000) */
 constexpr uint16_t AUTO_SPEED = 600;
 
+/* Autonomous reverse speed (per-mille, 0-1000) */
+constexpr uint16_t AUTO_REVERSE_SPEED = 300;
+
+/* Backup duration during escape (milliseconds) */
+constexpr unsigned long AUTO_BACKUP_MS = 1000;
+
 /* How long to wait before retrying when all directions are blocked */
 constexpr unsigned long AUTO_RETRY_WAIT_MS = 2000;
 
