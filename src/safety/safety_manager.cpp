@@ -30,7 +30,6 @@ namespace SafetyManager {
 /* ============ STATIC VARS ============ */
 static SafetyState current_state   = SAFETY_CLEAR;
 static unsigned long last_decay_ms = 0;
-static bool emergency_stop_latched = false;
 static bool input_loss_active      = false;
 static bool connection_loss_active = false;
 
@@ -47,7 +46,6 @@ static bool last_estop = false;
 void init() {
     current_state = SAFETY_CLEAR;
     last_decay_ms = millis();
-    emergency_stop_latched = false;
     input_loss_active = false;
     connection_loss_active = false;
     min_voltage_seen = 10.0f;
@@ -58,7 +56,7 @@ void init() {
 
 /* ============ LOGIC ============ */
 void update() {
-    bool estop_active = emergency_stop_latched || MotorFault::active();
+    bool estop_active = MotorFault::active();
 
     #if ENABLE_BATTERY_MONITOR
         float v = BatteryVoltage::get_voltage();
@@ -159,7 +157,6 @@ void set_connection_loss(bool active) {
 }
 
 void clear_emergency_stop() {
-    emergency_stop_latched = false;
     min_voltage_seen = 10.0f;
     MotorFault::reset_user_faults();
     Comms::system.println(F(">>> SAFETY: ESTOP cleared <<<"));
