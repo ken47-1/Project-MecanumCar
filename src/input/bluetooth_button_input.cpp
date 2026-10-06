@@ -13,6 +13,9 @@
 namespace BluetoothButtonInput {
 
 bool handle_char(char c, MotionCommand& out) {
+    /* --- Normalize Case --- */
+    c = toupper((unsigned char)c);
+
     switch (c) {
         // Forward / Backward
         case 'W': out.forward += 1.0f; break;
