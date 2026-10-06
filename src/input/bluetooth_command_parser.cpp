@@ -76,17 +76,23 @@ void handle(InputWatchdog& watchdog) {
         cmd.rotate *= FIXED_ROTATE_SCALE;
     }
 
+    /* --- Autonomous Exit on Manual Input --- */
+    if (ModeManager::is_autonomous() && (explicit_stop || motion_applied)) {
+        ModeManager::set(DriveMode::MANUAL);
+    }
+
     /* --- Execution --- */
     if (!ModeManager::is_autonomous()) {
-        
-        /* --- Priority 1: Direct Manual Control --- */
-        if (motion_applied) {
+
+        /* --- Priority 1: Explicit Stop --- */
+        if (explicit_stop) {
+            MotorControl::apply_command({0.0f, 0.0f, 0.0f});
+            return;
+        }
+        /* --- Priority 2: Direct Manual Control --- */
+        else if (motion_applied) {
             DirectionalScan::update(cmd);
             MotorControl::apply_command(cmd);
-        } 
-        /* --- Priority 2: Explicit Stop --- */
-        else if (explicit_stop) {
-            MotorControl::apply_command({0.0f, 0.0f, 0.0f});
         }
     }
 
