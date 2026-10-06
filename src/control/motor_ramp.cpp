@@ -90,8 +90,16 @@ void update() {
 MotorSet current() {
     return cur;
 }
+
 MotorSet target() {
     return tgt;
+}
+
+bool is_ramping() {
+    return cur.fl != tgt.fl
+        || cur.fr != tgt.fr
+        || cur.rl != tgt.rl
+        || cur.rr != tgt.rr;
 }
 
 } // namespace MotorRamp

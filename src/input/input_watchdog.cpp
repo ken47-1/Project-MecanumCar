@@ -9,6 +9,7 @@
 
 /* ========= CONTROL ========= */
 #include "control/motor_control.h"
+#include "control/motor_ramp.h"
 
 /* ========= SAFETY ========= */
 #include "safety/safety_manager.h"
@@ -53,6 +54,11 @@ void InputWatchdog::update() {
     }
 
     if (!MotorControl::is_moving()) {
+        _last_seen = millis();
+        return;
+    }
+
+    if (MotorRamp::is_ramping()) {
         _last_seen = millis();
         return;
     }
