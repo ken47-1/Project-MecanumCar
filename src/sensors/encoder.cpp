@@ -10,6 +10,9 @@
 /* ========= COMMS ========= */
 #include "comms/comms.h"
 
+/* ========= CONTROL ========= */
+#include "control/motor_fault.h"
+
 /* ============ CORE ============ */
 #include <Arduino.h>
 
@@ -86,6 +89,16 @@ void init() {
     }
 
 #ifdef BOARD_UNO_R4
+    /* --- IRQ Capability Check --- */
+    for (uint8_t i = 0; i < 4; i++) {
+        if (digitalPinToInterrupt(PINS[i]) < 0) {
+            Comms::system.print(F("Encoder pin not IRQ-capable: D"));
+            Comms::system.println(PINS[i]);
+            MotorFault::trigger(MotorFaultReason::INTERNAL_ERROR);
+            return;
+        }
+    }
+
     attachInterrupt(digitalPinToInterrupt(PINS[0]), isr_fl, RISING);
     attachInterrupt(digitalPinToInterrupt(PINS[1]), isr_fr, RISING);
     attachInterrupt(digitalPinToInterrupt(PINS[2]), isr_rl, RISING);
