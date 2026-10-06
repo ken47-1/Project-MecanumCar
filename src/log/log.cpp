@@ -23,6 +23,15 @@ namespace Log {
 static uint8_t levelMask_   = 0;
 static uint8_t channelMask_ = 0;
 
+/* ============ RATE LIMIT ============ */
+static unsigned long last_emit_ms_[4] = {0, 0, 0, 0};
+static const unsigned long rate_ms_[4] = {
+    LOG_RATE_LIMIT_D,
+    LOG_RATE_LIMIT_I,
+    LOG_RATE_LIMIT_W,
+    LOG_RATE_LIMIT_E
+};
+
 /* =============== INTERNAL HELPERS =============== */
 /* ============ LOGIC ============ */
 static const char lvl_char(Lvl l) {
@@ -62,6 +71,9 @@ void init() {
 void reset() {
     levelMask_   = 0;
     channelMask_ = 0;
+    for (uint8_t i = 0; i < 4; i++) {
+        last_emit_ms_[i] = 0;
+    }
 }
 
 bool enabled(Lvl l, Ch c) {
@@ -151,6 +163,16 @@ void dumpShort() {
 }
 
 void write(Lvl l, Ch c, const char* fmt, ...) {
+    /* --- Rate Limit --- */
+    uint8_t idx = (uint8_t)l;
+    if (idx < 4 && rate_ms_[idx] > 0) {
+        unsigned long now = millis();
+        if (now - last_emit_ms_[idx] < rate_ms_[idx]) {
+            return;
+        }
+        last_emit_ms_[idx] = now;
+    }
+
     Comms::system.print('[');
     Comms::system.print(lvl_char(l));
     Comms::system.print(F("]["));
