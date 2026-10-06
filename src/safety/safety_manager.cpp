@@ -161,7 +161,7 @@ void set_connection_loss(bool active) {
 void clear_emergency_stop() {
     emergency_stop_latched = false;
     min_voltage_seen = 10.0f;
-    MotorFault::reset();
+    MotorFault::reset_user_faults();
     Comms::system.println(F(">>> SAFETY: ESTOP cleared <<<"));
 }
 

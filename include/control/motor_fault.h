@@ -30,4 +30,5 @@ namespace MotorFault {
     /* ============ Control ============ */
     void trigger(MotorFaultReason reason);
     void reset();
+    void reset_user_faults();
 }

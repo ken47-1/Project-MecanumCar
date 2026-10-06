@@ -91,7 +91,30 @@ void reset() {
     fault_active = false;
     fault_reason = MotorFaultReason::NONE;
 
-    Comms::system.println(F("MotorFault RESET - System Clear"));
+    Comms::system.println(F("MotorFault CLEAR - all faults"));
+}
+
+void reset_user_faults() {
+    /* Hardware faults stay latched. Only user faults clear. */
+    switch (fault_reason) {
+        case MotorFaultReason::SHIELD_NOT_FOUND:
+        case MotorFaultReason::INTERNAL_ERROR:
+        case MotorFaultReason::BATTERY_CRITICAL:
+        case MotorFaultReason::SENSOR_FAIL:
+            Comms::system.print(F("Cannot clear hardware fault: "));
+            Comms::system.println(fault_to_string(fault_reason));
+            return;
+        case MotorFaultReason::NONE:
+            Comms::system.println(F("MotorFault CLEAR - no fault"));
+            return;
+        default:
+            break;
+    }
+
+    fault_active = false;
+    fault_reason = MotorFaultReason::NONE;
+
+    Comms::system.println(F("MotorFault CLEAR - user fault"));
 }
 
 } // namespace MotorFault
