@@ -49,5 +49,17 @@ namespace Ultrasonic {
         inline uint16_t get_rear_distance_raw_cm() { return 999; }
     #endif
 
+    #if ENABLE_ULTRASONIC_FRONT
+        uint16_t apply_front_ema(uint16_t raw);
+    #else
+        inline uint16_t apply_front_ema(uint16_t) { return 999; }
+    #endif
+
+    #if ENABLE_ULTRASONIC_REAR
+        uint16_t apply_rear_ema(uint16_t raw);
+    #else
+        inline uint16_t apply_rear_ema(uint16_t) { return 999; }
+    #endif
+
     void scan_set_direction(ScanDir dir);
 }

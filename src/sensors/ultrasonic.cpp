@@ -79,13 +79,14 @@ void init() {
 /* ------ EMA Filtered (Continuous) ------ */
 #if ENABLE_ULTRASONIC_FRONT
 uint16_t get_front_distance_cm() {
-    uint16_t raw = front_sonar.ping_cm();
+    return apply_front_ema(front_sonar.ping_cm());
+}
 
+uint16_t apply_front_ema(uint16_t raw) {
     if (raw == 0) {
-        if (!front_ema_initialized) return 999;        // No history → clear
-        return (uint16_t)(front_filtered_cm + 0.5f);   // Hold last value
+        if (!front_ema_initialized) return 999;
+        return (uint16_t)(front_filtered_cm + 0.5f);
     }
-
     if (!front_ema_initialized) {
         front_filtered_cm = raw;
         front_ema_initialized = true;
@@ -98,13 +99,14 @@ uint16_t get_front_distance_cm() {
 
 #if ENABLE_ULTRASONIC_REAR
 uint16_t get_rear_distance_cm() {
-    uint16_t raw = rear_sonar.ping_cm();
-    
-    if (raw == 0) {
-        if (!rear_ema_initialized) return 999;        // No history → clear
-        return (uint16_t)(rear_filtered_cm + 0.5f);   // Hold last value
-    }
+    return apply_rear_ema(front_sonar.ping_cm());
+}
 
+uint16_t apply_rear_ema(uint16_t raw) {
+    if (raw == 0) {
+        if (!rear_ema_initialized) return 999;
+        return (uint16_t)(rear_filtered_cm + 0.5f);
+    }
     if (!rear_ema_initialized) {
         rear_filtered_cm = raw;
         rear_ema_initialized = true;

@@ -85,33 +85,34 @@ void init() {
 }
 
 void update() {
-    uint16_t front_dist = Ultrasonic::get_front_distance_raw_cm();
+    /* --- One Ping Per Sensor --- */
+    uint16_t front_raw = Ultrasonic::get_front_distance_raw_cm();
     #if ENABLE_ULTRASONIC_REAR
-    uint16_t rear_dist = Ultrasonic::get_rear_distance_raw_cm();
+    uint16_t rear_raw = Ultrasonic::get_rear_distance_raw_cm();
     #else
     // Return clear
-    uint16_t rear_dist = 999;
+    uint16_t rear_raw = 999;
     #endif
 
-    LOG_D(Log::Ch::CH_SNR, "FRONT=%u REAR=%u", front_dist, rear_dist);
+    LOG_D(Log::Ch::CH_SNR, "FRONT=%u REAR=%u", front_raw, rear_raw);
 
     /* --- FRONT ZONES --- */
-    update_zone(front_dist, FRONT_SLOW_ENTER_CM, FRONT_SLOW_EXIT_CM,
+    update_zone(front_raw, FRONT_SLOW_ENTER_CM, FRONT_SLOW_EXIT_CM,
                 front_in_slow, front_last_clear_slow_ms);
-    update_zone(front_dist, FRONT_STOP_ENTER_CM, FRONT_STOP_EXIT_CM,
+    update_zone(front_raw, FRONT_STOP_ENTER_CM, FRONT_STOP_EXIT_CM,
                 front_in_stop, front_last_clear_stop_ms);
 
     /* --- REAR ZONES --- */
-    update_zone(rear_dist, REAR_SLOW_ENTER_CM, REAR_SLOW_EXIT_CM,
+    update_zone(rear_raw, REAR_SLOW_ENTER_CM, REAR_SLOW_EXIT_CM,
                 rear_in_slow, rear_last_clear_slow_ms);
-    update_zone(rear_dist, REAR_STOP_ENTER_CM, REAR_STOP_EXIT_CM,
+    update_zone(rear_raw, REAR_STOP_ENTER_CM, REAR_STOP_EXIT_CM,
                 rear_in_stop, rear_last_clear_stop_ms);
 
-    front_cache.distance_cm = Ultrasonic::get_front_distance_cm();
+    front_cache.distance_cm = Ultrasonic::apply_front_ema(front_raw);
     front_cache.in_slow_zone = front_in_slow;
     front_cache.in_stop_zone = front_in_stop;
 
-    rear_cache.distance_cm = Ultrasonic::get_rear_distance_cm();
+    rear_cache.distance_cm = Ultrasonic::apply_rear_ema(rear_raw);
     rear_cache.in_slow_zone = rear_in_slow;
     rear_cache.in_stop_zone = rear_in_stop;
 
