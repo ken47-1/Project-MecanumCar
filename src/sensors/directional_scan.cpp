@@ -9,6 +9,7 @@
 
 /* ========= COMMS ========= */
 #include "comms/comms.h"
+#include "log/log.h"
 
 /* ========= SENSORS ========= */
 #include "sensors/ultrasonic.h"
@@ -131,6 +132,7 @@ void update(const MotionCommand& cmd) {
 
     ScanDir next = classify(cmd);
     if (next != active_dir) {
+        LOG_I(Log::Ch::CH_SNR, "servo %d -> %d", (int)active_dir, (int)next);
         last_settled_dir = active_dir;
         active_dir = next;
         Ultrasonic::scan_set_direction(active_dir);

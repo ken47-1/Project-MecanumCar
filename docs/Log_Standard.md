@@ -104,7 +104,7 @@ A firmware picks its own `Ch` values. Here is one example.
 | `CH_RMP` | `RMP ` | MotorRamp |
 | `CH_PID` | `PID ` | MotorPID, Encoder |
 | `CH_SNR` | `SNR ` | Ultrasonic, ObstacleDetection, Battery |
-| `CH_SAF` | `SAF ` | SafetyManager, MotionPolicy, MotorFault |
+| `CH_SAF` | `SAF ` | SafetyManager, MotionPolicy, SystemFault |
 | `CH_WDG` | `WDG ` | InputWatchdog |
 
 ---

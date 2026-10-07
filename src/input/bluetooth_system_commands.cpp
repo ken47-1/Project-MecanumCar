@@ -13,7 +13,7 @@
 #include "log/log.h"
 
 /* ========= CONTROL ========= */
-#include "control/motor_fault.h"
+#include "safety/system_fault.h"
 #include "control/mode_manager.h"
 #if ENABLE_ENCODERS
     #include "control/motor_pid.h"
@@ -111,7 +111,7 @@ bool handle_char(char c, InputWatchdog& watchdog) {
 
         /* ============ SAFETY & WATCHDOG ============ */
         case '!':
-            MotorFault::trigger(MotorFaultReason::ESTOP);
+            SystemFault::trigger(SystemFaultReason::ESTOP);
             watchdog.feed();
             return true;
 

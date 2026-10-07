@@ -1,9 +1,9 @@
-/* ==================== motor_fault.h ==================== */
+/* ==================== system_fault.h ==================== */
 #pragma once
 
 /* =============== TYPES =============== */
 /* ============ ENUMS ============ */
-enum class MotorFaultReason {
+enum class SystemFaultReason {
     NONE,
 
     // Hardware failures (fatal)
@@ -19,16 +19,16 @@ enum class MotorFaultReason {
 };
 
 /* =============== API =============== */
-namespace MotorFault {
+namespace SystemFault {
     /* ============ Lifecycle ============ */
     void init();
 
     /* ============ Status ============ */
     bool active();
-    MotorFaultReason reason();
+    SystemFaultReason reason();
 
     /* ============ Control ============ */
-    void trigger(MotorFaultReason reason);
+    void trigger(SystemFaultReason reason);
     void reset();
     void reset_user_faults();
 }

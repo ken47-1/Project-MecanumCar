@@ -68,7 +68,7 @@ A professional-grade firmware for a hobbyist robot kit. The same hardware, now c
 - `MotorHardware` — Singleton hardware ownership of motors; raw PWM interface to AFMS V2
 - `MotorControl` — Applies motion commands to motors via MotorHardware
 - `MotorRamp` — Acceleration/deceleration curves (400ms accel, 200ms decel)
-- `MotorFault` — Fault state tracking and latching
+- `SystemFault` — Fault state tracking and latching
 - `ModeManager` — Manual vs. Autonomous mode switching with state tracking
 - `AutonomousController` — Autonomous state machine (MOVING -> SCANNING -> SPINNING -> BACKING_UP -> STUCK) with servo sweep and pathfinding
 - `MotionCommand` — Data structure for motion intents (speed, direction)
@@ -147,7 +147,7 @@ graph TB
         MR[MotorRamp<br>Accel/decel curves]
         MH[MotorHardware<br>AFMS V2]
         AM[AutonomousController<br>State machine]
-        MF[MotorFault]
+        MF[SystemFault]
         MD[ModeManager]
     end
 

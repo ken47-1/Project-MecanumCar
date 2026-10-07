@@ -8,7 +8,7 @@
 /* ============ PROJECT ============ */
 
 /* ========= CONTROL ========= */
-#include "control/motor_fault.h"
+#include "safety/system_fault.h"
 
 /* ========= SENSORS ========= */
 #include "sensors/encoder.h"
@@ -128,7 +128,7 @@ static float apply_one(uint8_t idx, float intent, float dt) {
     /* --- Encoder Stall Detection --- */
     if (fabsf(intent) >= PID_STALL_INTENT_MIN && rpm == 0.0f) {
         if (++s.stall_ticks >= PID_STALL_TICKS) {
-            MotorFault::trigger(MotorFaultReason::SENSOR_FAIL);
+            SystemFault::trigger(SystemFaultReason::SENSOR_FAIL);
             return 0.0f;
         }
     } else {
@@ -167,16 +167,16 @@ MotorSet apply(const MotorSet& intent) {
     if (dt > PID_DT_MAX) dt = PID_DT_MAX;
 
     last_out.fl = apply_one(0, intent.fl, dt);
-    if (MotorFault::active()) { last_out = {}; return last_out; }
+    if (SystemFault::active()) { last_out = {}; return last_out; }
 
     last_out.fr = apply_one(1, intent.fr, dt);
-    if (MotorFault::active()) { last_out = {}; return last_out; }
+    if (SystemFault::active()) { last_out = {}; return last_out; }
 
     last_out.rl = apply_one(2, intent.rl, dt);
-    if (MotorFault::active()) { last_out = {}; return last_out; }
+    if (SystemFault::active()) { last_out = {}; return last_out; }
 
     last_out.rr = apply_one(3, intent.rr, dt);
-    if (MotorFault::active()) { last_out = {}; return last_out; }
+    if (SystemFault::active()) { last_out = {}; return last_out; }
 
     return last_out;
 }

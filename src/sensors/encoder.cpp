@@ -11,7 +11,7 @@
 #include "comms/comms.h"
 
 /* ========= CONTROL ========= */
-#include "control/motor_fault.h"
+#include "safety/system_fault.h"
 
 /* ============ CORE ============ */
 #include <Arduino.h>
@@ -100,7 +100,7 @@ void init() {
         if (digitalPinToInterrupt(PINS[i]) < 0) {
             Comms::system.print(F("Encoder pin not IRQ-capable: D"));
             Comms::system.println(PINS[i]);
-            MotorFault::trigger(MotorFaultReason::INTERNAL_ERROR);
+            SystemFault::trigger(SystemFaultReason::INTERNAL_ERROR);
             return;
         }
     }

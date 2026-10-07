@@ -13,7 +13,7 @@
 #include "log/log.h"
 
 /* ========= CONTROL ========= */
-#include "control/motor_fault.h"
+#include "safety/system_fault.h"
 
 /* ========= SENSORS ========= */
 #include "sensors/directional_scan.h"
@@ -42,7 +42,7 @@ static bool last_estop = false;
 /* =============== INTERNAL HELPERS =============== */
 /* ============ STATE RESOLUTION ============ */
 static SafetyState compute_state() {
-    if (MotorFault::active())   return SAFETY_EMERGENCY_STOP;
+    if (SystemFault::active())   return SAFETY_EMERGENCY_STOP;
     if (connection_loss_active) return SAFETY_CONNECTION_LOSS;
     if (input_loss_active)      return SAFETY_INPUT_LOSS;
     return SAFETY_CLEAR;
@@ -63,7 +63,7 @@ void init() {
 
 /* ============ LOGIC ============ */
 void update() {
-    bool estop_active = MotorFault::active();
+    bool estop_active = SystemFault::active();
 
     #if ENABLE_BATTERY_MONITOR
         float v = BatteryVoltage::get_voltage();
@@ -79,7 +79,7 @@ void update() {
         
         if (min_voltage_seen < BATTERY_CRITICAL_VOLTAGE && !estop_active) {
             estop_active = true;
-            MotorFault::trigger(MotorFaultReason::BATTERY_CRITICAL);
+            SystemFault::trigger(SystemFaultReason::BATTERY_CRITICAL);
             Comms::system.print(F("!!! BATTERY CRITICAL: "));
             Comms::system.print(min_voltage_seen);
             Comms::system.println(F("V - E-STOP !!!"));
@@ -159,7 +159,7 @@ void set_connection_loss(bool active) {
 
 void clear_emergency_stop() {
     min_voltage_seen = 10.0f;
-    MotorFault::reset_user_faults();
+    SystemFault::reset_user_faults();
     refresh();
 }
 

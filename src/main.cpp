@@ -21,7 +21,7 @@
 #include "control/mode_manager.h"
 #include "control/motor_control.h"
 #include "control/motor_ramp.h"
-#include "control/motor_fault.h"
+#include "safety/system_fault.h"
 #include "control/motor_hardware.h"
 #include "control/autonomous_controller.h"
 
@@ -59,7 +59,7 @@ void setup() {
     randomSeed(analogRead(A1));
 
     /* --- Control System --- */
-    MotorFault::init();
+    SystemFault::init();
     motor_hw.init();
     MotorControl::init(motor_hw);
     ModeManager::init();

@@ -13,7 +13,7 @@
 #include "log/log.h"
 
 /* ========= CONTROL ========= */
-#include "control/motor_fault.h"
+#include "safety/system_fault.h"
 #include "control/motor_ramp.h"
 #include "control/motor_pid.h"
 
@@ -72,7 +72,7 @@ static inline int8_t sign_i8(float v) {
 /* =============== PUBLIC API =============== */
 void init(MotorHardware& hw) {
     if (!hw.ready()) {
-        MotorFault::trigger(MotorFaultReason::INTERNAL_ERROR);
+        SystemFault::trigger(SystemFaultReason::INTERNAL_ERROR);
         return;
     }
 

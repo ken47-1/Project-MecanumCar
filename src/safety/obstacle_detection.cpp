@@ -100,8 +100,8 @@ void update() {
     uint16_t rear_raw = 999;
     #endif
 
-    LOG_D(Log::Ch::CH_SNR, "FRONT_DIR=%d REAR=%u SWEEP=%d",
-          (int)Ultrasonic::scan_get_direction(), rear_raw, sweep_active);
+    LOG_D(Log::Ch::CH_SNR, "FRONT_DIR=%d SWEEP=%d",
+          (int)Ultrasonic::scan_get_direction(), sweep_active);
 
     /* --- Rear Zones --- */
     update_zone(rear_raw, REAR_SLOW_ENTER_CM, REAR_SLOW_EXIT_CM,
@@ -120,7 +120,7 @@ void update() {
     if (front_poll_ok) {
         uint16_t front_raw = Ultrasonic::get_front_distance_raw_cm();
 
-        LOG_D(Log::Ch::CH_SNR, "FRONT=%u", front_raw);
+        LOG_D(Log::Ch::CH_SNR, "FRONT=%u REAR=%u", front_raw, rear_raw);
 
         update_zone(front_raw, FRONT_SLOW_ENTER_CM, FRONT_SLOW_EXIT_CM,
                     front_in_slow, front_last_clear_slow_ms);
@@ -130,6 +130,12 @@ void update() {
         front_cache.distance_cm = Ultrasonic::apply_front_ema(front_raw);
         front_cache.in_slow_zone = front_in_slow;
         front_cache.in_stop_zone = front_in_stop;
+    } else {
+        /* Servo off-axis. Front zone flags are stale. */
+        front_in_slow = false;
+        front_in_stop = false;
+        front_cache.in_slow_zone = false;
+        front_cache.in_stop_zone = false;
     }
 
     LOG_D(Log::Ch::CH_SAF, "F_SLOW=%d F_STOP=%d R_SLOW=%d R_STOP=%d",

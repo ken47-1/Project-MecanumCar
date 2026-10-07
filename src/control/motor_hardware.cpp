@@ -12,7 +12,7 @@
 #include "comms/comms.h"
 
 /* ========= CONTROL ========= */
-#include "control/motor_fault.h"
+#include "safety/system_fault.h"
 
 /* ============ CORE ============ */
 #include <Arduino.h>
@@ -20,7 +20,7 @@
 /* =============== PUBLIC API =============== */
 bool MotorHardware::init() {
     if (!_shield.begin()) {
-        MotorFault::trigger(MotorFaultReason::SHIELD_NOT_FOUND);
+        SystemFault::trigger(SystemFaultReason::SHIELD_NOT_FOUND);
         return false;
     }
 
@@ -30,7 +30,7 @@ bool MotorHardware::init() {
     _rr = _shield.getMotor(3);
 
     if (!_fl || !_fr || !_rl || !_rr) {
-        MotorFault::trigger(MotorFaultReason::INTERNAL_ERROR);
+        SystemFault::trigger(SystemFaultReason::INTERNAL_ERROR);
         return false;
     }
 

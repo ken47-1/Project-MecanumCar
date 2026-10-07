@@ -23,7 +23,7 @@ enum class Ch : uint8_t {
     CH_RMP = 3,   /* MotorRamp */
     CH_PID = 4,   /* MotorPID, Encoder */
     CH_SNR = 5,   /* Ultrasonic, ObstacleDetection, Battery */
-    CH_SAF = 6,   /* SafetyManager, MotionPolicy, MotorFault */
+    CH_SAF = 6,   /* SafetyManager, MotionPolicy, SystemFault */
     CH_WDG = 7,   /* InputWatchdog */
     COUNT  = 8
 };
