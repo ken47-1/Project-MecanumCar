@@ -21,7 +21,6 @@
 #include "control/mode_manager.h"
 #include "control/motor_control.h"
 #include "control/motor_ramp.h"
-#include "safety/system_fault.h"
 #include "control/motor_hardware.h"
 #include "control/autonomous_controller.h"
 
@@ -32,8 +31,9 @@
 #include "sensors/encoder.h"
 
 /* ========= SAFETY ========= */
-#include "safety/obstacle_detection.h"
 #include "safety/safety_manager.h"
+#include "safety/system_fault.h"
+#include "safety/obstacle_detection.h"
 
 /* ============ CORE ============ */
 #include <Wire.h>

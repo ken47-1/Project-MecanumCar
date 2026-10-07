@@ -100,10 +100,12 @@ static uint16_t* result_slot(uint8_t step) {
 /* =============== PUBLIC API =============== */
 /* ============ LIFECYCLE ============ */
 void reset() {
-    active_dir   = ScanDir::FRONT;
-    sweep_phase  = SweepPhase::IDLE;
-    sweep_step   = 0;
-    sweep_result = {};
+    active_dir       = ScanDir::FRONT;
+    last_settled_dir = ScanDir::NONE;
+    last_move_ms     = millis();
+    sweep_phase      = SweepPhase::IDLE;
+    sweep_step       = 0;
+    sweep_result     = {};
     Ultrasonic::scan_set_direction(active_dir);
 }
 

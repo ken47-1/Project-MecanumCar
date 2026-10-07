@@ -7,7 +7,7 @@
 
 /* ============ PROJECT ============ */
 
-/* ========= CONTROL ========= */
+/* ========= SAFETY ========= */
 #include "safety/system_fault.h"
 
 /* ========= SENSORS ========= */

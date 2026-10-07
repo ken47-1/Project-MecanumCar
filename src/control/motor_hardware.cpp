@@ -11,7 +11,7 @@
 /* ========= COMMS ========= */
 #include "comms/comms.h"
 
-/* ========= CONTROL ========= */
+/* ========= SAFETY ========= */
 #include "safety/system_fault.h"
 
 /* ============ CORE ============ */

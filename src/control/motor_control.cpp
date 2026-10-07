@@ -13,13 +13,13 @@
 #include "log/log.h"
 
 /* ========= CONTROL ========= */
-#include "safety/system_fault.h"
 #include "control/motor_ramp.h"
 #include "control/motor_pid.h"
 
 /* ========= SAFETY ========= */
-#include "safety/motion_policy.h"
 #include "safety/safety_manager.h"
+#include "safety/system_fault.h"
+#include "safety/motion_policy.h"
 
 /* ========= SENSORS ========= */
 #include "sensors/encoder.h"

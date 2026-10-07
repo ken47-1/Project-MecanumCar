@@ -12,7 +12,7 @@
 #include "comms/comms.h"
 #include "log/log.h"
 
-/* ========= CONTROL ========= */
+/* ========= SAFETY ========= */
 #include "safety/system_fault.h"
 
 /* ========= SENSORS ========= */
@@ -46,6 +46,23 @@ static SafetyState compute_state() {
     if (connection_loss_active) return SAFETY_CONNECTION_LOSS;
     if (input_loss_active)      return SAFETY_INPUT_LOSS;
     return SAFETY_CLEAR;
+}
+
+/* ============ STATE TRANSITION LOG ============ */
+static void log_transition(SafetyState s) {
+    switch (s) {
+        case SAFETY_EMERGENCY_STOP:
+            Comms::system.println(F("!!! SAFETY: EMERGENCY STOP ACTIVE !!!"));
+            break;
+        case SAFETY_CONNECTION_LOSS:
+            LOG_D(Log::Ch::CH_WDG, "CONNECTION_LOSS HC05_STATE");
+            break;
+        case SAFETY_INPUT_LOSS:
+            LOG_D(Log::Ch::CH_WDG, "INPUT_LOSS WATCHDOG");
+            break;
+        default:
+            break;
+    }
 }
 
 /* =============== PUBLIC API =============== */
@@ -115,19 +132,7 @@ void update() {
     SafetyState next_state = compute_state();
 
     if (next_state != current_state) {
-        switch (next_state) {
-            case SAFETY_EMERGENCY_STOP:
-                Comms::system.println(F("!!! SAFETY: EMERGENCY STOP ACTIVE !!!"));
-                break;
-            case SAFETY_CONNECTION_LOSS:
-                LOG_D(Log::Ch::CH_WDG, "CONNECTION_LOSS HC05_STATE");
-                break;
-            case SAFETY_INPUT_LOSS:
-                LOG_D(Log::Ch::CH_WDG, "INPUT_LOSS WATCHDOG");
-                break;
-            default:
-                break;
-        }
+        log_transition(next_state);
     }
 
     current_state = next_state;
@@ -144,7 +149,11 @@ float get_min_voltage() {
 
 /* ============ STATE MODIFICATION ============ */
 void refresh() {
-    current_state = compute_state();
+    SafetyState next_state = compute_state();
+    if (next_state != current_state) {
+        log_transition(next_state);
+    }
+    current_state = next_state;
 }
 
 void set_input_loss(bool active) {

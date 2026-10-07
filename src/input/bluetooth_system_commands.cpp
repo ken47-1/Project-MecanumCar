@@ -13,13 +13,13 @@
 #include "log/log.h"
 
 /* ========= CONTROL ========= */
-#include "safety/system_fault.h"
 #include "control/mode_manager.h"
 #if ENABLE_ENCODERS
     #include "control/motor_pid.h"
 #endif
 
 /* ========= SAFETY ========= */
+#include "safety/system_fault.h"
 #include "safety/safety_manager.h"
 
 /* ========= INPUT ========= */
@@ -117,6 +117,7 @@ bool handle_char(char c, InputWatchdog& watchdog) {
 
         case '?':
             SafetyManager::clear_emergency_stop();
+            watchdog.feed();
             return true;
 
         case 'X':
