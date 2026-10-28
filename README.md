@@ -69,7 +69,7 @@ The original code has several problems:
 
 This rewrite addresses every limitation:
 - **Modular C++ architecture** – separate modules for comms, control, input, safety, and sensors.
-- **Non‑blocking scheduling** – all scheduling uses `millis()`. Sensor reads block for ~30 ms each. A four-ping loop costs about 120 ms. No `delay()` freezes the loop.
+- **Non‑blocking scheduling** – all scheduling uses `millis()`. Sensor reads block for ~30 ms each. A two-ping loop costs about 60 ms. No `delay()` freezes the loop.
 - **Real‑time safety** – a watchdog, input loss detection, and a latching emergency stop.
 - **Autonomous navigation** – a state machine with pathfinding (MOVING → SCANNING → SPINNING → BACKING_UP → STUCK).
 - **Dual ultrasonic sensors** – front (servo‑mounted, 5‑position sweep) and rear.
@@ -205,8 +205,8 @@ All settings are split across three config files in `include/config/`:
 - `0` — Manual mode
 - `1` — Autonomous mode
 - `T` — Arc turn toggle
-- `^` — Force watchdog feed
 - `P` — Toggle closed-loop PID (encoders only)
+- `K` — PID telemetry snapshot (encoders only)
 - `G` + letter — Toggle log channel (C/I/M/R/P/S/F/W)
 - `G` + `G` — Dump full mask
 - `G` + `+` / `G` + `-` — All channels on / off
@@ -287,7 +287,7 @@ All settings are split across three config files in `include/config/`:
 - HC-05 only: STATE pin detected disconnection
 - Only appears when `ENABLE_HC05_STATE_PIN` is enabled
 - Re-pair Bluetooth or restart the app
-- HC-06 users: disable `ENABLE_HC05_STATE_PIN` in `Config.h`
+- HC-06 users: disable `ENABLE_HC05_STATE_PIN` in `HardwareConfig.h`
 
 ## Performance
 

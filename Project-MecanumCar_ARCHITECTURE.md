@@ -68,7 +68,6 @@ A professional-grade firmware for a hobbyist robot kit. The same hardware, now c
 - `MotorHardware` — Singleton hardware ownership of motors; raw PWM interface to AFMS V2
 - `MotorControl` — Applies motion commands to motors via MotorHardware
 - `MotorRamp` — Acceleration/deceleration curves (400ms accel, 200ms decel)
-- `SystemFault` — Fault state tracking and latching
 - `ModeManager` — Manual vs. Autonomous mode switching with state tracking
 - `AutonomousController` — Autonomous state machine (MOVING -> SCANNING -> SPINNING -> BACKING_UP -> STUCK) with servo sweep and pathfinding
 - `MotionCommand` — Data structure for motion intents (speed, direction)
@@ -77,10 +76,12 @@ A professional-grade firmware for a hobbyist robot kit. The same hardware, now c
 - `BluetoothCommandParser` — Parses ASCII commands from Bluetooth Serial module
 - `BluetoothButtonInput` — Maps button commands (W/A/S/D/Q/E/Z/C/J/L) to motion intents
 - `BluetoothSpeedAuthority` — Handles speed step control (%+, %-, %R/%N/%F)
-- `BluetoothSystemCommands` — Handles system commands (!, ?, 0, 1, T, ^)
+- `BluetoothSystemCommands` — Handles system commands (!, ?, 0, 1, T)
 - `InputWatchdog` — Bluetooth keepalive; asserts INPUT_LOSS (150ms timeout)
 
 **Safety** (`src/safety/`)
+- `SystemFault` — Fault state tracking and latching
+
 - `ObstacleDetection` — Sensor thresholds with hysteresis
   - Front: SLOW (30–35cm), STOP (15–20cm)
   - Rear: SLOW (35–40cm), STOP (15–20cm)
@@ -103,7 +104,7 @@ A professional-grade firmware for a hobbyist robot kit. The same hardware, now c
   - Dropout handling: `dist==0` treated as 999cm (assume clear)
 - `DirectionalScan` — Servo sweep logic and multi-angle distance measurement
   - Sweeps 5 positions: LEFT (0°), FRONT_LEFT (45°), CENTER (90°), FRONT_RIGHT (135°), RIGHT (180°) [mirrored mounting]
-  - Returns `SweepResult` with distances and `clear_mask` (bitmask of clear directions)
+  - Returns `SweepResult` with five distance measurements
   - Dynamic settle times based on angle change: 45°=200ms, 90°=300ms, 135°=500ms (configurable)
 - `BatteryVoltage` — 0-25V voltage sensor reader (Rev 2)
   - `get_voltage()` — Returns filtered voltage (EMA alpha=0.1)
@@ -161,7 +162,7 @@ graph TB
     MP --> MC
     AM --> MC
     MC --> MR
-    MR --> MH
+    MC --> MH
     MF --> MC
     MD --> AM
 ```
@@ -179,7 +180,7 @@ graph TB
 - Stop at obstacle (front distance < `FRONT_STOP_ENTER_CM`)
 - Servo sweeps 5 positions via `DirectionalScan::start_sweep()`
 - Measure distance at each position (raw readings, bypasses EMA)
-- Evaluate `SweepResult::clear_mask` (bitmask of clear directions)
+- Evaluate `SweepResult` (five distance measurements)
 - Transition to SPINNING, rotating toward clearest direction
 
 **SPINNING**
@@ -197,14 +198,14 @@ graph TB
 **STUCK**
 - All directions blocked (distance <threshold in all 5 positions)
 - Wait `AUTO_RETRY_WAIT_MS` (2000ms)
-- Retry by transitioning back to MOVING
+- Retry by transitioning back to SCANNING
 - If retries exhausted, give up and wait for user intervention
 
 ### Navigation Logic Flow
 
 1. MOVING: forward motion, continuous monitoring
 2. Obstacle detected -> SCANNING: servo sweep
-3. Evaluate clear_mask from sweep results
+3. Evaluate the distance measurements from sweep results
 4. Pick direction with max distance -> SPINNING: rotate to that direction
 5. Resume MOVING after rotation
 6. If all zones blocked -> BACKING_UP: escape attempt
@@ -216,9 +217,9 @@ flowchart TD
     A[MOVING] -->|hit obstacle| B[SCANNING]
     B -->|path found| C[SPINNING]
     C -->|rotation complete| A
-    B -->|all blocked| D[BACKING_UP]
-    D -->|max attempts| E[STUCK]
-    D -->|retry| B
+    B -->|all blocked<br>rear clear| D[BACKING_UP]
+    B -->|all blocked<br>rear blocked| E[STUCK]
+    D -->|timeout| B
     E -->|wait & retry| B
 ```
 
@@ -438,19 +439,6 @@ flowchart LR
     OD2 --> MP[MotionPolicy::apply_safety]
     MP --> MC[MotorControl::apply_command]
     MC --> Motors
-```
-
-### State Transitions (Autonomous)
-
-```mermaid
-flowchart LR
-    A[MOVING] -->|hit obstacle| B[SCANNING]
-    B -->|path found| C[SPINNING]
-    C -->|rotation complete| A
-    B -->|all blocked| D[BACKING_UP]
-    D -->|max attempts| E[STUCK]
-    D -->|retry| B
-    E -->|wait & retry| B
 ```
 
 ### Log Output

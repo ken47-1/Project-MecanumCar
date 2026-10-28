@@ -114,7 +114,7 @@ Debug and Info lines are rate-limited. Warn and Error print immediately and neve
 - Front sensor polling suspends while the servo is off-axis and during a sweep.
 - Watchdog asserts input loss if no valid command arrives within `INPUT_WATCHDOG_TIMEOUT_MS` (default 150 ms).
 - Autonomous mode ON (`1`) and OFF (`0`) are stateless.
-- Autonomous mode exits immediately on any manual input.
+- Autonomous mode exits immediately on any manual movement input.
 - HC-05 STATE pin (optional) detects physical disconnection. See `ENABLE_HC05_STATE_PIN` in HardwareConfig.h. `CONNECTION_LOSS` has higher priority than `INPUT_LOSS`.
 - `T` toggles between Fixed (0.5× rotation) and Speed-Dependent (tighter at low speed, wider at high) arc turning. Prints current mode.
 - `P` requires `ENABLE_ENCODERS = 1` in `HardwareConfig.h`. When encoders are off, the command prints an error and does nothing. When on, it prints `PID: closed` or `PID: open`.
