@@ -47,10 +47,6 @@ static void update_zone(
     bool& in_zone,
     uint32_t& last_clear_ms
 ) {
-    if (distance == 0) {
-        return;  // invalid reading, hold state
-    }
-
     bool triggered = (distance <= enter_threshold);
     bool should_exit = (distance > exit_threshold);
 
