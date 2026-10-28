@@ -79,7 +79,7 @@ void handle(InputWatchdog& watchdog) {
     }
 
     /* --- Autonomous Exit on Manual Input --- */
-    if (ModeManager::is_autonomous() && (explicit_stop || motion_applied)) {
+    if (ModeManager::is_autonomous() && motion_applied) {
         ModeManager::set(DriveMode::MANUAL);
     }
 
