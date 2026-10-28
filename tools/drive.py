@@ -55,7 +55,6 @@ Quit:
 
 import argparse
 import ctypes
-import os
 import shutil
 import sys
 import time
@@ -68,7 +67,8 @@ WINDOWS = sys.platform == 'win32'
 if WINDOWS:
     import msvcrt
     # Enable ANSI escape sequences in Windows terminal
-    os.system('')
+    kernel32 = ctypes.windll.kernel32
+    kernel32.SetConsoleMode(kernel32.GetStdHandle(-11), 7)
     
     VK = {
         'W': 0x57, 'A': 0x41, 'S': 0x53, 'D': 0x44,
@@ -90,6 +90,7 @@ if WINDOWS:
         'ESC': 0x1B,
     }
 else:
+    msvcrt = None
     VK = {}
 
 LOG_KEYS = {
@@ -148,6 +149,7 @@ class Driver:
         self.pending_oneshots = []
         self.stop = False
         self._drop_until = 0.0
+        self._sent_stop = False
 
         # Terminal layout
         self.term_size = shutil.get_terminal_size()
@@ -162,7 +164,7 @@ class Driver:
     def _drain_stdin(self):
         """Consume console input buffer so keystrokes do not appear on the prompt."""
         while not self.stop:
-            if WINDOWS:
+            if msvcrt:
                 while msvcrt.kbhit():
                     msvcrt.getch()
             time.sleep(0.01)
@@ -254,20 +256,31 @@ class Driver:
                 oneshots = self.pending_oneshots
                 self.pending_oneshots = []
 
-            try:
-                self.ser.write(keys.encode('ascii'))
-                for kind, cmd in oneshots:
-                    if kind == 'quit':
-                        self.stop = True
-                        break
-                    elif kind == 'log':
-                        print(cmd, flush=True)
-                    else:
-                        self.ser.write(cmd.encode('ascii'))
-            except serial.SerialException as e:
-                print(f"Serial error: {e}", file=sys.stderr, flush=True)
-                self.stop = True
-                return
+            payload = b""
+            
+            if keys != 'X':
+                payload += keys.encode('ascii')
+                self._sent_stop = False
+            elif not self._sent_stop:
+                payload += b'X'
+                self._sent_stop = True
+
+            for kind, cmd in oneshots:
+                if kind == 'quit':
+                    self.stop = True
+                    break
+                elif kind == 'log':
+                    print(cmd, flush=True)
+                else:
+                    payload += cmd.encode('ascii')
+
+            if payload:
+                try:
+                    self.ser.write(payload)
+                except serial.SerialException as e:
+                    print(f"Serial error: {e}", file=sys.stderr, flush=True)
+                    self.stop = True
+                    return
 
             if self.stop:
                 return
