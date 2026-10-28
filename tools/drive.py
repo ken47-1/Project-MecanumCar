@@ -23,8 +23,8 @@ Keys (hold for continuous motion, combine freely):
     SPACE       stop (overrides any motion key)
 
 System (one-shot):
-    0           manual mode
-    1           autonomous mode
+    1           manual mode
+    2           autonomous mode
     T           toggle arc turn mode
     P           toggle closed-loop PID
     F1          EMERGENCY STOP (latching)
@@ -74,9 +74,8 @@ if WINDOWS:
         'W': 0x57, 'A': 0x41, 'S': 0x53, 'D': 0x44,
         'Q': 0x51, 'E': 0x45, 'Z': 0x5A, 'C': 0x43,
         'J': 0x4A, 'L': 0x4C,
-        'SPACE': 0x20,
-        'ZERO': 0x30, 'ONE': 0x31,
-        'TWO':   0x32, 'THREE': 0x33, 'FOUR': 0x34,
+        'SPACE': 0x20, 'ONE': 0x31, 'TWO':   0x32,
+        'THREE': 0x33, 'FOUR': 0x34,
         'T': 0x54, 'P': 0x50,
         'F1': 0x70, 'F2': 0x71,
         'TICK': 0xC0,
@@ -112,8 +111,8 @@ MOTION_KEYS = [
 ]
 
 ONESHOTS = {
-    'ZERO':  '0',
-    'ONE':   '1',
+    'ONE':   '0',  # Key 1 sends Manual (0)
+    'TWO':   '1',  # Key 2 sends Autonomous (1)
     'T':     'T',
     'P':     'P',
     'F1':    '!',
@@ -133,7 +132,7 @@ POLL_MS = 20
 CONTROLS_TEXT = """\
 ================================================================================
   MOTION:  W A S D   Q E Z C   J L    |    SPACE stop    |    ESC quit
-  MODE:    0 Manual   1 Autonomous   T Arc turn   P PID
+  MODE:    1 Manual   2 Autonomous   T Arc turn   P PID
   SPEED:   = / -     STEP: R / N / F
   SAFETY:  F1 E-stop    F2 Reset    ` Watchdog drop
   LOG:     Shift + C I M R P S F W G   channels   Shift + 1 2 3 4   levels
