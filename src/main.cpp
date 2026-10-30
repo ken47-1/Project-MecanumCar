@@ -54,10 +54,6 @@ void setup() {
     /* --- Logging --- */
     Log::init();
 
-    /* Seed the PRNG from an unconnected analog pin. */
-    analogRead(A1);
-    randomSeed(analogRead(A1));
-
     /* --- Control System --- */
     SystemFault::init();
     motor_hw.init();

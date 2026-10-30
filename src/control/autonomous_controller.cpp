@@ -48,6 +48,7 @@ enum class AutoState : uint8_t {
 /* ============ STATIC VARS ============ */
 static AutoState     state          = AutoState::MOVING;
 static float         spin_direction = 0.0f; // -1.0 Left, 1.0 Right
+static float         last_spin_dir  = 0.0f;
 static uint16_t      spin_limit_ms  = 0;
 static unsigned long timer_ms       = 0;
 static uint8_t       stuck_retries  = 0;
@@ -103,7 +104,17 @@ static uint16_t pick_best_spin_time(const SweepResult& r, float& dir_out) {
         return 0;
     }
 
-    uint8_t pick = best_idx[random(best_n)];
+    /* --- Alternating Tiebreaker --- */
+    uint8_t pick = best_idx[0];
+    if (best_n > 1) {
+        for (uint8_t i = 0; i < best_n; i++) {
+            if (candidates[best_idx[i]].direction != last_spin_dir) {
+                pick = best_idx[i];
+                break;
+            }
+        }
+    }
+    last_spin_dir = candidates[pick].direction;
     dir_out     = candidates[pick].direction;
     return candidates[pick].duration;
 }
