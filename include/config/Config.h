@@ -127,7 +127,7 @@ constexpr uint16_t AUTO_SPEED = 600;
 constexpr uint16_t AUTO_REVERSE_SPEED = 300;
 
 /* Backup duration during escape (milliseconds) */
-constexpr unsigned long AUTO_BACKUP_MS = 1000;
+constexpr unsigned long AUTO_BACKUP_MS = 500;
 
 /* How long to wait before retrying when all directions are blocked */
 constexpr unsigned long AUTO_RETRY_WAIT_MS = 2000;

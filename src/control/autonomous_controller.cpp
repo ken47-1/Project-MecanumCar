@@ -169,20 +169,26 @@ void update(InputWatchdog& watchdog) {
                 spin_limit_ms = pick_best_spin_time(DirectionalScan::consume_sweep_result(), spin_direction);
 
                 if (spin_limit_ms > 0) {
-                    // Center the sensor for the next MOVING state
+                    stuck_retries = 0; // Path found, reset counter
                     Ultrasonic::scan_set_direction(ScanDir::FRONT);
                     enter(AutoState::SPINNING);
                 } else {
-                    // No forward path: check if rear escape is possible
-                #if ENABLE_ULTRASONIC_REAR
-                    if (Ultrasonic::get_rear_distance_raw_cm() > REAR_SLOW_EXIT_CM) {
-                        enter(AutoState::BACKING_UP);
-                    } else {
+                    stuck_retries++; // Failed to find a path
+                    
+                    if (stuck_retries >= STUCK_MAX_RETRIES) {
                         enter(AutoState::STUCK);
+                    } else {
+                        // No forward path: check if rear escape is possible
+                        #if ENABLE_ULTRASONIC_REAR
+                            if (Ultrasonic::get_rear_distance_raw_cm() > REAR_STOP_EXIT_CM) {
+                                enter(AutoState::BACKING_UP);
+                            } else {
+                                enter(AutoState::STUCK);
+                            }
+                        #else
+                            enter(AutoState::STUCK);
+                        #endif
                     }
-                #else
-                    enter(AutoState::STUCK);
-                #endif
                 }
             }
             break;
