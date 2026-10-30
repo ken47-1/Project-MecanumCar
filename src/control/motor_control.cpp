@@ -137,7 +137,6 @@ void apply_command_instant(const MotionCommand& cmd) {
     motors_stopped = false;
 
     /* --- SAFETY POLICY --- */
-    // All safety checks, obstacle avoidance, and authority scaling in one place
     MotionCommand safe_cmd = MotionPolicy::apply_safety(cmd);
 
     /* --- MECANUM MIX --- */
@@ -152,8 +151,15 @@ void apply_command_instant(const MotionCommand& cmd) {
     }
 
     MotorRamp::set_target({fl, fr, rl, rr});
-    MotorRamp::snap_to_target();   /* <- new: skip the ramp curve */
+    MotorRamp::snap_to_target();   
+
     #if ENABLE_ENCODERS
+        // Set directions immediately so PID knows which way the wheels are turning
+        Encoder::set_direction(0, sign_i8(fl));
+        Encoder::set_direction(1, sign_i8(fr));
+        Encoder::set_direction(2, sign_i8(rl));
+        Encoder::set_direction(3, sign_i8(rr));
+
         MotorSet out = MotorPID::apply({fl, fr, rl, rr});
         drive_one_motor(motor_fl, out.fl);
         drive_one_motor(motor_fr, out.fr);
