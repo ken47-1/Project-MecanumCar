@@ -7,6 +7,9 @@
 
 /* ============ PROJECT ============ */
 
+/* ========= CONTROL ========= */
+#include "control/mode_manager.h"
+
 /* ========= SAFETY ========= */
 #include "safety/system_fault.h"
 
@@ -126,7 +129,8 @@ static float apply_one(uint8_t idx, float intent, float dt) {
     s.output = output;
 
     /* --- Encoder Stall Detection --- */
-    if (fabsf(intent) >= PID_STALL_INTENT_MIN && rpm == 0.0f) {
+    if (!ModeManager::is_autonomous() && 
+        fabsf(intent) >= PID_STALL_INTENT_MIN && rpm == 0.0f) {
         if (++s.stall_ticks >= PID_STALL_TICKS) {
             SystemFault::trigger(SystemFaultReason::SENSOR_FAIL);
             return 0.0f;
