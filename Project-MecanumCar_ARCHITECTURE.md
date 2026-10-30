@@ -61,7 +61,7 @@ A professional-grade firmware for a hobbyist robot kit. The same hardware, now c
     
 **Log** (`src/log/`)
 - `Log` — Two-mask runtime logging (level + channel). `LOG_D/I/W/E` macros.
-    - `LogConfig.h` — Compile-time gate (`LOG_ENABLED`).
+    - `LogConfig.h` — Compile-time gate (`LOG_ENABLED`). Defaults to `0`.
     - Levels and channels toggle at runtime over Bluetooth (`G` commands).
 
 **Control** (`src/control/`)
@@ -182,6 +182,7 @@ graph TB
 - Measure distance at each position (raw readings, bypasses EMA)
 - Evaluate `SweepResult` (five distance measurements)
 - Transition to SPINNING, rotating toward clearest direction
+- If all paths blocked, check rear distance against `REAR_STOP_EXIT_CM` to trigger `BACKING_UP`
 
 **SPINNING**
 - Rotate toward clearest direction
@@ -192,7 +193,7 @@ graph TB
 **BACKING_UP**
 - Escape maneuver: reverse at reduced speed
 - Used when all directions blocked (CORNERED logic)
-- Reverse escape (max 1 second or until rear is blocked)
+- Reverse escape (max `AUTO_BACKUP_MS` or until rear is blocked)
 - Transition back to SCANNING after escape
 
 **STUCK**

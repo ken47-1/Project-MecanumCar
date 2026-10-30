@@ -65,7 +65,6 @@ Multiple keys combine. The parser accumulates every command in one cycle. Holdin
 | `0` | Autonomous mode OFF |
 | `T` | Toggle arc turn mode (Fixed ↔ Speed-Dependent) |
 | `P` | Toggle closed-loop PID (requires `ENABLE_ENCODERS`) |
-| `K` | PID telemetry snapshot (requires `ENABLE_ENCODERS`) |
 | `G` + letter | Toggle one log channel (`C I M R P S F W`; `G` reserved for dump) |
 | `G` + `G` | Dump full mask |
 | `G` + `+` | All channels on |
@@ -74,7 +73,7 @@ Multiple keys combine. The parser accumulates every command in one cycle. Holdin
 
 `?` only resets `E-STOP`, `MANUAL`, and user faults. Hardware faults (`SHIELD_NOT_FOUND`, `INTERNAL_ERROR`, `BATTERY_CRITICAL`, `SENSOR_FAIL`) require a power cycle.
 
-The `P` and `K` error paths feed the watchdog too, when encoders are off.
+The `P` error path feeds the watchdog too, when encoders are off.
 
 Log commands feed the watchdog.
 

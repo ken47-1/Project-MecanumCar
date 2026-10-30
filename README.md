@@ -206,7 +206,6 @@ All settings are split across three config files in `include/config/`:
 - `1` — Autonomous mode
 - `T` — Arc turn toggle
 - `P` — Toggle closed-loop PID (encoders only)
-- `K` — PID telemetry snapshot (encoders only)
 - `G` + letter — Toggle log channel (C/I/M/R/P/S/F/W)
 - `G` + `G` — Dump full mask
 - `G` + `+` / `G` + `-` — All channels on / off
@@ -312,7 +311,9 @@ When contributing, follow the visual hierarchy scale defined in the standard doc
 
 ## Log Channels
 
-Runtime-toggled over Bluetooth. See [`docs/Log_Standard.md`](docs/Log_Standard.md) and [`docs/Control_Protocol.md`](docs/Control_Protocol.md).
+Runtime-toggled over Bluetooth. `LOG_ENABLED` defaults to `0`.
+
+See [`docs/Log_Standard.md`](docs/Log_Standard.md) and [`docs/Control_Protocol.md`](docs/Control_Protocol.md).
 
 | Command | Action |
 |---|---|
