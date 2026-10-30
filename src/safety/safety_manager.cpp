@@ -51,9 +51,6 @@ static SafetyState compute_state() {
 /* ============ STATE TRANSITION LOG ============ */
 static void log_transition(SafetyState s) {
     switch (s) {
-        case SAFETY_EMERGENCY_STOP:
-            Comms::system.println(F("!!! SAFETY: EMERGENCY STOP ACTIVE !!!"));
-            break;
         case SAFETY_CONNECTION_LOSS:
             LOG_D(Log::Ch::CH_WDG, "CONNECTION_LOSS HC05_STATE");
             break;
@@ -95,25 +92,22 @@ void update() {
         if (min_voltage_seen > 10.0f) min_voltage_seen = 10.0f;
         
         if (min_voltage_seen < BATTERY_CRITICAL_VOLTAGE && !estop_active) {
-            estop_active = true;
+            // SystemFault::trigger will print the banner and halt motors
             SystemFault::trigger(SystemFaultReason::BATTERY_CRITICAL);
-            Comms::system.print(F("!!! BATTERY CRITICAL: "));
-            Comms::system.print(min_voltage_seen);
-            Comms::system.println(F("V - E-STOP !!!"));
         }
         else if (v < BATTERY_CRITICAL_VOLTAGE + 0.3f) {
             if (now - last_critical_ms >= BATTERY_CRITICAL_COOLDOWN_MS) {
-                Comms::system.print(F("BATTERY NEAR CRITICAL: "));
-                Comms::system.print(v);
-                Comms::system.println(F("V"));
+                Comms::print.print(F("BATTERY NEAR CRITICAL: "));
+                Comms::print.print(v);
+                Comms::print.println(F("V"));
                 last_critical_ms = now;
             }
         }
         else if (v < BATTERY_WARNING_VOLTAGE) {
             if (now - last_warning_ms >= BATTERY_WARNING_COOLDOWN_MS) {
-                Comms::system.print(F("BATTERY LOW: "));
-                Comms::system.print(v);
-                Comms::system.println(F("V"));
+                Comms::print.print(F("BATTERY LOW: "));
+                Comms::print.print(v);
+                Comms::print.println(F("V"));
                 last_warning_ms = now;
             }
         }

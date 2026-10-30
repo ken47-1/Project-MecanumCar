@@ -13,9 +13,7 @@ enum class SystemFaultReason {
     SENSOR_FAIL,
     
     // User/command issues
-    ESTOP,
-    INVALID_COMMAND,
-    MANUAL
+    ESTOP
 };
 
 /* =============== API =============== */

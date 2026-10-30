@@ -28,7 +28,6 @@ static SystemFaultReason fault_reason = SystemFaultReason::NONE;
 /* ============ STRINGS ============ */
 static const char* fault_to_string(SystemFaultReason r) {
     switch (r) {
-
         // Hardware failures (fatal)
         case SystemFaultReason::SHIELD_NOT_FOUND: return "SHIELD NOT FOUND";
         case SystemFaultReason::INTERNAL_ERROR:   return "INTERNAL ERROR";
@@ -37,9 +36,7 @@ static const char* fault_to_string(SystemFaultReason r) {
 
         // User/command issues
         case SystemFaultReason::ESTOP:            return "E-STOP";
-        case SystemFaultReason::INVALID_COMMAND:  return "INVALID COMMAND";
-        case SystemFaultReason::MANUAL:           return "MANUAL";
-        default:                                 return "UNKNOWN";
+        default:                                  return "UNKNOWN";
     }
 }
 
@@ -65,7 +62,8 @@ void trigger(SystemFaultReason reason) {
     /* Prevent re-triggering if already faulted */
     if (fault_active) {
         Comms::system.print(F(">>> Fault ignored (already active): "));
-        Comms::system.println(fault_to_string(reason));
+        Comms::system.print(fault_to_string(reason));
+        Comms::system.println(F(" <<<"));
         return;
     }
 
@@ -87,7 +85,10 @@ void reset() {
     fault_active = false;
     fault_reason = SystemFaultReason::NONE;
 
-    Comms::system.println(F("SystemFault CLEAR - all faults"));
+    Comms::print.println(F("===================="));
+    Comms::print.println(F("!!! FAULT  CLEAR !!!"));
+    Comms::print.println(F("All faults"));
+    Comms::print.println(F("===================="));
     SafetyManager::refresh();
 }
 
@@ -102,12 +103,18 @@ void reset_user_faults() {
             Comms::system.println(fault_to_string(fault_reason));
             break;
         case SystemFaultReason::NONE:
-            Comms::system.println(F("SystemFault CLEAR - no fault"));
+            Comms::print.println(F("===================="));
+            Comms::print.println(F("!!! FAULT  CLEAR !!!"));
+            Comms::print.println(F("None"));
+            Comms::print.println(F("===================="));
             break;
         default:
             fault_active = false;
             fault_reason = SystemFaultReason::NONE;
-            Comms::system.println(F("SystemFault CLEAR - user fault"));
+            Comms::print.println(F("===================="));
+            Comms::print.println(F("!!! FAULT  CLEAR !!!"));
+            Comms::print.println(F("User faults"));
+            Comms::print.println(F("===================="));
             break;
     }
 
