@@ -13,8 +13,11 @@
 
 /* ============ CORE ============ */
 #include <Arduino.h>
+
+#if LOG_ENABLED
 #include <stdarg.h>
 #include <stdio.h>
+#endif
 
 namespace Log {
 
@@ -162,6 +165,8 @@ void dumpShort() {
     Comms::system.println();
 }
 
+#if LOG_ENABLED
+
 void write(Lvl l, Ch c, const char* fmt, ...) {
     /* --- Rate Limit --- */
     uint8_t idx = (uint8_t)l;
@@ -179,12 +184,14 @@ void write(Lvl l, Ch c, const char* fmt, ...) {
     Comms::system.print(tag_of(c));
     Comms::system.print(F("] "));
 
-    char buf[128];
+    char buf[32];
     va_list args;
     va_start(args, fmt);
     vsnprintf(buf, sizeof(buf), fmt, args);
     va_end(args);
     Comms::system.println(buf);
 }
+
+#endif
 
 } // namespace Log

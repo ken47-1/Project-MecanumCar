@@ -193,18 +193,6 @@ bool is_closed_loop() {
     return closed_loop;
 }
 
-WheelPID get_wheel(uint8_t idx) {
-    if (idx >= 4) {
-        return {};
-    }
-    return {
-        pid[idx].target,
-        pid[idx].measured,
-        pid[idx].error,
-        pid[idx].output
-    };
-}
-
 } // namespace MotorPID
 
 #endif // ENABLE_ENCODERS

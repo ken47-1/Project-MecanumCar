@@ -71,7 +71,7 @@ void report() {
         float v   = get_voltage();
         float min = SafetyManager::get_min_voltage();
 
-        char buf[20];
+        char buf[12];
 
         /* Filtered Voltage */
         snprintf(buf, sizeof(buf), "*V%.2fV*", (double)v);
