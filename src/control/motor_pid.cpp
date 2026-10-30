@@ -24,9 +24,6 @@
 struct PIDState {
     float    integral;
     float    last_meas;
-    float    target;
-    float    measured;
-    float    error;
     float    output;
     int8_t   last_dir;
     uint16_t stall_ticks;
@@ -87,10 +84,6 @@ static float apply_one(uint8_t idx, float intent, float dt) {
     if (flipped) {
         s.last_meas = measured_frac;
     }
-
-    s.target   = intent;
-    s.measured = measured_frac;
-    s.error    = error;
 
     /* --- Proportional + Derivative --- */
     float d_meas = 0.0f;
