@@ -10,18 +10,13 @@ void MultiPrint::set_secondary(Print* b) {
 }
 
 size_t MultiPrint::write(uint8_t c) {
-    bool wrote = false;
+    if (!_a) return 0;
 
-    if (_a) {
-        _a->write(c);
-        wrote = true;
-    }
     if (_b) {
-        _b->write(c);
-        wrote = true;
+        _b->write(c); // Forward to secondary, ignore result
     }
-
-    return wrote ? 1 : 0;
+    
+    return _a->write(c); // Return primary result
 }
 
 size_t MultiPrint::write(const uint8_t* buffer, size_t size) {
