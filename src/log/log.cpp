@@ -37,6 +37,8 @@ static const unsigned long rate_ms_[4] = {
 
 /* =============== INTERNAL HELPERS =============== */
 /* ============ LOGIC ============ */
+#if LOG_ENABLED
+
 static const char lvl_char(Lvl l) {
     switch (l) {
         case Lvl::D: return 'D';
@@ -61,6 +63,8 @@ static const char* tag_of(Ch c) {
         default:         return "??? ";
     }
 }
+
+#endif
 
 /* =============== PUBLIC API =============== */
 void init() {
