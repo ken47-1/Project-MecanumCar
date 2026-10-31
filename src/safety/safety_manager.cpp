@@ -52,10 +52,10 @@ static SafetyState compute_state() {
 static void log_transition(SafetyState s) {
     switch (s) {
         case SAFETY_CONNECTION_LOSS:
-            LOG_D(Log::Ch::CH_WDG, "CONNECTION_LOSS HC05_STATE");
+            LOG_D(Log::Ch::CH_WDG, "CONNECTION_LOSS: HC05_STATE");
             break;
         case SAFETY_INPUT_LOSS:
-            LOG_D(Log::Ch::CH_WDG, "INPUT_LOSS WATCHDOG");
+            LOG_D(Log::Ch::CH_WDG, "INPUT_LOSS: WATCHDOG");
             break;
         default:
             break;
