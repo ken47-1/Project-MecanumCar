@@ -44,6 +44,13 @@ void begin() {
     /* system_out_impl binds &Serial at static init. Open USB CDC
        unconditionally, not only for the debug mirror. */
     Serial.begin(9600);
+
+    /* R4 boots faster than USB enumerates. Wait for the host to open
+       the port, otherwise the boot prints are lost. */
+    uint32_t start = millis();
+    while (!Serial && (millis() - start < 2000)) {
+        delay(10);
+    }
 #endif
 
 #if COMMS_DEBUG_MIRROR && defined(BOARD_UNO_R4)

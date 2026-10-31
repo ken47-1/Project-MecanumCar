@@ -3,7 +3,7 @@
 
 /* =============== LOG =============== */
 #define LOG_ENABLED        0   // Compile-time gate for LOG_* macros
-#define COMMS_DEBUG_MIRROR 0   // Mirror serial output to USB (R4 only)
+#define COMMS_DEBUG_MIRROR 1   // Mirror serial output to USB (R4 only)
 
 /* Rate limits: minimum ms between emits, per level. 0 = no limit. */
 #define LOG_RATE_LIMIT_D   100  // Debug: 10/sec max
