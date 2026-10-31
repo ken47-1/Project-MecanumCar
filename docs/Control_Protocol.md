@@ -16,7 +16,7 @@ App ⇄ Robot Communication Contract
 | Prefix | Domain |
 |---|---|
 | (none) | Movement / system |
-| `%`    | Speed / step mode |
+| `%` | Speed / step mode |
 
 ---
 

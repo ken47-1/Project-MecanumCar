@@ -21,8 +21,8 @@ This project supports both HC-05 and HC-06 Bluetooth modules.
 
 | Module | STATE Pin | Connection Detection |
 |---|---|---|
-| HC-05  | Yes (D2)  | Detects bluetooth disconnection (disabled by default) |
-| HC-06  | No        | Relies on watchdog timeout only |
+| HC-05 | Yes (D2) | Detects bluetooth disconnection (disabled by default) |
+| HC-06 | No | Relies on watchdog timeout only |
 
 **HC-05 users**: Connect STATE pin to D2. Set `ENABLE_HC05_STATE_PIN = 1` in `HardwareConfig.h`.
 
