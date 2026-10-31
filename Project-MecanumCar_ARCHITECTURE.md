@@ -56,12 +56,14 @@ A professional-grade firmware for a hobbyist robot kit. The same hardware, now c
 
 **Comms** (`src/comms/`)
 - `Comms` — Serial output multiplexing (debug mirror + Bluetooth feedback) with support for HC-05 (STATE pin optional) and HC-06 modules. `Comms::is_connected()` uses STATE pin when enabled, otherwise assumes always connected.
+  - `begin()` waits up to 2 seconds for USB CDC enumeration on the R4.
+  - `COMMS_DEBUG_MIRROR` is enabled by default, mirroring Bluetooth output to the R4 USB serial port.
 - `MultiPrint` — Fans output to two channels simultaneously
     - Handles message formatting and transmission
     
 **Log** (`src/log/`)
 - `Log` — Two-mask runtime logging (level + channel). `LOG_D/I/W/E` macros.
-    - `LogConfig.h` — Compile-time gate (`LOG_ENABLED`). Defaults to `0`.
+    - `LogConfig.h` — Compile-time gate (`LOG_ENABLED`). Defaults to `0`. Also enables `COMMS_DEBUG_MIRROR` by default.
     - Levels and channels toggle at runtime over Bluetooth (`G` commands).
 
 **Control** (`src/control/`)

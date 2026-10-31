@@ -288,6 +288,11 @@ All settings are split across three config files in `include/config/`:
 - Re-pair Bluetooth or restart the app
 - HC-06 users: disable `ENABLE_HC05_STATE_PIN` in `HardwareConfig.h`
 
+**R4 serial monitor is blank**
+
+- The R4 USB CDC port requires the host to connect before it prints.
+- Firmware waits up to 2 seconds on boot for this. If you miss the boot prints, press the reset button on the board while the monitor is open.
+
 ## Performance
 
 - Command latency: <10ms
@@ -311,7 +316,7 @@ When contributing, follow the visual hierarchy scale defined in the standard doc
 
 ## Log Channels
 
-Runtime-toggled over Bluetooth. `LOG_ENABLED` defaults to `0`.
+Runtime-toggled over Bluetooth. `LOG_ENABLED` defaults to `0`. `COMMS_DEBUG_MIRROR` defaults to `1` (mirrors debug output to R4 USB Serial).
 
 See [`docs/Log_Standard.md`](docs/Log_Standard.md) and [`docs/Control_Protocol.md`](docs/Control_Protocol.md).
 
