@@ -98,7 +98,6 @@ void reset_user_faults() {
         case SystemFaultReason::SHIELD_NOT_FOUND:
         case SystemFaultReason::INTERNAL_ERROR:
         case SystemFaultReason::BATTERY_CRITICAL:
-        case SystemFaultReason::SENSOR_FAIL:
             Comms::system.print(F("Cannot clear hardware fault: "));
             Comms::system.println(fault_to_string(fault_reason));
             break;

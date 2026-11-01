@@ -71,7 +71,7 @@ Multiple keys combine. The parser accumulates every command in one cycle. Holdin
 | `G` + `-` | All channels off |
 | `G` + `L` + letter | Toggle one log level (`D I W E`) |
 
-`?` only resets `E-STOP`, `MANUAL`, and user faults. Hardware faults (`SHIELD_NOT_FOUND`, `INTERNAL_ERROR`, `BATTERY_CRITICAL`, `SENSOR_FAIL`) require a power cycle.
+`?` only resets `E-STOP`, `MANUAL`, `SENSOR_FAIL`, and user faults. Hardware faults (`SHIELD_NOT_FOUND`, `INTERNAL_ERROR`, `BATTERY_CRITICAL`) require a power cycle.
 
 The `P` error path feeds the watchdog too, when encoders are off.
 
