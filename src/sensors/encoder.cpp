@@ -13,6 +13,11 @@
 /* ========= SAFETY ========= */
 #include "safety/system_fault.h"
 
+/* ============ THIRD-PARTY ============ */
+#ifdef BOARD_UNO_R4
+    #include "AGTimerR4.h"
+#endif
+
 /* ============ CORE ============ */
 #include <Arduino.h>
 
@@ -26,24 +31,23 @@ static const uint8_t PINS[4] = {
 };
 
 /* ============ COUNTERS ============ */
-static volatile int32_t  total[4]        = {0, 0, 0, 0};
-static volatile uint32_t last_edge_us[4] = {0, 0, 0, 0};
-static volatile uint32_t period_us[4]    = {0, 0, 0, 0};
-static volatile int8_t   dir_state[4]    = {0, 0, 0, 0};
+static volatile int32_t  total[4]          = {0, 0, 0, 0};
+static volatile uint32_t last_edge_us[4]   = {0, 0, 0, 0};
+static volatile uint32_t period_us[4]      = {0, 0, 0, 0};
+static volatile int8_t   dir_state[4]      = {0, 0, 0, 0};
+static volatile uint8_t  last_pin_state[4] = {1, 1, 1, 1};
 
 /* =============== INTERNAL HELPERS =============== */
-static inline void count_pulse(uint8_t idx) {
+static inline void accept_edge(uint8_t idx) {
     uint32_t now  = micros();
     uint32_t prev = last_edge_us[idx];
 
-    /* --- Debounce --- */
     if (prev != 0 && (now - prev) < ENCODER_DEBOUNCE_US) {
         return;
     }
 
     last_edge_us[idx] = now;
 
-    /* --- First Pulse After Reset --- */
     if (prev == 0) {
         return;
     }
@@ -55,10 +59,15 @@ static inline void count_pulse(uint8_t idx) {
 /* =============== ISR =============== */
 #ifdef BOARD_UNO_R4
 
-static void isr_fl() { count_pulse(0); }
-static void isr_fr() { count_pulse(1); }
-static void isr_rl() { count_pulse(2); }
-static void isr_rr() { count_pulse(3); }
+static void poll_all() {
+    for (uint8_t i = 0; i < 4; i++) {
+        uint8_t s = digitalRead(PINS[i]);
+        if (s != last_pin_state[i]) {
+            last_pin_state[i] = s;
+            if (s == HIGH) accept_edge(i);
+        }
+    }
+}
 
 #else
 
@@ -69,18 +78,17 @@ ISR(PCINT2_vect) {
     uint8_t changed = pind ^ last_pind;
     last_pind       = pind;
 
-    /* Rising edge only: pin was LOW, is now HIGH. */
     if ((changed & (1 << ENCODER_FL_PIN)) && (pind & (1 << ENCODER_FL_PIN))) {
-        count_pulse(0);
+        accept_edge(0);
     }
     if ((changed & (1 << ENCODER_FR_PIN)) && (pind & (1 << ENCODER_FR_PIN))) {
-        count_pulse(1);
+        accept_edge(1);
     }
     if ((changed & (1 << ENCODER_RL_PIN)) && (pind & (1 << ENCODER_RL_PIN))) {
-        count_pulse(2);
+        accept_edge(2);
     }
     if ((changed & (1 << ENCODER_RR_PIN)) && (pind & (1 << ENCODER_RR_PIN))) {
-        count_pulse(3);
+        accept_edge(3);
     }
 }
 
@@ -92,25 +100,17 @@ namespace Encoder {
 void init() {
     for (uint8_t i = 0; i < 4; i++) {
         pinMode(PINS[i], INPUT_PULLUP);
+        last_pin_state[i] = digitalRead(PINS[i]);
     }
 
 #ifdef BOARD_UNO_R4
-    /* --- IRQ Capability Check --- */
-    for (uint8_t i = 0; i < 4; i++) {
-        if (digitalPinToInterrupt(PINS[i]) < 0) {
-            Comms::system.print(F("Encoder pin not IRQ-capable: D"));
-            Comms::system.println(PINS[i]);
-            SystemFault::trigger(SystemFaultReason::INTERNAL_ERROR);
-            return;
-        }
+    AGTimer.init(250, poll_all);
+    if (!AGTimer.start()) {
+        Comms::system.println(F("Encoder: AGTimer failed to start"));
+        SystemFault::trigger(SystemFaultReason::INTERNAL_ERROR);
+        return;
     }
-
-    attachInterrupt(digitalPinToInterrupt(PINS[0]), isr_fl, RISING);
-    attachInterrupt(digitalPinToInterrupt(PINS[1]), isr_fr, RISING);
-    attachInterrupt(digitalPinToInterrupt(PINS[2]), isr_rl, RISING);
-    attachInterrupt(digitalPinToInterrupt(PINS[3]), isr_rr, RISING);
 #else
-    /* Capture current state so the first ISR does not report a phantom edge. */
     last_pind = PIND;
 
     PCMSK2 |= (1 << ENCODER_FL_PIN)
@@ -126,10 +126,11 @@ void init() {
 void reset() {
     noInterrupts();
     for (uint8_t i = 0; i < 4; i++) {
-        total[i]        = 0;
-        last_edge_us[i] = 0;
-        period_us[i]    = 0;
-        dir_state[i]    = 0;
+        total[i]          = 0;
+        last_edge_us[i]   = 0;
+        period_us[i]      = 0;
+        dir_state[i]      = 0;
+        last_pin_state[i] = digitalRead(PINS[i]);
     }
     interrupts();
 }
@@ -144,8 +145,6 @@ void set_direction(uint8_t idx, int8_t dir) {
 
     noInterrupts();
     dir_state[idx]    = dir;
-    /* Drop the reference. The next pulse starts a fresh period measurement
-       instead of comparing across the direction change. */
     last_edge_us[idx] = 0;
     period_us[idx]    = 0;
     interrupts();
@@ -176,12 +175,10 @@ float get_rpm(uint8_t idx) {
         return 0.0f;
     }
 
-    /* No pulse for 200 ms means the wheel is stopped. */
     if (micros() - last > 200000UL) {
         return 0.0f;
     }
 
-    /* rpm = 60 s * 1e6 us/s / (period_us * ticks_per_rev) */
     float magnitude = 60000000.0f / ((float)period * (float)ENCODER_TICKS_PER_REV);
     return magnitude * (float)dir;
 }
