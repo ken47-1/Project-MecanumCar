@@ -88,22 +88,19 @@ MotionCommand apply_safety(MotionCommand cmd) {
             return { 0.0f, 0.0f, 0.0f };
         }
 
-        // Front stop zone
+        // Front stop zone: block forward, allow strafe/rotate
         if (front.in_stop_zone) {
             if (cmd.forward > 0.0f) {
-                return { 0.0f, 0.0f, 0.0f };
+                cmd.forward = 0.0f;
             }
-            // Block forward but allow reverse/strafe
-            cmd.forward = min(cmd.forward, 0.0f);
         }
 
-        // Rear stop zone
+        // Rear stop zone: block reverse, allow strafe/rotate
         #if ENABLE_ULTRASONIC_REAR
             if (rear.in_stop_zone) {
                 if (cmd.forward < 0.0f) {
-                    return { 0.0f, 0.0f, 0.0f };
+                    cmd.forward = 0.0f;
                 }
-                cmd.forward = max(cmd.forward, 0.0f);
             }
         #endif // ENABLE_ULTRASONIC_REAR
     #endif // ENABLE_OBSTACLE_AVOIDANCE
