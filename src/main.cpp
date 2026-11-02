@@ -29,6 +29,7 @@
 #include "sensors/battery_voltage.h"
 #include "sensors/directional_scan.h"
 #include "sensors/encoder.h"
+#include "sensors/odometry.h"
 
 /* ========= SAFETY ========= */
 #include "safety/safety_manager.h"
@@ -63,6 +64,7 @@ void setup() {
     /* --- Navigation & Safety --- */
     Ultrasonic::init();
     Encoder::init();
+    Odometry::init();
     DirectionalScan::init();
     ObstacleDetection::init();
     SafetyManager::init();
@@ -111,4 +113,7 @@ void loop() {
     /* --- Hardware Execution --- */
     MotorRamp::update();
     MotorControl::update();
+
+    /* --- Odometry Update --- */
+    Odometry::update();
 }
