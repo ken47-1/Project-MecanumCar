@@ -21,10 +21,12 @@
 /* ========= SAFETY ========= */
 #include "safety/obstacle_detection.h"
 #include "safety/safety_manager.h"
+#include "safety/system_fault.h"
 
 /* ========= SENSORS ========= */
 #include "sensors/directional_scan.h"
 #include "sensors/ultrasonic.h"
+#include "sensors/encoder.h"
 
 /* ========= INPUT ========= */
 #include "input/input_watchdog.h"
@@ -49,11 +51,23 @@ enum class AutoState : uint8_t {
 static AutoState     state          = AutoState::MOVING;
 static float         spin_direction = 0.0f; // -1.0 Left, 1.0 Right
 static float         last_spin_dir  = 0.0f;
+static int32_t       target_ticks   = 0;
+static int32_t       start_ticks    = 0;
 static uint16_t      spin_limit_ms  = 0;
 static unsigned long timer_ms       = 0;
 static uint8_t       stuck_retries  = 0;
 
 /* =============== INTERNAL HELPERS =============== */
+/* ============ KINEMATICS ============ */
+#if ENABLE_ENCODERS
+    constexpr float WHEEL_CIRC_MM = PI * WHEEL_DIAMETER_MM;
+    constexpr float MM_PER_TICK   = WHEEL_CIRC_MM / ENCODER_TICKS_PER_REV;
+    constexpr float TRACK_CIRC_MM = PI * TRACK_WIDTH_MM;
+
+    constexpr int32_t TICKS_DIAGONAL = (TRACK_CIRC_MM * (45.0f / 360.0f)) / MM_PER_TICK;
+    constexpr int32_t TICKS_SIDE     = (TRACK_CIRC_MM * (90.0f / 360.0f)) / MM_PER_TICK;
+#endif
+
 /* ============ NAVIGATION ============ */
 static void enter(AutoState next) {
     state = next;
@@ -66,21 +80,29 @@ static void spin_direct(float direction, float magnitude) {
 }
 
 /* --- Search all swept directions for the absolute widest path --- */
-static uint16_t pick_best_spin_time(const SweepResult& r, float& dir_out) {
+static int32_t pick_best_spin_ticks(const SweepResult& r, float& dir_out, uint16_t& time_out) {
     
     struct PathOption {
         uint16_t dist;
         float    direction; // -1.0 Left, 1.0 Right
-        uint16_t duration;  // Time to turn to this angle
+        int32_t  ticks;     // Tick target to reach this angle
+        uint16_t time_ms;   // Time target if encoders are disabled
     };
 
-    /* Define turn candidates with their specific timing needs */
+    /* Define turn candidates with their specific requirements */
     PathOption candidates[] = {
-        { r.front_left,  -1.0f, AUTO_SPIN_DIAGONAL_MS }, // 45 deg
-        { r.front_right,  1.0f, AUTO_SPIN_DIAGONAL_MS }, // 45 deg
-        { r.left,        -1.0f, AUTO_SPIN_SIDE_MS     }, // 90 deg
-        { r.right,        1.0f, AUTO_SPIN_SIDE_MS     }  // 90 deg
+        { r.front_left,  -1.0f, 0, AUTO_SPIN_DIAGONAL_MS }, // 45 deg
+        { r.front_right,  1.0f, 0, AUTO_SPIN_DIAGONAL_MS }, // 45 deg
+        { r.left,        -1.0f, 0, AUTO_SPIN_SIDE_MS     }, // 90 deg
+        { r.right,        1.0f, 0, AUTO_SPIN_SIDE_MS     }  // 90 deg
     };
+
+    #if ENABLE_ENCODERS
+        candidates[0].ticks = TICKS_DIAGONAL;
+        candidates[1].ticks = TICKS_DIAGONAL;
+        candidates[2].ticks = TICKS_SIDE;
+        candidates[3].ticks = TICKS_SIDE;
+    #endif
 
     uint16_t max_dist = 0;
     uint8_t  best_idx[4] = {0, 0, 0, 0};
@@ -98,7 +120,6 @@ static uint16_t pick_best_spin_time(const SweepResult& r, float& dir_out) {
     }
 
     /* --- Path Clearance Check --- */
-    // If the best available path is still narrow, return 0 to trigger escape
     if (max_dist < FRONT_SLOW_EXIT_CM) {
         dir_out = 0.0f;
         return 0;
@@ -116,7 +137,9 @@ static uint16_t pick_best_spin_time(const SweepResult& r, float& dir_out) {
     }
     last_spin_dir = candidates[pick].direction;
     dir_out     = candidates[pick].direction;
-    return candidates[pick].duration;
+    time_out    = candidates[pick].time_ms;
+    
+    return (candidates[pick].ticks > 0) ? candidates[pick].ticks : 1; // Return >0 to indicate path found
 }
 
 /* =============== PUBLIC API =============== */
@@ -143,8 +166,7 @@ void update(InputWatchdog& watchdog) {
         return;
     }
 
-    /* --- Speed Constant --- */
-    // Convert per-mille (0-1000) to float (0.0-1.0)
+    /* --- Speed Constants --- */
     constexpr float speed = (float)AUTO_SPEED / 1000.0f;
     
     /* --- State Machine --- */
@@ -165,12 +187,16 @@ void update(InputWatchdog& watchdog) {
         /* ------ SCANNING ------ */
         case AutoState::SCANNING: {
             DirectionalScan::update_sweep();
+            
             if (DirectionalScan::sweep_ready()) {
-                spin_limit_ms = pick_best_spin_time(DirectionalScan::consume_sweep_result(), spin_direction);
+                target_ticks = pick_best_spin_ticks(DirectionalScan::consume_sweep_result(), spin_direction, spin_limit_ms);
 
-                if (spin_limit_ms > 0) {
+                if (target_ticks > 0) {
                     stuck_retries = 0; // Path found, reset counter
                     Ultrasonic::scan_set_direction(ScanDir::FRONT);
+                    #if ENABLE_ENCODERS
+                        start_ticks = Encoder::get_count(0); // Snapshot FL wheel
+                    #endif
                     enter(AutoState::SPINNING);
                 } else {
                     stuck_retries++; // Failed to find a path
@@ -190,19 +216,35 @@ void update(InputWatchdog& watchdog) {
                         #endif
                     }
                 }
+            } 
+            /* --- Sweep Timeout Safety --- */
+            else if (millis() - timer_ms > AUTO_SWEEP_TIMEOUT_MS) {
+                SystemFault::trigger(SystemFaultReason::SENSOR_FAIL);
+                MotorControl::hard_stop();
+                enter(AutoState::STUCK);
             }
             break;
         }
 
         /* ------ SPINNING ------ */
         case AutoState::SPINNING: {
-            // Check if hardcoded rotation duration has elapsed
-            if (millis() - timer_ms >= (unsigned long)spin_limit_ms) {
+            bool spin_done = false;
+
+            #if ENABLE_ENCODERS
+                int32_t current_ticks = Encoder::get_count(0);
+                int32_t traveled = abs(current_ticks - start_ticks);
+                if (traveled >= target_ticks) spin_done = true;
+            #else
+                if (millis() - timer_ms >= (unsigned long)spin_limit_ms) spin_done = true;
+            #endif
+
+            if (spin_done) {
                 MotorControl::hard_stop();
                 enter(AutoState::MOVING);
             } else {
-                // Fixed duration rotation at autonomous speed
-                spin_direct(spin_direction, speed);
+                // Spin at a capped speed to reduce kinetic energy
+                constexpr float spin_speed = (float)AUTO_SPIN_SPEED / 1000.0f;
+                spin_direct(spin_direction, spin_speed);
             }
             break;
         }

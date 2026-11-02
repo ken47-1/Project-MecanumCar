@@ -235,6 +235,13 @@ constexpr unsigned long AUTO_RETRY_WAIT_MS  = 2000;
 /* Max attempts to escape before giving up and stopping. */
 constexpr uint8_t       STUCK_MAX_RETRIES   = 5;
 
+/* Speed cap for autonomous spins (per-mille). 
+   Kept low to reduce kinetic energy near walls. */
+constexpr uint16_t AUTO_SPIN_SPEED = 400; // 40%
+
+/* Timeout for the servo sweep. Triggers SENSOR_FAIL if the servo jams. */
+constexpr unsigned long AUTO_SWEEP_TIMEOUT_MS = 3000; 
+
 /* Fallback spin times (ms) if encoders are disabled. 
    If encoders are enabled, the robot uses odometry ticks instead. */
 constexpr uint16_t AUTO_SPIN_DIAGONAL_MS = 500;   // 45 degrees
