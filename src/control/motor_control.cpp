@@ -220,7 +220,7 @@ void update() {
 
     #if ENABLE_ENCODERS
         static unsigned long last_speed_print = 0;
-        if (millis() - last_speed_print >= 500) {
+        if (millis() - last_speed_print >= 200) {
             last_speed_print = millis();
             LOG_D(Log::Ch::CH_PID, "FL=%d FR=%d RL=%d RR=%d",
                       (int)Encoder::get_rpm(0),
