@@ -175,7 +175,7 @@ float get_rpm(uint8_t idx) {
         return 0.0f;
     }
 
-    if (micros() - last > 200000UL) {
+    if (micros() - last > ENCODER_STALL_TIMEOUT_US) {
         return 0.0f;
     }
 

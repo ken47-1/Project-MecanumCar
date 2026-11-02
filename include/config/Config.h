@@ -190,7 +190,7 @@ constexpr uint16_t ENCODER_TICKS_PER_REV = 20;
    discards only spurious edges. */
 constexpr uint32_t ENCODER_DEBOUNCE_US = 50;
 
-/* --- Per-Wheel Speed Ceiling --- */
+/* ------ Per-Wheel Speed Ceiling ------ */
 /* Full-throttle open-loop RPM per wheel. Motors differ. Measure each wheel
    with tools/drive.py before trusting these. */
 constexpr float MOTOR_MAX_RPM_FL = 255.0f;
@@ -198,11 +198,11 @@ constexpr float MOTOR_MAX_RPM_FR = 255.0f;
 constexpr float MOTOR_MAX_RPM_RL = 255.0f;
 constexpr float MOTOR_MAX_RPM_RR = 255.0f;
 
-/* --- PID (per-wheel, normalized) --- */
+/* ------ PID (per-wheel, normalized) ------ */
 /* Gains depend on motor, gearbox, load, and battery. Retune per build. */
-constexpr float PID_KP = 1.5f;
-constexpr float PID_KI = 0.0f;
-constexpr float PID_KD = 0.0f;
+constexpr float PID_KP[4] = { 1.5f, 1.5f, 1.5f, 1.5f };
+constexpr float PID_KI[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+constexpr float PID_KD[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 constexpr float PID_INTEGRAL_LIMIT = 0.5f;
 constexpr uint16_t PID_PERIOD_MS = 20;
 
@@ -212,12 +212,25 @@ constexpr float PID_DT_MAX = 0.05f;
 /* Minimum output floor (motor deadband). 0 = disabled. */
 constexpr float PID_MIN_OUTPUT = 0.0f;
 
+/* ------ Encoder Stall Timeout ------ */
+/*
+    Time since last pulse before RPM is forced to 0.
+    Lower values react faster to real stalls but cap the minimum
+    trackable speed. Assuming 20 ticks/rev:
+
+    100 ms = 30 RPM min  (aggressive)
+    250 ms = 12 RPM min  (balanced)
+    500 ms =  6 RPM min  (allows slow creep)
+    >1s    = <3 RPM min  (sluggish)
+*/
+constexpr uint32_t ENCODER_STALL_TIMEOUT_US = 500000;  // 500 ms
+
 /* Encoder stall detection. Fault if |intent| >= MIN and RPM == 0
    for STALL_TICKS consecutive PID cycles. */
 constexpr float PID_STALL_INTENT_MIN = 0.3f;
 constexpr uint16_t PID_STALL_TICKS = 25;
 
-/* --- Mode --- */
+/* ------ Mode ------ */
 /* 1 = closed loop (PID active), 0 = open loop (raw intent passthrough).
    Runtime toggle with the 'P' command. */
 #define PID_CLOSED_LOOP_DEFAULT 0

@@ -89,11 +89,11 @@ static float apply_one(uint8_t idx, float intent, float dt) {
     }
     s.last_meas = measured_frac;
 
-    float proportional = PID_KP * error;
-    float derivative   = -PID_KD * d_meas;
+    float proportional = PID_KP[idx] * error;
+    float derivative   = -PID_KD[idx] * d_meas;
 
     /* --- Integral (conditional: skip if saturated against the error) --- */
-    float tentative = intent + proportional + PID_KI * s.integral + derivative;
+    float tentative = intent + proportional + PID_KI[idx] * s.integral + derivative;
     bool  sat_high  = (tentative >=  1.0f && error > 0.0f);
     bool  sat_low   = (tentative <= -1.0f && error < 0.0f);
     if (!sat_high && !sat_low) {
@@ -103,7 +103,7 @@ static float apply_one(uint8_t idx, float intent, float dt) {
 
     /* --- Final Output --- */
     float output = constrain(
-        intent + proportional + PID_KI * s.integral + derivative,
+        intent + proportional + PID_KI[idx] * s.integral + derivative,
         -1.0f, 1.0f
     );
 
