@@ -104,7 +104,7 @@ void init() {
     }
 
 #ifdef BOARD_UNO_R4
-    AGTimer.init(250, poll_all);
+    AGTimer.init(ENCODER_POLL_PERIOD_US, poll_all);
     if (!AGTimer.start()) {
         Comms::system.println(F("Encoder: AGTimer failed to start"));
         SystemFault::trigger(SystemFaultReason::INTERNAL_ERROR);

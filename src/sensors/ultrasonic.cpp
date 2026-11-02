@@ -31,14 +31,14 @@ static bool  servo_ready = false;
 static UltraPing front_sonar(
     SR04_FRONT_TRIG_PIN,
     SR04_FRONT_ECHO_PIN,
-    90
+    ULTRASONIC_MAX_DIST_CM
 );
 
 #if ENABLE_ULTRASONIC_REAR
 static UltraPing rear_sonar(
     SR04_REAR_TRIG_PIN,
     SR04_REAR_ECHO_PIN,
-    90
+    ULTRASONIC_MAX_DIST_CM
 );
 #endif
 
@@ -86,8 +86,8 @@ uint16_t get_front_distance_cm() {
 }
 
 uint16_t apply_front_ema(uint16_t raw) {
-    if (raw == 0 || raw > 400) {
-        if (!front_ema_initialized) return 999;
+    if (raw == 0 || raw > ULTRASONIC_INVALID_CM) {
+        if (!front_ema_initialized) return DISTANCE_FALLBACK_CM;
         return (uint16_t)(front_filtered_cm + 0.5f);
     }
     if (!front_ema_initialized) {
@@ -106,8 +106,8 @@ uint16_t get_rear_distance_cm() {
 }
 
 uint16_t apply_rear_ema(uint16_t raw) {
-    if (raw == 0 || raw > 400) {
-        if (!rear_ema_initialized) return 999;
+    if (raw == 0 || raw > ULTRASONIC_INVALID_CM) {
+        if (!rear_ema_initialized) return DISTANCE_FALLBACK_CM;
         return (uint16_t)(rear_filtered_cm + 0.5f);
     }
     if (!rear_ema_initialized) {
@@ -124,14 +124,14 @@ uint16_t apply_rear_ema(uint16_t raw) {
 #if ENABLE_ULTRASONIC_FRONT
 uint16_t get_front_distance_raw_cm() {
     uint16_t raw = front_sonar.ping_cm();
-    return (raw == 0) ? 999 : raw;
+    return (raw == 0) ? DISTANCE_FALLBACK_CM : raw;
 }
 #endif
 
 #if ENABLE_ULTRASONIC_REAR
 uint16_t get_rear_distance_raw_cm() {
     uint16_t raw = rear_sonar.ping_cm();
-    return (raw == 0) ? 999 : raw;
+    return (raw == 0) ? DISTANCE_FALLBACK_CM : raw;
 }
 #endif
 

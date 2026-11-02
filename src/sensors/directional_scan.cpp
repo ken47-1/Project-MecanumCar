@@ -176,7 +176,7 @@ void update_sweep() {
     /* --- Step 2: Sample Distance --- */
     if (sweep_phase == SweepPhase::READING) {
         uint16_t dist = Ultrasonic::get_front_distance_raw_cm();
-        if (dist == 0) dist = 999;
+        if (dist == 0) dist = DISTANCE_FALLBACK_CM;
 
         uint16_t* slot = result_slot(sweep_step);
         if (slot) *slot = dist;

@@ -32,7 +32,7 @@ static bool input_loss_active      = false;
 static bool connection_loss_active = false;
 
 /* ============ BATTERY TRACKING ============ */
-static float min_voltage_seen = 10.0f;
+static float min_voltage_seen = BATTERY_VOLTAGE_MAX;
 static unsigned long last_warning_ms = 0;
 static unsigned long last_critical_ms = 0;
 
@@ -89,13 +89,13 @@ void update() {
         
         min_voltage_seen += BATTERY_MIN_DECAY_RATE * dt;
         if (min_voltage_seen > v) min_voltage_seen = v;
-        if (min_voltage_seen > 10.0f) min_voltage_seen = 10.0f;
+        if (min_voltage_seen > BATTERY_VOLTAGE_MAX) min_voltage_seen = BATTERY_VOLTAGE_MAX;
         
         if (min_voltage_seen < BATTERY_CRITICAL_VOLTAGE && !estop_active) {
             // SystemFault::trigger will print the banner and halt motors
             SystemFault::trigger(SystemFaultReason::BATTERY_CRITICAL);
         }
-        else if (v < BATTERY_CRITICAL_VOLTAGE + 0.3f) {
+        else if (v < BATTERY_CRITICAL_VOLTAGE + BATTERY_CRITICAL_BUFFER) {
             if (now - last_critical_ms >= BATTERY_CRITICAL_COOLDOWN_MS) {
                 Comms::print.print(F("BATTERY NEAR CRITICAL: "));
                 Comms::print.print(v);
@@ -161,7 +161,7 @@ void set_connection_loss(bool active) {
 }
 
 void clear_emergency_stop() {
-    min_voltage_seen = 10.0f;
+    min_voltage_seen = BATTERY_VOLTAGE_MAX;
     SystemFault::reset_user_faults();
     refresh();
 }

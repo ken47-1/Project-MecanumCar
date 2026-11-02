@@ -25,14 +25,14 @@ namespace ObstacleDetection {
 
 /* =============== INTERNAL STATE =============== */
 /* ============ FRONT SENSOR ============ */
-static Proximity front_cache = { 999, false, false };
+static Proximity front_cache = { DISTANCE_FALLBACK_CM, false, false };
 static bool     front_in_slow = false;
 static bool     front_in_stop = false;
 static uint32_t front_last_clear_slow_ms = 0;
 static uint32_t front_last_clear_stop_ms = 0;
 
 /* ============ REAR SENSOR ============ */
-static Proximity rear_cache  = { 999, false, false };
+static Proximity rear_cache  = { DISTANCE_FALLBACK_CM, false, false };
 static bool     rear_in_slow = false;
 static bool     rear_in_stop = false;
 static uint32_t rear_last_clear_slow_ms = 0;
@@ -93,7 +93,7 @@ void update() {
     #if ENABLE_ULTRASONIC_REAR
     uint16_t rear_raw = Ultrasonic::get_rear_distance_raw_cm();
     #else
-    uint16_t rear_raw = 999;
+    uint16_t rear_raw = DISTANCE_FALLBACK_CM;
     #endif
 
     LOG_D(Log::Ch::CH_SNR, "FRONT_DIR=%d SWEEP=%d",

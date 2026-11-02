@@ -36,7 +36,7 @@ void handle(InputWatchdog& watchdog) {
 
     /* --- Parsing Loop --- */
     uint8_t drained = 0;
-    while (Comms::available() && drained < 64) {
+    while (Comms::available() && drained < RX_DRAIN_MAX) {
         char c = (char)Comms::read();
         drained++;
         if (c == '\n' || c == '\r' || c == ' ') continue;

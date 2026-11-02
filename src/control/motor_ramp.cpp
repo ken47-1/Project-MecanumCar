@@ -68,7 +68,7 @@ void update() {
         return;
     }
 
-    if (dt_ms > 100) dt_ms = 100;
+    if (dt_ms > RAMP_DT_MAX_MS) dt_ms = RAMP_DT_MAX_MS;
 
     last_update_ms = now;
 

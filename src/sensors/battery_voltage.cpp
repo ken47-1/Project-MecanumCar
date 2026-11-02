@@ -37,7 +37,7 @@ static void sample() {
     }
 
     int raw = analogRead(BATTERY_SENSOR_PIN);
-    float v = (raw / 1023.0f) * 5.0f * BATTERY_DIVIDER_RATIO;
+    float v = (raw / ADC_RESOLUTION) * ADC_REF_VOLTAGE * BATTERY_DIVIDER_RATIO;
 
     if (!initialized) {
         filtered_voltage = v;

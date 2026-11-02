@@ -33,8 +33,8 @@ namespace ObstacleDetection {
 namespace ObstacleDetection {
     inline void init() {}
     inline void update() {}
-    inline Proximity get_front() { return { 999, false, false }; }
-    inline Proximity get_rear()  { return { 999, false, false }; }
+    inline Proximity get_front() { return { DISTANCE_FALLBACK_CM, false, false }; }
+    inline Proximity get_rear()  { return { DISTANCE_FALLBACK_CM, false, false }; }
 }
 
 #endif // ENABLE_OBSTACLE_AVOIDANCE

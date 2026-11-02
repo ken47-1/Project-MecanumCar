@@ -188,7 +188,7 @@ void write(Lvl l, Ch c, const char* fmt, ...) {
     Comms::system.print(tag_of(c));
     Comms::system.print(F("] "));
 
-    char buf[32];
+    char buf[LOG_BUFFER_SIZE];
     va_list args;
     va_start(args, fmt);
     vsnprintf(buf, sizeof(buf), fmt, args);

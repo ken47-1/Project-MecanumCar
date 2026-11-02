@@ -64,8 +64,8 @@ static void drive_one_motor(Adafruit_DCMotor* m, float value) {
 }
 
 static inline int8_t sign_i8(float v) {
-    if (v > 0.01f)  return 1;
-    if (v < -0.01f) return -1;
+    if (v > MOTOR_SIGN_DEADBAND)  return 1;
+    if (v < -MOTOR_SIGN_DEADBAND) return -1;
     return 0;
 }
 
@@ -182,10 +182,10 @@ void update() {
     MotorSet cur = MotorRamp::current();
     MotorSet tgt = MotorRamp::target();
 
-    if (tgt.fl == 0.0f && fabs(cur.fl) < 0.05f &&
-        tgt.fr == 0.0f && fabs(cur.fr) < 0.05f &&
-        tgt.rl == 0.0f && fabs(cur.rl) < 0.05f &&
-        tgt.rr == 0.0f && fabs(cur.rr) < 0.05f) {
+    if (tgt.fl == 0.0f && fabs(cur.fl) < MOTOR_STOP_THRESHOLD &&
+        tgt.fr == 0.0f && fabs(cur.fr) < MOTOR_STOP_THRESHOLD &&
+        tgt.rl == 0.0f && fabs(cur.rl) < MOTOR_STOP_THRESHOLD &&
+        tgt.rr == 0.0f && fabs(cur.rr) < MOTOR_STOP_THRESHOLD) {
         hard_stop();
         return;
     }
