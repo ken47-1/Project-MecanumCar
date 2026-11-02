@@ -2,31 +2,28 @@
 
 *This project was developed with AI-assisted code generation and human oversight.*
 
-Bluetooth-controlled Mecanum wheel robot with autonomous obstacle avoidance. Arduino Uno + Motor Shield V2, modular C++ firmware on the Arduino Framework, dual HC-SR04 ultrasonic sensors with servo turret, real-time safety subsystem. Manual driving via Bluetooth app or autonomous mode with pathfinding. Complete rewrite of the ZYC0044 Mini Mecanum Wheel Car kit.
+Bluetooth-controlled Mecanum wheel robot with autonomous obstacle avoidance. The robot uses an Arduino Uno and an Adafruit Motor Shield V2. The firmware uses modular C++ on the Arduino Framework. It includes dual HC-SR04 ultrasonic sensors with a servo turret and a real-time safety subsystem.
 
 ## Hardware
 
-- **MCU**: Arduino Uno R3 (ATmega328P) or Uno R4 (Minima/WiFi)
-- **Motor Driver**: Adafruit Motor Shield V2 (TB6612FNG + PCA9685, 12-bit PWM)
-- **Wheels**: 4x mecanum (45° rubber rollers)
-- **Sensors**: HC-SR04 front (servo-mounted, 5-position sweep) + HC-SR04 rear (static)
-- **Servo**: Micro servo (SG90 or compatible) for turret scanning
-- **Bluetooth**: HC-05 or HC-06 (9600 baud)
-- **Power**: 2x 18650 lithium cells in series
-- **Chassis**: Clear acrylic frame
+- **MCU:** Arduino Uno R3 (ATmega328P) or Uno R4 (Minima/WiFi).
+- **Motor Driver:** Adafruit Motor Shield V2 (TB6612FNG + PCA9685, 12-bit PWM).
+- **Wheels:** 4x mecanum (45° rubber rollers).
+- **Sensors:** HC-SR04 front (servo-mounted, 5-position sweep) and HC-SR04 rear.
+- **Servo:** Micro servo (SG90 or compatible).
+- **Bluetooth:** HC-05 or HC-06 (9600 baud).
+- **Power:** 2x 18650 lithium cells in series.
+- **Chassis:** Clear acrylic frame.
 
 ### Bluetooth Module Support
 
-This project supports both HC-05 and HC-06 Bluetooth modules.
-
 | Module | STATE Pin | Connection Detection |
 |---|---|---|
-| HC-05 | Yes (D2) | Detects bluetooth disconnection (disabled by default) |
+| HC-05 | Yes (D2) | Detects Bluetooth disconnection (disabled by default) |
 | HC-06 | No | Relies on watchdog timeout only |
 
-**HC-05 users**: Connect STATE pin to D2. Set `ENABLE_HC05_STATE_PIN = 1` in `HardwareConfig.h`.
-
-**HC-06 users**: Leave `ENABLE_HC05_STATE_PIN = 0` in `HardwareConfig.h` (default).
+**HC-05 users:** Connect the STATE pin to D2. Set `ENABLE_HC05_STATE_PIN = 1` in `HardwareConfig.h`.
+**HC-06 users:** Leave `ENABLE_HC05_STATE_PIN = 0` in `HardwareConfig.h`.
 
 ### Pin Configuration
 
@@ -35,12 +32,12 @@ This project supports both HC-05 and HC-06 Bluetooth modules.
 | Front Ultrasonic TRIG/ECHO | D11 / D12 |
 | Rear Ultrasonic TRIG/ECHO | D8 / D9 |
 | Servo | D10 |
-| Bluetooth RX/TX | D0 / D1 (Hardware Serial) |
-| Bluetooth STATE (HC-05 only) | D2 (disabled by default) |
-| Battery Monitor (Rev 2) | A0 (disabled by default) |
-| Encoders (Rev 3) | D7, D6, D5, D4 (disabled by default) |
+| Bluetooth RX/TX | D0 / D1 |
+| Bluetooth STATE (HC-05 only) | D2 |
+| Battery Monitor | A0 |
+| Encoders | D7, D6, D5, D4 |
 
-**Note**: On R3, disconnect Bluetooth when uploading (pins shared with USB). On R4, upload with Bluetooth connected (Serial1 is independent).
+**Note:** On R3, disconnect Bluetooth when uploading. On R4, upload with Bluetooth connected.
 
 ### Motor Mapping (AFMS V2)
 
@@ -50,36 +47,6 @@ This project supports both HC-05 and HC-06 Bluetooth modules.
 | Front Right | M4 |
 | Rear Left | M2 |
 | Rear Right | M3 |
-
-## About This Project
-
-This is a complete rewrite of the **ZYC0044 Mini Mecanum Wheel Car** kit firmware.
-
-The original code (by Ajay Huajian, ZHIYI Technology) controls the car with an L293D motor driver and a 74HC595 shift register. It uses a single HC‑SR04 ultrasonic sensor on pins A2 and A3. The car accepts motion commands (`F`, `B`, `L`, `Y` for Right, `S`, `C` for Turn Left, `D` for Turn Right) and speed changes (`+` and `-` in 10‑step increments). Its obstacle‑avoidance routine measures distance. If an object is closer than 20 cm, it backs up for 500 ms and turns left for 500 ms.
-
-The original code has several problems:
-- **Blocking delays** (`delay()` and `delayMicroseconds()`) freeze the car during maneuvers.
-- **Flat architecture** – all variables and logic reside in a single `.ino` file.
-- **No safety system** – no watchdog, no input loss detection, and no emergency stop.
-- **Limited obstacle logic** – only one sensor, no hysteresis, and a fixed 20 cm threshold.
-- **No autonomous navigation** – only a simple backup‑and‑turn response.
-- **No motor ramping** – motors start and stop abruptly.
-- **Single‑board only** – designed for Arduino Uno R3.
-- **Hardcoded values** – speeds, pins, and thresholds are not configurable.
-
-This rewrite addresses every limitation:
-- **Modular C++ architecture** – separate modules for comms, control, input, safety, and sensors.
-- **Non‑blocking scheduling** – all scheduling uses `millis()`. Sensor reads block for ~30 ms each. A two-ping loop costs about 60 ms. No `delay()` freezes the loop.
-- **Real‑time safety** – a watchdog, input loss detection, and a latching emergency stop.
-- **Autonomous navigation** – a state machine with pathfinding (MOVING → SCANNING → SPINNING → BACKING_UP → STUCK).
-- **Dual ultrasonic sensors** – front (servo‑mounted, 5‑position sweep) and rear.
-- **Sensor filtering** – exponential moving average (EMA) and hysteresis for stable readings.
-- **Motor ramping** – smooth acceleration and deceleration (400 ms up, 200 ms down).
-- **Dual‑board support** – works on Arduino Uno R3 and R4 Minima/WiFi.
-- **Fully configurable** – all settings are in `Config.h`, `HardwareConfig.h`, and `LogConfig.h`.
-- **Real feedback** – speed gauge, step mode, and debug output.
-
-The same hardware now delivers autonomous driving, reliable obstacle avoidance, and safe operation in a clean, maintainable codebase.
 
 ## Quick Start
 
@@ -92,240 +59,198 @@ pio run -e uno -t upload
 # Arduino Uno R4 Minima/WiFi
 pio run -e uno_r4_minima -t upload
 
-# Monitor (both boards)
+# Monitor
 pio device monitor -b 9600
 ```
 
 ### 2. Wiring
 
-**Bluetooth**: Connect to pins D0 (RX) and D1 (TX).
-
-- **HC-05**: Connect STATE pin to D2 (optional, enables connection loss detection)
-- **HC-06**: No STATE pin, watchdog only
-
-**Note**: On Arduino Uno R3, disconnect Bluetooth when uploading (pins shared with USB). On R4, upload with Bluetooth connected.
+Connect Bluetooth to pins D0 (RX) and D1 (TX).
+- **HC-05:** Connect the STATE pin to D2.
+- **HC-06:** No STATE pin.
 
 ### 3. Pair Bluetooth
 
-- Phone Bluetooth settings -> HC-05 or HC-06 (PIN usually 1234 or 0000 for HC-06; 1234 for HC-05)
-- Android: Install Bluetooth Electronics app
-- Load custom panel from `archive/Bluetooth Electronics Panels/`
+1. Open phone Bluetooth settings.
+2. Pair with HC-05 or HC-06 (PIN is usually 1234 or 0000).
+3. Install the Bluetooth Electronics app on Android.
+4. Load the custom panel from `archive/Bluetooth Electronics Panels/`.
 
 ### 4. Drive
 
-- **Manual Mode (0)**: Use d-pad to move, speed slider to control
-- **Autonomous Mode (1)**: Robot navigates obstacles automatically
+- **Manual Mode (`0`):** Use the d-pad to move. Use the speed slider to control speed.
+- **Autonomous Mode (`1`):** The robot navigates obstacles automatically.
 
 ## Configuration
 
-All settings are split across three config files in `include/config/`:
+Settings are split across three files in `include/config/`.
 
-- `HardwareConfig.h` – Physical hardware presence (pins, sensors installed)
-- `Config.h` – Software behavior (thresholds, timing, speed, features)
-- `LogConfig.h` – Compile-time log gate (`LOG_ENABLED`)
-
-### Hardware Configuration (HardwareConfig.h)
-
-- Servo angles (`SERVO_LEFT`, ...)
-- Physical presence flags (`ENABLE_ULTRASONIC_FRONT`, `ENABLE_SERVO`, `ENABLE_BATTERY_MONITOR`, etc.)
-
-### Software Configuration (Config.h)
-
-- Feature flags (`ENABLE_INPUT_WATCHDOG`, `ENABLE_OBSTACLE_AVOIDANCE`, `ENABLE_AUTONOMOUS_MODE`, etc.)
-- Ultrasonic thresholds (`FRONT_SLOW_ENTER_CM`, ...)
+- `HardwareConfig.h`: Physical hardware presence.
+- `Config.h`: Software behavior.
+- `LogConfig.h`: Compile-time log gate.
 
 ### Features
 
-**Input** (Config.h)
+**Input** (`Config.h`)
+- `ENABLE_INPUT_WATCHDOG`: Bluetooth keepalive.
+- `ENABLE_INPUT_BUTTONS`: WASD/QE/ZC/JL commands.
+- `ENABLE_INPUT_SPEED_AUTHORITY`: Speed slider.
 
-- `ENABLE_INPUT_WATCHDOG` — Bluetooth keepalive (150ms timeout, default: ON)
-- `ENABLE_INPUT_BUTTONS` — WASD/QE/ZC/JL button commands (default: ON)
-- `ENABLE_INPUT_SPEED_AUTHORITY` — Speed slider (%+, %-, %R/%N/%F) (default: ON)
+**Navigation & Autonomy** (`Config.h`)
+- `ENABLE_DIRECTIONAL_SCAN`: Servo sweep.
+- `ENABLE_OBSTACLE_AVOIDANCE`: Front/rear veto logic.
+- `ENABLE_AUTONOMOUS_MODE`: State machine. Requires `ENABLE_DIRECTIONAL_SCAN`.
 
-**Navigation & Autonomy** (Config.h)
-
-- `ENABLE_DIRECTIONAL_SCAN` — Servo sweep for obstacle detection (default: ON)
-- `ENABLE_OBSTACLE_AVOIDANCE` — Front/rear veto logic with hysteresis (default: ON)
-- `ENABLE_AUTONOMOUS_MODE` — State machine with pathfinding (default: OFF)
-
-**Note**: `ENABLE_AUTONOMOUS_MODE` requires `ENABLE_DIRECTIONAL_SCAN` to be enabled.
-
-**Hardware Presence** (HardwareConfig.h)
-
-- `ENABLE_HC05_STATE_PIN` — HC-05 STATE pin connection detection (default: OFF)
-- `ENABLE_ULTRASONIC_FRONT` — Front HC-SR04 installed (default: ON)
-- `ENABLE_ULTRASONIC_REAR` — Rear HC-SR04 installed (default: ON)
-- `ENABLE_SERVO` — Servo for directional scan installed (default: ON)
-- `ENABLE_BATTERY_MONITOR` — 0-25V voltage sensor (default: OFF)
-- `ENABLE_ENCODERS` — H206 optical encoders (default: OFF)
+**Hardware Presence** (`HardwareConfig.h`)
+- `ENABLE_HC05_STATE_PIN`: HC-05 STATE pin.
+- `ENABLE_ULTRASONIC_FRONT`: Front HC-SR04.
+- `ENABLE_ULTRASONIC_REAR`: Rear HC-SR04.
+- `ENABLE_SERVO`: Servo for directional scan.
+- `ENABLE_BATTERY_MONITOR`: 0-25V voltage sensor.
+- `ENABLE_ENCODERS`: H206 optical encoders.
 
 ### Drive Behavior
 
-- **Speed**: `SPEED_USER_MIN` (200 per-mille), `SPEED_USER_MAX` (1000), `SPEED_USER_DEFAULT` (1000)
-- **Speed steps**: `SPEED_STEP_ROUGH` (10%), `SPEED_STEP_NORMAL` (5%), `SPEED_STEP_FINE` (1%)
-- **Motor ramp**: `RAMP_UP_TIME_MS` (400ms), `RAMP_DOWN_TIME_MS` (200ms)
-- **Autonomous speed**: `AUTO_SPEED` (600 per-mille)
+- **Speed:** `SPEED_USER_MIN` (200), `SPEED_USER_MAX` (1000), `SPEED_USER_DEFAULT` (1000).
+- **Speed steps:** `SPEED_STEP_ROUGH` (10%), `SPEED_STEP_NORMAL` (5%), `SPEED_STEP_FINE` (1%).
+- **Motor ramp:** `RAMP_UP_TIME_MS` (400 ms), `RAMP_DOWN_TIME_MS` (200 ms).
+- **Autonomous speed:** `AUTO_SPEED` (600).
 
 ### Obstacle Avoidance
 
-- **Autonomous mode**: user speed slider is bypassed. `AUTO_SPEED` is used as-is.
-- **Front slow**: 30–35cm → 0.5x
-- **Front stop**: 15–20cm → block
-- **Rear slow**: 35–40cm → 0.5x
-- **Rear stop**: 15–20cm → block
-- **Hold time**: OA_CLEAR_HOLD_MS (200ms)
+- **Autonomous mode:** Bypasses the user speed slider.
+- **Front slow:** 30 to 35 cm (0.5x speed).
+- **Front stop:** 15 to 20 cm (clamps forward motion).
+- **Rear slow:** 35 to 40 cm (0.5x speed).
+- **Rear stop:** 15 to 20 cm (clamps reverse motion).
+- **Hold time:** `OA_CLEAR_HOLD_MS` (200 ms).
 
 ### Autonomous Mode
 
-- **Retry wait**: `AUTO_RETRY_WAIT_MS` (2000ms when cornered)
-- **Spin time**: `AUTO_SPIN_DIAGONAL_MS` (500ms 45°), `AUTO_SPIN_SIDE_MS` (1000ms 90°)
-- **Servo settle**: `45°=200ms, 90°=300ms, 135°=500ms`
+- **Retry wait:** `AUTO_RETRY_WAIT_MS` (2000 ms).
+- **Spin time:** `AUTO_SPIN_DIAGONAL_MS` (500 ms), `AUTO_SPIN_SIDE_MS` (1000 ms).
+- **Servo settle:** 45°=200 ms, 90°=300 ms, 135°=500 ms.
 
 ## Controls
 
-### Movement (Manual)
+### Movement
 
-- `W/S` — Forward / Backward
-- `A/D` — Strafe left / right
-- `Q/E/Z/C` — Diagonals (FL, FR, BL, BR)
-- `J/L` — Rotate CCW / CW
-- `X` — Stop / Heartbeat
+- `W/S`: Forward / Backward.
+- `A/D`: Strafe left / right.
+- `Q/E/Z/C`: Diagonals.
+- `J/L`: Rotate CCW / CW.
+- `X`: Stop / Heartbeat.
 
 ### Speed
 
-- `%+` / `%-` — Increase / Decrease (step mode)
-- `%R` — Rough (10% steps)
-- `%N` — Normal (5% steps)
-- `%F` — Fine (1% steps)
+- `%+` / `%-`: Increase / Decrease speed.
+- `%R`: Rough (10% steps).
+- `%N`: Normal (5% steps).
+- `%F`: Fine (1% steps).
 
 ### System
 
-- `!` — Emergency stop (latches)
-- `?` — Reset / clear E-stop
-- `0` — Manual mode
-- `1` — Autonomous mode
-- `T` — Arc turn toggle
-- `P` — Toggle closed-loop PID (encoders only)
-- `G` + letter — Toggle log channel (C/I/M/R/P/S/F/W)
-- `G` + `G` — Dump full mask
-- `G` + `+` / `G` + `-` — All channels on / off
-- `G` + `L` + letter — Toggle log level (D/I/W/E)
+- `!`: Emergency stop (latches).
+- `?`: Reset / clear E-stop and SENSOR_FAIL.
+- `0`: Manual mode.
+- `1`: Autonomous mode.
+- `T`: Arc turn toggle.
+- `P`: Toggle closed-loop PID.
+- `G` + letter: Toggle log channel.
+- `G` + `G`: Dump full mask.
+- `G` + `+` / `G` + `-`: All channels on / off.
+- `G` + `L` + letter: Toggle log level.
 
 ## Safety Features
 
-- **Watchdog**: 150ms Bluetooth timeout, armed only while moving. Any valid command (`X`, `W`, `%+`, `T`, etc.) resets the timer. If no command arrives within 150ms while driving, INPUT_LOSS is asserted and motors stop. Auto-resumes on the next valid command. Only E-STOP latches.
-
-- **Obstacle Detection**: Front/rear independent
-  - Clear: >35cm front, >40cm rear — full speed
-  - Slow: 30–35cm front, 35–40cm rear — 0.5x speed with hysteresis
-  - Stop: 15–20cm — block motion in that direction
-  - **Sensor Dropout**: `dist==0` treated as clear (sensor glitch absorption)
-  - **Independent Vetoes**: Front blocked does not equal rear blocked (can reverse when front is blocked)
+- **Watchdog:** 150 ms Bluetooth timeout. Armed only while moving. Any valid command resets the timer. If no command arrives, INPUT_LOSS is asserted and the motors stop.
+- **Obstacle Detection:** Front/rear independent.
+  - Clear: >35 cm front, >40 cm rear.
+  - Slow: 30 to 35 cm front, 35 to 40 cm rear.
+  - Stop: 15 to 20 cm.
+  - Sensor dropout (`dist==0`) is treated as clear.
+  - Front blocked allows reverse. Rear blocked allows forward.
 
 ## Autonomous Mode
 
-1. Drives forward at `AUTO_SPEED` (600 per-mille = 60%)
-2. On obstacle: stops, servo sweeps 5 positions (left, FL, center, FR, right)
-3. Picks clearest path, rotates toward it
-4. Resumes driving
-5. If cornered: waits `AUTO_RETRY_WAIT_MS` (2 seconds), retries
-6. If `STUCK_MAX_RETRIES` (5) attempts fail, holds position until user intervention
-
-**Note**: Autonomous mode is disabled by default (`ENABLE_AUTONOMOUS_MODE = 0` in Config.h). Enable it manually if desired. Obstacle avoidance itself is enabled by default.
+1. Drives forward at `AUTO_SPEED` (600).
+2. On obstacle: stops and sweeps the servo.
+3. Picks the clearest path and rotates toward it (using encoder ticks if enabled).
+4. Resumes driving.
+5. If cornered: waits `AUTO_RETRY_WAIT_MS` and retries.
+6. If `STUCK_MAX_RETRIES` is reached, holds position.
 
 ## Architecture & Code
 
-**Modules** (`src/`, namespaced C++):
-
-- `comms/` — Bluetooth parser, serial output multiplexing
-- `control/` — Motor control, ramping (400ms accel/200ms decel), autonomous state machine
-- `input/` — Bluetooth watchdog, button parsing, speed authority
-- `safety/` — Obstacle detection with EMA filtering, motion policy
-- `sensors/` — HC-SR04 wrapper (`Ultrasonic`), servo sweep (`DirectionalScan`), battery voltage monitor (`BatteryVoltage`)
+**Modules** (`src/`):
+- `comms/`: Bluetooth parser, serial output.
+- `control/`: Motor control, ramping, autonomous state machine.
+- `input/`: Watchdog, button parsing, speed authority.
+- `safety/`: Obstacle detection, motion policy.
+- `sensors/`: HC-SR04 wrapper, servo sweep, battery monitor, encoders, odometry.
 
 **Design Patterns**:
-
-- Non-blocking architecture (no `delay()`)
-- Threshold tuning over math compensation
-- Emergent watchdog (idle `X` resets timeout)
-- EMA filtering for sensor noise suppression
+- Non-blocking architecture.
+- Threshold tuning over math compensation.
+- Emergent watchdog.
+- EMA filtering for sensor noise.
 
 ## Troubleshooting
 
 **Robot won't move**
-
-- Check E-stop: send `?` to reset
-- Verify Bluetooth connected (check serial output)
-- Check battery voltage (should be >6V for two 18650s)
-- Test individual motors manually
-- Check SafetyManager state: `SAFETY_INPUT_LOSS`, `SAFETY_CONNECTION_LOSS`, or `SAFETY_EMERGENCY_STOP` will block motion
+- Check E-stop: send `?` to reset.
+- Verify Bluetooth connected.
+- Check battery voltage (>6V).
+- Check SafetyManager state.
 
 **Bluetooth keeps disconnecting**
-
-- Move closer to phone (HC-06 range ~10m)
-- Reduce electromagnetic interference
-- Try re-pairing
-- HC-05 users: ensure `ENABLE_HC05_STATE_PIN` is set correctly in `HardwareConfig.h`
-- HC-06 users: disable `ENABLE_HC05_STATE_PIN` in `HardwareConfig.h` (set to 0)
+- Move closer to the phone.
+- Reduce electromagnetic interference.
+- Re-pair.
+- HC-05 users: verify `ENABLE_HC05_STATE_PIN`.
 
 **Obstacle avoidance not working**
-
-- Check sensor wires (HC-SR04 needs GND, 5V, TRIG, ECHO)
-- Watch serial output: `[D][SNR ] FRONT=XX REAR=XX`
-- Adjust thresholds in `Config.h` if using different sensors
-- Toggle the SNR channel (`G` + `S`) to watch sensor lines
+- Check sensor wires.
+- Watch serial output: `[D][SNR ] FRONT=XX REAR=XX`.
+- Adjust thresholds in `Config.h`.
 
 **Servo doesn't scan**
+- Check D10 connection.
+- Verify servo power.
+- Adjust `SERVO_LEFT`, `SERVO_CENTER`, `SERVO_RIGHT`.
 
-- Check D10 connection to servo control line
-- Verify servo power (should be ~6V, not from Arduino 5V pin)
-- Adjust `SERVO_LEFT`, `SERVO_CENTER`, `SERVO_RIGHT` angles
+**Encoders read 0 on R4**
+- Ensure `AGTimer_R4_Library` is installed in your build environment.
+- Verify the encoder wires connect to D4-D7.
+- Check the encoder power connections.
 
 **Robot stops and shows CONNECTION_LOSS**
-
-- HC-05 only: STATE pin detected disconnection
-- Only appears when `ENABLE_HC05_STATE_PIN` is enabled
-- Re-pair Bluetooth or restart the app
-- HC-06 users: disable `ENABLE_HC05_STATE_PIN` in `HardwareConfig.h`
+- HC-05 only: STATE pin detected disconnection.
+- Re-pair Bluetooth or restart the app.
 
 **R4 serial monitor is blank**
-
-- The R4 USB CDC port requires the host to connect before it prints.
-- Firmware waits up to 2 seconds on boot for this. If you miss the boot prints, press the reset button on the board while the monitor is open.
+- The R4 USB CDC port requires the host to connect. Press the reset button on the board while the monitor is open.
 
 ## Performance
 
-- Command latency: <10ms
-- Motor response: <50ms
-- Ultrasonic sampling: ~50ms per sensor
-- Servo sweep: ~1.2 seconds (5 positions, 200–500ms settle by angle)
-- Speed ramp: 400ms accel, 200ms decel
-- Watchdog timeout: 150ms
-- Max speed: ~1.5 m/s (depends on gearing)
+| Metric | Value |
+|---|---|
+| Command latency | <10 ms |
+| Motor response | <50 ms |
+| Ultrasonic sampling | ~50 ms per sensor |
+| Servo sweep | ~1.2 seconds |
+| Speed ramp | 400 ms accel, 200 ms decel |
+| Watchdog timeout | 150 ms |
+| Max speed | ~1.5 m/s |
 
 ## For Developers
 
-This project enforces a strict code layout standard documented in [`docs/Code_Layout_Standard.md`](docs/Code_Layout_Standard.md). Key rules:
+This project enforces a strict code layout standard in [`docs/Code_Layout_Standard.md`](docs/Code_Layout_Standard.md).
 
-- One logical module per file
-- Headers declare public API only — no implementation
-- Source files contain all implementation and internal state
-- Comment hierarchy: T1 (file header) → T7 (inline notes)
-
-When contributing, follow the visual hierarchy scale defined in the standard document.
-
-## Log Channels
-
-Runtime-toggled over Bluetooth. `LOG_ENABLED` defaults to `0`. `COMMS_DEBUG_MIRROR` defaults to `1` (mirrors debug output to R4 USB Serial).
-
-See [`docs/Log_Standard.md`](docs/Log_Standard.md) and [`docs/Control_Protocol.md`](docs/Control_Protocol.md).
-
-| Command | Action |
-|---|---|
-| `G` + letter | Toggle one channel |
-| `G` + `G` | Dump full mask |
-| `G` + `+` / `G` + `-` | All on / all off |
-| `G` + `L` + letter | Toggle one level |
+- One logical module per file.
+- Headers declare public API only.
+- Source files contain all implementation and internal state.
+- Comment hierarchy: T1 (file header) to T7 (inline notes).
 
 ## License
 
