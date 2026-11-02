@@ -21,7 +21,7 @@ namespace SystemFault {
 
 /* =============== INTERNAL STATE =============== */
 /* ============ STATIC VARS ============ */
-static bool             fault_active = false;
+static bool              fault_active = false;
 static SystemFaultReason fault_reason = SystemFaultReason::NONE;
 
 /* =============== INTERNAL HELPERS =============== */
@@ -61,9 +61,11 @@ SystemFaultReason reason() {
 void trigger(SystemFaultReason reason) {
     /* Prevent re-triggering if already faulted */
     if (fault_active) {
-        Comms::system.print(F(">>> Fault ignored (already active): "));
-        Comms::system.print(fault_to_string(reason));
-        Comms::system.println(F(" <<<"));
+        Comms::print.println(F("===================="));
+        Comms::print.println(F(">> FAULT  IGNORED <<"));
+        Comms::print.print(F("Active: "));
+        Comms::print.println(fault_to_string(fault_reason));
+        Comms::print.println(F("===================="));
         return;
     }
 
